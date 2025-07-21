@@ -11,7 +11,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependencias y artefactos de build generales de Node.js/JS (si aplicara globalmente)
+# Dependencias y artefactos de build generales
 node_modules/
 dist/
 dist-ssr/
@@ -23,7 +23,7 @@ coverage/
 
 # Editor directories and files
 .vscode/
-!.vscode/extensions.json # Mantener extensions.json si lo necesitas
+!.vscode/extensions.json
 .idea/
 *.suo
 *.ntvs*
@@ -35,31 +35,33 @@ coverage/
 .env
 .env.*
 
-# Carpetas de build y node_modules específicas de subproyectos
-# Frontend
-frontend-sda/build/
-frontend-sda/dist/
-frontend-sda/node_modules/ # Si tu frontend tiene su propio node_modules
+# Carpetas de build específicas de subproyectos (más genérico y efectivo)
+**/node_modules
+**/build
+**/dist
+**/ios/Pods
+**/android/.gradle
+**/android/app/build
+**/android/app/.cxx
+**/android/app/.externalNativeBuild
 
-# Backends
-backend-cotizador/node_modules/
-backend-cotizador/dist/
-backend-cotizador/build/
+# -------------------------------------------------------------------
+# ARCHIVOS GENERADOS Y DATOS (¡NUEVO Y MUY IMPORTANTE!)
+# -------------------------------------------------------------------
 
-backend-sistema/node_modules/
-backend-sistema/dist/
-backend-sistema/build/
+# Backups y volcados de base de datos
+*.tar.gz
+*.sql
+*.bson
+backend-usuarios/dump_sda/
 
-backend-usuarios/node_modules/
-backend-usuarios/dist/
-backend-usuarios/build/
+# Archivos subidos por usuarios
+backend-usuarios/uploads/
 
-# App Móvil (React Native)
-app-sda-chofer/android/build/
-app-sda-chofer/ios/build/
-app-sda-chofer/node_modules/ # Si tu app móvil tiene su propio node_modules
-app-sda-chofer/ios/Pods/ # Dependencias de iOS
-app-sda-chofer/android/.gradle/
-app-sda-chofer/android/app/build/
-app-sda-chofer/android/app/.cxx/
-app-sda-chofer/android/app/.externalNativeBuild/
+# Documentos generados por la aplicación (PDFs, etc.)
+backend-sistema/pdfs/
+
+# Archivos de sesión y caché de la app móvil
+app-sda-chofer/.expo/
+app-sda-chofer/.expo-shared/
+
