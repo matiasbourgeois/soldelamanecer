@@ -1,0 +1,326 @@
+.btn-icono {
+    border: none;
+    border-radius: 10px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-icono:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.btn-editar {
+    background-color: #fff9db;
+    color: #a67c00;
+}
+
+.btn-activar {
+    background-color: #e6fffa;
+    color: #2e7d32;
+}
+
+.btn-desactivar {
+    background-color: #ffecec;
+    color: #d32f2f;
+}
+
+.btn-eliminar {
+    background-color: #f5f5f5;
+    color: #6b7280;
+}
+
+/* Botón principal amarillo del sistema */
+/* Botón principal redondeado estilo "Agregar nueva localidad" */
+/* Botón principal redondeado con efecto suave y sombra */
+.btn-sda-principal {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #fff9db !important;
+    color: #8b6f00 !important;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 24px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.btn-sda-principal:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background-color: #fff9db !important;
+    color: #8b6f00 !important;
+}
+
+/* 👇 Estas líneas eliminan el anillo de borde amarillo */
+.btn-sda-principal:focus,
+.btn-sda-principal:active,
+.btn-sda-principal:focus-visible {
+    background-color: #fff9db !important;
+    color: #8b6f00 !important;
+    outline: none !important;
+    border: none !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    /* o el mismo del estado normal */
+}
+
+/* Botón secundario para links tipo "Gestionar localidades" */
+.btn-sda-secundario {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease-in-out;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+}
+
+.btn-sda-secundario:hover {
+    background-color: #e2e6ea;
+    color: #495057;
+    text-decoration: none;
+}
+
+/* Botón suave reutilizable para formularios y acciones neutras */
+.btn-soft {
+    border: none;
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    font-family: 'Montserrat', sans-serif;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.btn-soft:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-soft:focus,
+.btn-soft:active,
+.btn-soft:focus-visible {
+    background-color: inherit !important;
+    color: inherit !important;
+    box-shadow: 0 0 0 0.2rem rgba(241, 196, 15, 0.3) !important;
+    outline: none !important;
+    border-color: transparent !important;
+}
+
+.btn-soft-cancelar {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #f0f0f0;
+    color: #6b7280;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.btn-soft-cancelar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-soft-cancelar:focus,
+.btn-soft-cancelar:active,
+.btn-soft-cancelar:focus-visible {
+    background-color: #f0f0f0 !important;
+    color: #6b7280 !important;
+    box-shadow: 0 0 0 0.2rem rgba(209, 213, 219, 0.3) !important;
+    outline: none !important;
+    border-color: transparent !important;
+}
+
+/* Estado deshabilitado elegante para todos los botones suaves */
+.btn-soft:disabled,
+.btn-soft[disabled],
+.btn-soft-warning:disabled,
+.btn-soft-warning[disabled],
+.btn-soft-cancelar:disabled,
+.btn-soft-cancelar[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: inherit !important;
+    color: inherit !important;
+    box-shadow: none;
+}
+
+.btn-soft-warning {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #fff8dc;
+    color: #8b6f00;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.btn-soft-warning:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-soft-warning:focus,
+.btn-soft-warning:active,
+.btn-soft-warning:focus-visible {
+    background-color: #fff8dc !important;
+    color: #8b6f00 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    outline: none !important;
+    border: none !important;
+}
+
+.btn-soft-confirmar {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #e0f7fa;
+    color: #006064;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.btn-soft-confirmar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-soft-confirmar:focus,
+.btn-soft-confirmar:active,
+.btn-soft-confirmar:focus-visible {
+    background-color: #e0f7fa !important;
+    color: #006064 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    outline: none !important;
+    border: none !important;
+}
+
+.btn-soft-eliminar {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #ffecec;
+    color: #d32f2f;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.btn-soft-eliminar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-soft-eliminar:focus,
+.btn-soft-eliminar:active,
+.btn-soft-eliminar:focus-visible {
+    background-color: #ffecec !important;
+    color: #d32f2f !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    outline: none !important;
+    border: none !important;
+}
+
+.btn-soft-secundario {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease-in-out;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+}
+
+.btn-soft-secundario:hover {
+    background-color: #e2e6ea;
+    color: #495057;
+    text-decoration: none;
+}
+
+.btn-soft-secundario:focus,
+.btn-soft-secundario:active,
+.btn-soft-secundario:focus-visible {
+    background-color: #f8f9fa !important;
+    color: #6c757d !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    outline: none !important;
+    border: none !important;
+}
+
+/* Estilo tipo pastilla para botones de texto como "Ver Localidades" */
+.btn-pill-texto {
+    background-color: #e0f7fa;
+    color: #00796b;
+    border: none;
+    border-radius: 20px;
+    font-weight: 600;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-family: 'Montserrat', sans-serif;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+  
+  .btn-pill-texto:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+    background-color: #b2ebf2;
+    color: #00695c;
+  }
+  
+  .btn-pill-texto:focus,
+  .btn-pill-texto:active,
+  .btn-pill-texto:focus-visible {
+    outline: none !important;
+    border: none !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .icono-pdf-solo {
+    color: #d32f2f;
+    transition: transform 0.2s ease;
+    padding: 4px;
+    border: 0;
+    background-color: transparent;
+  }
+  
+  .icono-pdf-solo:hover {
+    transform: scale(1.1);
+    color: #b71c1c;
+  }
+  
+  /* 🔧 Añade separación horizontal entre botones SweetAlert2 con clases del sistema */
+.swal2-actions .btn-soft-confirmar,
+.swal2-actions .btn-soft-warning,
+.swal2-actions .btn-soft-eliminar,
+.swal2-actions .btn-soft-cancelar {
+  margin: 8px 6px;
+  padding: 8px 16px;
+}

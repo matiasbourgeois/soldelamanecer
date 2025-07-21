@@ -1,0 +1,65 @@
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencias y artefactos de build generales de Node.js/JS (si aplicara globalmente)
+node_modules/
+dist/
+dist-ssr/
+*.local
+coverage/
+*.tgz
+.npm/
+.eslintcache
+
+# Editor directories and files
+.vscode/
+!.vscode/extensions.json # Mantener extensions.json si lo necesitas
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Archivos de entorno sensibles (¡MUY IMPORTANTE!)
+.env
+.env.*
+
+# Carpetas de build y node_modules específicas de subproyectos
+# Frontend
+frontend-sda/build/
+frontend-sda/dist/
+frontend-sda/node_modules/ # Si tu frontend tiene su propio node_modules
+
+# Backends
+backend-cotizador/node_modules/
+backend-cotizador/dist/
+backend-cotizador/build/
+
+backend-sistema/node_modules/
+backend-sistema/dist/
+backend-sistema/build/
+
+backend-usuarios/node_modules/
+backend-usuarios/dist/
+backend-usuarios/build/
+
+# App Móvil (React Native)
+app-sda-chofer/android/build/
+app-sda-chofer/ios/build/
+app-sda-chofer/node_modules/ # Si tu app móvil tiene su propio node_modules
+app-sda-chofer/ios/Pods/ # Dependencias de iOS
+app-sda-chofer/android/.gradle/
+app-sda-chofer/android/app/build/
+app-sda-chofer/android/app/.cxx/
+app-sda-chofer/android/app/.externalNativeBuild/

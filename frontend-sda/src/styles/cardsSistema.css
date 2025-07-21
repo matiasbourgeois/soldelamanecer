@@ -1,0 +1,68 @@
+.card-sda {
+    background-color: #fff;
+    border: 1px solid #f7e597;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    font-family: 'Montserrat', sans-serif;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .card-sda:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  }
+  
+  .card-sda h3,
+  .card-sda h5 {
+    font-weight: 700;
+  }
+  .card-opcion {
+    background-color: #fffdf1;
+    border: 2px solid #f9e790;
+    border-radius: 1rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    font-family: 'Montserrat', sans-serif;
+  }
+  
+  .card-opcion:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+  
+  .icono-opcion {
+    background-color: #fff7c2;
+    color: #8b6f00;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+  }
+  .bloque-datos {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-left: 4px solid #f9e790;
+    padding: 1.2rem 1.5rem;
+    border-radius: 0.75rem;
+    margin-top: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  }
+  
+  .bloque-datos p {
+    margin-bottom: 6px;
+  }
+  
+  .bloque-datos strong {
+    display: inline-block;
+    width: 100px;
+    font-weight: 600;
+    color: #333;
+  }
+  

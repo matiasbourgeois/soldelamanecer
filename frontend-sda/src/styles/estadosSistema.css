@@ -1,0 +1,93 @@
+.estado-activo {
+  background-color: #e0f7fa;
+  color: #00796b;
+  font-weight: 600;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  border-radius: 999px;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
+}
+
+.estado-inactivo {
+  background-color: #f0f0f0;
+  color: #6b7280;
+  font-weight: 600;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  border-radius: 999px;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
+}
+
+.estado-chip {
+  display: inline-block;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 16px;
+  text-transform: capitalize;
+  margin-left: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  animation: fadeInUp 0.4s ease forwards;
+  opacity: 0;
+  transform: translateY(8px);
+
+  min-width: 120px; /* ✅ fuerza mismo ancho */
+  height: 32px;      /* ✅ evita que se achique por el texto */
+  line-height: 22px; /* ✅ centra el texto verticalmente */
+  text-align: center;
+  vertical-align: middle;
+}
+
+
+/* Animación */
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Colores por estado */
+.estado-pendiente {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.estado-en-reparto {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.estado-entregado {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.estado-devuelto {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.estado-rechazado {
+  background-color: #f5c6cb;
+  color: #721c24;
+}
+
+.estado-no-entregado {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+.estado-reagendado {
+  background-color: #e2e3e5;
+  color: #0c5460;
+}
+
+.estado-cancelado {
+  background-color: #d6d8db;
+  color: #1b1e21;
+}

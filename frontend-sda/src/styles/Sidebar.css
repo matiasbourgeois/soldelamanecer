@@ -1,0 +1,349 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
+
+.sidebar {
+  font-family: 'Montserrat', sans-serif;
+  position: fixed;
+  top: 10px;
+  /* Separación desde arriba para que se vean los bordes */
+  left: 5px;
+  /* Separación del borde izquierdo */
+  height: calc(100vh - 20px);
+  /* Ajuste por padding top/bottom */
+  width: 280px;
+  background: rgba(17, 17, 17, 0.6); /* 40% opaco → más transparente */;
+  backdrop-filter: blur(14px);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 16px;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 4px 8px rgba(241, 196, 15, 0.15);
+
+  transition: all 0.3s ease;
+  z-index: 1000;
+
+  /* 🔸 Borde redondeado estilo pro */
+  border-radius: 24px;
+
+  /* 🔸 Borde visual elegante */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+/* 🔶 Logo */
+.sidebar-logo {
+  font-size: 1.15rem;
+  text-align: center;
+  margin-bottom: 20px;
+  letter-spacing: 0.1px;
+  /* ⬇️ Menos espaciado entre letras */
+}
+
+.navbar-brand {
+  font-size: 1.9rem;
+  /* ✅ Tamaño de letra más grande y directo */
+  font-weight: 600;
+  letter-spacing: -0.9px;
+  /* ✅ Menor espaciado entre letras */
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #ffc107, #ffdd57, #ffc107);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 3s linear infinite;
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* 👤 Usuario */
+.sidebar-user {
+  text-align: center;
+  padding-bottom: 30px;
+}
+
+.sidebar-user h2 {
+  font-size: 1rem;
+  margin: 5px 0;
+  color: #aaa;
+}
+
+.sidebar-user p {
+  font-size: 0.75rem;
+  color: #aaa;
+  word-break: break-word;
+}
+
+/* 🔗 Links */
+.sidebar-links {
+  list-style: none;
+  padding: 0;
+  flex-grow: 1;
+}
+
+.sidebar-links li {
+  margin: 6px 0;
+}
+
+.sidebar-links a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ddd;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.sidebar-links a:hover {
+  background: rgba(255, 193, 7, 0.12);
+  color: #ffc107;
+}
+
+/* 🚪 Logout */
+.logout-link {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+  margin-top: 20px;
+}
+
+.logout-link button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.logout-link button:hover {
+  background: rgba(255, 193, 7, 0.12);
+  color: #ffc107;
+}
+
+/* 🌙 Modo colapsado */
+.sidebar.collapsed .sidebar-logo,
+.sidebar.collapsed .sidebar-user,
+.sidebar.collapsed .sidebar-links a span,
+.sidebar.collapsed .logout-link button span {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-links a svg,
+.sidebar.collapsed .logout-link button svg {
+  margin: 0 auto;
+}
+
+.sidebar-links a svg,
+.logout-link button svg {
+  min-width: 20px;
+}
+
+.sidebar.collapsed .toggle-btn {
+  margin-bottom: 10px;
+}
+
+.sidebar-toggle-bottom {
+  position: absolute;
+  bottom: 58px;
+  /* ⬆️ Subido para dejar espacio a Cerrar Sesión */
+  right: 20px;
+  z-index: 2000;
+}
+
+.toggle-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 50%;
+  color: #ffc107;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    inset 0 0 6px rgba(255, 255, 255, 0.05);
+  animation: float 3s ease-in-out infinite;
+}
+
+.toggle-icon:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.07);
+}
+
+/* 💫 Animación flotante sutil */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* 🎈 Tooltip elegante para el botón toggle */
+.toggle-icon {
+  position: relative;
+}
+
+.toggle-icon::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 110%;
+  /* Encima del botón */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  color: #ffc107;
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-icon:hover::after {
+  opacity: 1;
+}
+
+/* 📏 Íconos más grandes solo cuando el sidebar está colapsado */
+.sidebar.collapsed .sidebar-links a svg,
+.sidebar.collapsed .logout-link button svg {
+  width: 26px;
+  height: 26px;
+  transition: all 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-links a:hover svg,
+.sidebar.collapsed .logout-link button:hover svg {
+  transform: scale(1.1);
+  color: #ffc107;
+}
+
+.sidebar-avatar {
+  width: 90px; /* ⬆️ Aumentado */
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 12px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  animation: fadeZoomIn 0.4s ease-in-out;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-avatar:hover {
+  transform: scale(1.03);
+}
+
+
+.sidebar-user {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.sidebar-user h2 {
+  font-size: 1rem;
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.sidebar-user p {
+  font-size: 0.85rem;
+  color: #cccccc;
+  font-weight: 400;
+  margin: 0;
+}
+
+@keyframes fadeZoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.sidebar-scrollable {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  padding-right: 4px; /* para evitar el solapamiento del scroll */
+}
+
+/* Scrollbar estética opcional */
+.sidebar-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scrollable::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.sidebar-scrollable::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.35);
+}
+.sidebar-scrollable {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  padding-right: 4px;
+}
+.sidebar-scrollable {
+  direction: rtl; /* Invertimos la dirección para que el scroll vaya a la izquierda */
+}
+
+.sidebar-scrollable ul {
+  direction: ltr; /* Pero el contenido lo mantenemos normal, así no se invierte */
+}
+.sidebar-scrollable::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.sidebar-scrollable::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 6px 0;
+}
+
+.sidebar-scrollable::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease;
+}
+
+.sidebar-scrollable::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 193, 7, 0.3); /* color amarillo suave al hacer hover */
+}
