@@ -1,13 +1,11 @@
 {
   "name": "soldelamanecer-monorepo",
   "private": true,
- "workspaces": [
+"workspaces": [
     "frontend-sda",
-    "app-sda-chofer",
     "backend-sistema",
     "backend-usuarios"
-  ],
-  "scripts": {
+  ],  "scripts": {
     "install:all": "npm install"
   }
 }
