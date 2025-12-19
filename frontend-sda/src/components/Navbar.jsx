@@ -48,19 +48,16 @@ const Navbar = () => {
                 Servicios
               </Link>
             </li>
-            <li className="nav-item dropdown cotizador-dropdown">
-              <span className="nav-link">
+            <li className="nav-item">
+              <Link
+                to="/cotizador-online"
+                className="nav-link"
+                onClick={() => setIsDropdownOpen(false)}
+              >
                 Cotizador Online
-              </span>
-              <ul className="dropdown-menu">
-                <li>
-                  <Link to="/cotizacion-viajes" className="dropdown-item">Cotización de Viajes</Link>
-                </li>
-                <li>
-                  <Link to="/cotizacion-encomiendas" className="dropdown-item">Cotización de Encomiendas</Link>
-                </li>
-              </ul>
+              </Link>
             </li>
+
             <li className="nav-item">
               <Link to="/seguimiento" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
                 Seguimiento de Envíos

@@ -1,19 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import TablaChoferes from "../../components/choferes/TablaChoferes";
 import FormularioChofer from "../../components/choferes/FormularioChofer";
-import { useContext } from "react";
-import { FormControl } from "react-bootstrap";
 import AuthContext from "../../context/AuthProvider";
 import { apiSistema, apiUsuariosApi } from "../../utils/api";
-import { confirmarAccion } from "../../utils/confirmarAccion";
-import "../../styles/botonesSistema.css";
-import "../../styles/tablasSistema.css";
-import "../../styles/formularioSistema.css";
-import "../../styles/titulosSistema.css";
-
-
-
+import { confirmarAccion } from "../../utils/confirmarAccion.jsx";
+import { Container, Paper, Title, Group, Button, TextInput } from "@mantine/core";
+import { Plus, Search } from "lucide-react";
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
 
 const ChoferesAdmin = () => {
   const { auth } = useContext(AuthContext);
@@ -27,11 +21,9 @@ const ChoferesAdmin = () => {
     telefono: "",
     tipoVinculo: "contratado",
   });
-  const [paginaActual, setPaginaActual] = useState(0);
+  const [paginaActual, setPaginaActual] = useState(1); // Mantine starts at 1
   const [totalChoferes, setTotalChoferes] = useState(0);
-  // más adelante vamos a usar esto para búsqueda:
   const [filtro, setFiltro] = useState("");
-
 
   const [modoEdicion, setModoEdicion] = useState(false);
   const [choferEditando, setChoferEditando] = useState(null);
@@ -40,10 +32,10 @@ const ChoferesAdmin = () => {
     fetchChoferes(paginaActual, filtro);
   }, [paginaActual, filtro]);
 
-  const fetchChoferes = async (pagina = 0, busqueda = "") => {
+  const fetchChoferes = async (pagina = 1, busqueda = "") => {
     try {
       const res = await fetch(
-        apiSistema(`/api/choferes?pagina=${pagina}&busqueda=${busqueda}`)
+        apiSistema(`/api/choferes?pagina=${pagina - 1}&busqueda=${busqueda}`)
       );
       const data = await res.json();
 
@@ -64,10 +56,12 @@ const ChoferesAdmin = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+      // CRITICAL: Logic preserved - filtering users with role "cliente"
       const filtrados = data.filter(
         (u) => u.rol === "cliente"
       );
 
+      console.log("Usuarios filtered:", filtrados);
       setUsuarios(filtrados);
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
@@ -75,6 +69,7 @@ const ChoferesAdmin = () => {
   };
 
   const handleAbrirModal = () => {
+    console.log("Opening modal...");
     fetchUsuarios();
     setMostrarModal(true);
   };
@@ -89,10 +84,26 @@ const ChoferesAdmin = () => {
   };
 
   const handleChangeFormulario = (e) => {
+    // If it's a direct value (from Mantine Select) or event
+    const name = e.target ? e.target.name : e.name; // Logic adaptation might be needed depending on form component
+    // Keep it generic for now, we will adapt in FormularioChofer
     setFormulario({ ...formulario, [e.target.name]: e.target.value });
   };
 
+  // Custom handler for Mantine inputs in form
+  const handleFormularioChange = (name, value) => {
+    setFormulario(prev => ({ ...prev, [name]: value }));
+  }
+
   const handleChangeUsuario = (e) => {
+    const { name, value } = e.target;
+    setUsuarioSeleccionado((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  // Custom handler for Mantine inputs in user edit (TextInput passes event)
+  const handleUsuarioChange = (e) => {
     const { name, value } = e.target;
     setUsuarioSeleccionado((prev) => ({
       ...prev,
@@ -126,12 +137,22 @@ const ChoferesAdmin = () => {
 
     } catch (error) {
       console.error("❌ Error al obtener usuario para edición:", error);
+      mostrarAlerta("Error al cargar datos del usuario", "danger");
     }
   };
 
 
   const handleCrearChofer = async () => {
-    if (!usuarioSeleccionado) return;
+    if (!usuarioSeleccionado) {
+      mostrarAlerta("Debe seleccionar un usuario.", "warning");
+      return;
+    }
+
+    // Validations
+    if (!usuarioSeleccionado.nombre || !usuarioSeleccionado.dni || !usuarioSeleccionado.telefono || !formulario.tipoVinculo) {
+      mostrarAlerta("Por favor, complete todos los campos obligatorios (Nombre, DNI, Teléfono, Tipo de Contratación).", "warning");
+      return;
+    }
 
     try {
       const token = auth?.token;
@@ -160,13 +181,15 @@ const ChoferesAdmin = () => {
 
 
       // Reiniciar el estado y actualizar la lista
+      mostrarAlerta("Chofer creado correctamente", "success");
       setMostrarModal(false);
       setUsuarioSeleccionado(null);
       setFormulario({ dni: "", telefono: "", tipoVinculo: "contratado" });
       setBusqueda("");
-      fetchChoferes();
+      fetchChoferes(paginaActual, filtro);
     } catch (error) {
       console.error("Error al crear chofer:", error);
+      mostrarAlerta("Error al crear chofer", "danger");
     }
   };
 
@@ -198,14 +221,16 @@ const ChoferesAdmin = () => {
       });
 
       // 3. Resetear estado
+      mostrarAlerta("Chofer actualizado correctamente", "success");
       setMostrarModal(false);
       setUsuarioSeleccionado(null);
       setFormulario({ dni: "", telefono: "", tipoVinculo: "contratado" });
       setModoEdicion(false);
       setChoferEditando(null);
-      fetchChoferes();
+      fetchChoferes(paginaActual, filtro);
     } catch (error) {
       console.error("Error al actualizar chofer:", error);
+      mostrarAlerta("Error al actualizar chofer", "danger");
     }
   };
 
@@ -215,9 +240,11 @@ const ChoferesAdmin = () => {
     if (!confirmar) return;
     try {
       await axios.delete(apiSistema(`/api/choferes/${id}`));
-      fetchChoferes();
+      mostrarAlerta("Chofer eliminado", "success");
+      fetchChoferes(paginaActual, filtro);
     } catch (error) {
       console.error("Error al eliminar chofer:", error);
+      mostrarAlerta("Error al eliminar chofer", "danger");
     }
   };
 
@@ -227,31 +254,44 @@ const ChoferesAdmin = () => {
   );
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="titulo-seccion">Gestión de Choferes</h2>
-        <button className="btn-sda-principal me-2" onClick={handleAbrirModal}>
-          Agregar nuevo chofer
-        </button>
-      </div>
+    <Container size="xl" py="md">
+      <Paper p="md" radius="md" shadow="sm" withBorder mb="lg">
+        <Group justify="space-between" mb="md">
+          <Title order={2} fw={700} c="dimmed">
+            Gestión de Choferes
+          </Title>
+          <Button
+            leftSection={<Plus size={18} />}
+            color="cyan"
+            variant="filled"
+            onClick={handleAbrirModal}
+          >
+            Nuevo Chofer
+          </Button>
+        </Group>
 
-      <FormControl
-        className="input-sistema mb-3"
-        placeholder="Buscar por nombre, DNI o teléfono..."
-        value={filtro}
-        onChange={(e) => {
-          setFiltro(e.target.value);
-          setPaginaActual(0);
-        }}
-      />
-      <TablaChoferes
-        choferes={choferes}
-        onEditar={handleEditarChofer}
-        onEliminar={handleEliminarChofer}
-        paginaActual={paginaActual}
-        totalChoferes={totalChoferes}
-        setPaginaActual={setPaginaActual}
-      />
+        <TextInput
+          placeholder="Buscar por nombre, DNI o teléfono..."
+          leftSection={<Search size={16} />}
+          value={filtro}
+          onChange={(e) => {
+            setFiltro(e.target.value);
+            setPaginaActual(1);
+          }}
+          mb="md"
+          radius="md"
+          w={{ base: "100%", sm: 350 }}
+        />
+
+        <TablaChoferes
+          choferes={choferes}
+          onEditar={handleEditarChofer}
+          onEliminar={handleEliminarChofer}
+          paginaActual={paginaActual}
+          totalChoferes={totalChoferes}
+          setPaginaActual={setPaginaActual}
+        />
+      </Paper>
 
       <FormularioChofer
         mostrar={mostrarModal}
@@ -259,6 +299,8 @@ const ChoferesAdmin = () => {
           setMostrarModal(false);
           setUsuarioSeleccionado(null);
           setFormulario({ dni: "", telefono: "", tipoVinculo: "contratado" });
+          setModoEdicion(false);
+          setChoferEditando(null);
         }}
 
         busqueda={busqueda}
@@ -269,11 +311,11 @@ const ChoferesAdmin = () => {
         usuarioSeleccionado={usuarioSeleccionado}
         handleSeleccionUsuario={handleSeleccionUsuario}
         formulario={formulario}
-        handleChangeFormulario={handleChangeFormulario}
+        handleFormularioChange={handleFormularioChange}
         handleCrearChofer={handleCrearChofer}
-        handleChangeUsuario={handleChangeUsuario}
+        handleUsuarioChange={handleUsuarioChange}
       />
-    </div>
+    </Container>
   );
 };
 

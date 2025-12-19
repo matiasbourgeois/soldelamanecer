@@ -1,250 +1,235 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  Card,
-  Form,
-  InputGroup,
-  Spinner,
-} from "react-bootstrap";
-import { FilePdf } from "react-bootstrap-icons";
+  Container, Paper, Title, Table, Group, TextInput, Pagination,
+  Button, Text, Loader, Center, ActionIcon, Tooltip, Badge, Stack, Box
+} from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
+import { useDebouncedValue } from "@mantine/hooks";
+import { Search, Calendar as CalendarIcon, FileText, X } from "lucide-react";
 import { apiSistema } from "../../utils/api";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import "../../styles/datepicker-custom.css";
-import "../../styles/tablasSistema.css";
-import "../../styles/titulosSistema.css";
-import { FiSearch, FiCalendar } from "react-icons/fi";
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
 
 const ConsultarRemitos = () => {
-  const hoy = new Date();
-  const haceUnMes = new Date();
-  haceUnMes.setMonth(hoy.getMonth() - 1);
+  // 🟢 CHANGE: Default dates to null to show ALL history by default
+  const [filtroDesde, setFiltroDesde] = useState(null);
+  const [filtroHasta, setFiltroHasta] = useState(null);
 
   const [remitos, setRemitos] = useState([]);
   const [filtroNumero, setFiltroNumero] = useState("");
-  const [filtroDesde, setFiltroDesde] = useState(haceUnMes);
-  const [filtroHasta, setFiltroHasta] = useState(hoy);
+  // 🟢 Debounce for search to avoid API flood
+  const [debouncedFiltroNumero] = useDebouncedValue(filtroNumero, 500);
+
   const [loading, setLoading] = useState(false);
-  const [paginaActual, setPaginaActual] = useState(0);
+  const [paginaActual, setPaginaActual] = useState(1); // Mantine starts at 1
   const [limite] = useState(10);
   const [totalRemitos, setTotalRemitos] = useState(0);
 
-
   useEffect(() => {
-    const fetchRemitos = async () => {
-      setLoading(true);
-      try {
-        const res = await axios.get(
-          apiSistema(`/api/remitos?pagina=${paginaActual}&limite=${limite}` +
-            (filtroNumero ? `&numero=${encodeURIComponent(filtroNumero)}` : "") +
-            (filtroDesde ? `&desde=${filtroDesde.toISOString()}` : "") +
-            (filtroHasta ? `&hasta=${filtroHasta.toISOString()}` : "")
-          )
-          
-        );
-        console.log("🔽 Remitos recibidos:", res.data);
+    fetchRemitos();
+  }, [paginaActual, debouncedFiltroNumero, filtroDesde, filtroHasta]); // Use debounced value
 
-        setRemitos(res.data.resultados);
-        setTotalRemitos(res.data.total);
-      } catch (error) {
-        console.error("❌ Error al obtener remitos:", error.message);
-      } finally {
-        setLoading(false);
+  const fetchRemitos = async () => {
+    setLoading(true);
+
+    // Helper to safety format dates
+    const formatDateForApi = (date) => {
+      if (!date) return "";
+      try {
+        const d = new Date(date);
+        return isNaN(d.getTime()) ? "" : d.toISOString();
+      } catch (e) {
+        return "";
       }
     };
 
-    fetchRemitos();
-  }, [paginaActual, filtroNumero, filtroDesde, filtroHasta]);
+    try {
+      const params = new URLSearchParams();
+      params.append("pagina", paginaActual - 1); // Backend expects 0-indexed
+      params.append("limite", limite);
 
+      if (debouncedFiltroNumero) params.append("numero", debouncedFiltroNumero);
+
+      const desdeFormatted = formatDateForApi(filtroDesde);
+      if (desdeFormatted) params.append("desde", desdeFormatted);
+
+      // 🟢 FIX: Set "Hasta" to end of day (23:59:59) to include the selected day
+      if (filtroHasta) {
+        const hastaEndOfDay = new Date(filtroHasta);
+        hastaEndOfDay.setHours(23, 59, 59, 999);
+        const hastaFormatted = formatDateForApi(hastaEndOfDay);
+        if (hastaFormatted) params.append("hasta", hastaFormatted);
+      }
+
+      const res = await axios.get(apiSistema(`/api/remitos?${params.toString()}`));
+
+      console.log("🔽 Remitos recibidos:", res.data);
+
+      setRemitos(res.data.resultados);
+      setTotalRemitos(res.data.total);
+    } catch (error) {
+      console.error("❌ Error al obtener remitos:", error.message);
+      mostrarAlerta("Error al cargar remitos", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const limpiarFiltros = () => {
+    setFiltroNumero("");
+    setFiltroDesde(null);
+    setFiltroHasta(null);
+    setPaginaActual(1);
+  };
+
+  const totalPaginas = Math.ceil(totalRemitos / limite);
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4 titulo-seccion">Consultar Remitos</h2>
+    <Container size="xl" py="xl">
+      <Paper p="md" radius="md" shadow="sm" withBorder mb="lg">
+        {/* Header Section */}
+        <Group justify="space-between" mb="md">
+          <Title order={2} fw={700} c="dimmed">
+            Consultar Remitos
+          </Title>
+          {(filtroNumero || filtroDesde || filtroHasta) && (
+            <Button variant="subtle" color="red" leftSection={<X size={16} />} onClick={limpiarFiltros} size="xs">
+              Limpiar Filtros
+            </Button>
+          )}
+        </Group>
 
-      <Card className="p-4 mb-4 shadow-sm border-0 rounded-4">
-        <Form className="row g-3 align-items-center">
+        {/* Filters Section */}
+        <Group mb="lg" align="flex-end">
+          <TextInput
+            label="Buscar por Número"
+            placeholder="Ej: 8"
+            leftSection={<Search size={16} />}
+            value={filtroNumero}
+            onChange={(e) => {
+              setFiltroNumero(e.target.value);
+              setPaginaActual(1);
+            }}
+            w={{ base: "100%", sm: 300 }}
+          />
+          <DatePickerInput
+            label="Desde"
+            placeholder="Fecha inicial"
+            leftSection={<CalendarIcon size={16} />}
+            value={filtroDesde}
+            onChange={(date) => {
+              setFiltroDesde(date);
+              setPaginaActual(1);
+            }}
+            clearable
+            w={{ base: "100%", sm: 180 }}
+          />
+          <DatePickerInput
+            label="Hasta"
+            placeholder="Fecha final"
+            leftSection={<CalendarIcon size={16} />}
+            value={filtroHasta}
+            onChange={(date) => {
+              setFiltroHasta(date);
+              setPaginaActual(1);
+            }}
+            clearable
+            w={{ base: "100%", sm: 180 }}
+          />
+        </Group>
 
-          {/* Fecha Desde */}
-          <Form.Group className="col-md-4 d-flex align-items-center">
-            <label className="label-sistema me-2 mb-0">Desde</label>
-            <InputGroup className="input-group-custom flex-grow-1">
-              <DatePicker
-                selected={filtroDesde}
-                onChange={(date) => setFiltroDesde(date)}
-                dateFormat="yyyy-MM-dd"
-                className="form-control input-sistema"
-              />
-              <InputGroup.Text className="icono-input-sistema">
-                <FiCalendar />
-              </InputGroup.Text>
-            </InputGroup>
-          </Form.Group>
-
-          {/* Fecha Hasta */}
-          <Form.Group className="col-md-4 d-flex align-items-center">
-            <label className="label-sistema me-2 mb-0">Hasta</label>
-            <InputGroup className="input-group-custom flex-grow-1">
-              <DatePicker
-                selected={filtroHasta}
-                onChange={(date) => setFiltroHasta(date)}
-                dateFormat="yyyy-MM-dd"
-                className="form-control input-sistema"
-              />
-              <InputGroup.Text className="icono-input-sistema">
-                <FiCalendar />
-              </InputGroup.Text>
-            </InputGroup>
-          </Form.Group>
-
-          {/* Filtro por número */}
-          <Form.Group className="col-md-4 d-flex align-items-center">
-            <label className="label-sistema me-2 mb-0">Buscar</label>
-            <InputGroup className="input-group-custom flex-grow-1">
-              <Form.Control
-                type="text"
-                className="input-sistema"
-                placeholder="Remito (ej. 8)"
-                value={filtroNumero}
-                onChange={(e) => setFiltroNumero(e.target.value)}
-              />
-              <InputGroup.Text className="icono-input-sistema">
-                <FiSearch />
-              </InputGroup.Text>
-            </InputGroup>
-          </Form.Group>
-
-        </Form>
-      </Card>
-
-      <Card className="p-3 shadow-sm">
+        {/* Tabla */}
         {loading ? (
-          <div className="text-center p-4">
-            <Spinner animation="border" variant="warning" />
-          </div>
-        ) : !Array.isArray(remitos) || remitos.length === 0 ? (
-          <div className="text-center text-muted">No se encontraron remitos.</div>
+          <Center p="xl"><Loader color="cyan" type="dots" /></Center>
         ) : (
-          <table className="table tabla-montserrat text-center align-middle">
-            <thead className="encabezado-moderno">
-              <tr>
-                <th></th>
-                <th>N° Remito</th>
-                <th>Fecha</th>
-                <th>Remitente</th>
-                <th>Destinatario</th>
-                <th>Localidad</th>
-                <th>Bultos</th>
-                <th>Peso</th>
-                <th>PDF</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.isArray(remitos) &&
-                remitos.map((remito) => (
-                  <tr key={remito._id} className="tabla-moderna-fila">
-                    <td className="text-muted" style={{ fontSize: "1.2rem" }}>⋮⋮</td>
-                    <td>{remito.numeroRemito}</td>
-                    <td>{new Date(remito.fechaEmision).toLocaleDateString()}</td>
-                    <td>{remito.clienteRemitente?.nombre || "-"}</td>
-                    <td>{remito.destinatario?.nombre || "-"}</td>
-                    <td>{remito.localidadDestino?.nombre || "-"}</td>
-                    <td>{remito.encomienda?.cantidad}</td>
-                    <td>{remito.encomienda?.peso} kg</td>
-                    <td className="text-center">
-                      <a
-                        href={apiSistema(`/api/remitos/${remito.envio._id || remito.envio}/pdf`)}
-                      
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-danger"
-                        title="Descargar PDF"
-                      >
-                        <FilePdf size={22} />
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+          <>
+            <Table.ScrollContainer minWidth={800}>
+              <Table verticalSpacing="xs" withTableBorder={false}>
+                <Table.Thead style={{ backgroundColor: '#f9fafb' }}>
+                  <Table.Tr>
+                    <Table.Th>N° Remito</Table.Th>
+                    <Table.Th>Fecha</Table.Th>
+                    <Table.Th>Remitente</Table.Th>
+                    <Table.Th>Destinatario</Table.Th>
+                    <Table.Th>Localidad</Table.Th>
+                    <Table.Th>Detalles</Table.Th>
+                    <Table.Th style={{ textAlign: 'center' }}>Acciones</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {remitos.length > 0 ? (
+                    remitos.map((remito) => (
+                      <Table.Tr key={remito._id} style={{ transition: 'background-color 0.2s' }}>
+                        <Table.Td>
+                          <Text size="sm" ff="monospace" fw={600} c="dark.3">
+                            #{remito.numeroRemito}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm">{new Date(remito.fechaEmision).toLocaleDateString()}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" fw={500} c="dark.4">{remito.clienteRemitente?.nombre || "-"}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" fw={500} c="dark.4">{remito.destinatario?.nombre || "-"}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" c="dimmed">
+                            {remito.localidadDestino?.nombre || "-"}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="xs" c="dimmed">
+                            {remito.encomienda?.cantidad} bultos • {remito.encomienda?.peso} kg
+                          </Text>
+                        </Table.Td>
+                        <Table.Td style={{ textAlign: 'center' }}>
+                          <Tooltip label="Descargar PDF" withArrow>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              component="a"
+                              href={apiSistema(`/api/remitos/${typeof remito.envio === 'object' ? remito.envio._id : remito.envio}/pdf?t=${Date.now()}`)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <FileText size={18} />
+                            </ActionIcon>
+                          </Tooltip>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))
+                  ) : (
+                    <Table.Tr>
+                      <Table.Td colSpan={7}>
+                        <Center py="xl">
+                          <Text c="dimmed">No se encontraron remitos.</Text>
+                        </Center>
+                      </Table.Td>
+                    </Table.Tr>
+                  )}
+                </Table.Tbody>
+              </Table>
+            </Table.ScrollContainer>
+
+            {/* Paginación */}
+            {totalPaginas > 1 && (
+              <Group justify="flex-end" mt="md">
+                <Pagination
+                  total={totalPaginas}
+                  value={paginaActual}
+                  onChange={setPaginaActual}
+                  color="cyan"
+                  radius="md"
+                  withEdges
+                />
+              </Group>
+            )}
+          </>
         )}
-      </Card>
-      {totalRemitos > limite && (
-        <div className="paginacion-container mt-3">
-          <span className="paginacion-info">
-            Mostrando {remitos.length} de {totalRemitos} remitos
-          </span>
-          <div className="paginacion-botones">
-            {(() => {
-              const totalPaginas = Math.ceil(totalRemitos / limite);
-              const visiblePages = 5;
-              const totalGrupos = Math.ceil(totalPaginas / visiblePages);
-              const grupoActual = Math.floor(paginaActual / visiblePages);
-              const start = grupoActual * visiblePages;
-              const end = Math.min(start + visiblePages, totalPaginas);
-
-              return (
-                <>
-                  {/* ◀◀ Grupo anterior */}
-                  {grupoActual > 0 && (
-                    <button
-                      className="paginacion-btn"
-                      onClick={() => setPaginaActual(start - visiblePages)}
-                    >
-                      ◀◀
-                    </button>
-                  )}
-
-                  {/* ◀ Página anterior */}
-                  {paginaActual > 0 && (
-                    <button
-                      className="paginacion-btn"
-                      onClick={() => setPaginaActual(paginaActual - 1)}
-                    >
-                      ◀
-                    </button>
-                  )}
-
-                  {/* Botones de página */}
-                  {Array.from({ length: end - start }).map((_, i) => {
-                    const pageIndex = start + i;
-                    return (
-                      <button
-                        key={pageIndex}
-                        className={`paginacion-btn ${paginaActual === pageIndex ? "activo" : ""}`}
-                        onClick={() => setPaginaActual(pageIndex)}
-                      >
-                        {pageIndex + 1}
-                      </button>
-                    );
-                  })}
-
-                  {/* ▶ Página siguiente */}
-                  {paginaActual < totalPaginas - 1 && (
-                    <button
-                      className="paginacion-btn"
-                      onClick={() => setPaginaActual(paginaActual + 1)}
-                    >
-                      ▶
-                    </button>
-                  )}
-
-                  {/* ▶▶ Grupo siguiente */}
-                  {grupoActual < totalGrupos - 1 && (
-                    <button
-                      className="paginacion-btn"
-                      onClick={() => setPaginaActual(end)}
-                    >
-                      ▶▶
-                    </button>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      )}
-
-    </div>
+      </Paper>
+    </Container>
   );
 };
 

@@ -1,16 +1,24 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+    Container, Paper, Title, Text, Group, Grid, LoadingOverlay,
+    ThemeIcon, Table, Badge, Stack, Card, Button, Divider, Tabs, rem, SimpleGrid, ActionIcon
+} from "@mantine/core";
+import {
+    Calendar, User, Truck, FileText, ArrowLeft,
+    MapPin, Package, Ruler, ClipboardList, CheckCircle
+} from "lucide-react";
 import { apiSistema } from "../../utils/api";
-import "../../styles/cardsSistema.css";
-import "../../styles/titulosSistema.css";
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
 import MapaEntregas from "./MapaEntregas";
-
 
 const DetalleHojaReparto = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [hoja, setHoja] = useState(null);
     const [cargando, setCargando] = useState(true);
+    const [activeTab, setActiveTab] = useState("lista");
 
     useEffect(() => {
         const obtenerDetalle = async () => {
@@ -19,6 +27,7 @@ const DetalleHojaReparto = () => {
                 setHoja(res.data);
             } catch (error) {
                 console.error("Error al obtener hoja:", error);
+
             } finally {
                 setCargando(false);
             }
@@ -26,83 +35,231 @@ const DetalleHojaReparto = () => {
         obtenerDetalle();
     }, [id]);
 
-    if (cargando) return <p className="text-center mt-4">Cargando hoja...</p>;
-    if (!hoja) return <p className="text-center mt-4">No se encontró la hoja.</p>;
+    const exportarHoja = async (hojaId, numeroHoja) => {
+        try {
+            const response = await axios.get(apiSistema(`/api/hojas-reparto/exportar/${hojaId}`), {
+                responseType: "blob",
+            });
+            const blob = new Blob([response.data], { type: "application/pdf" });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", `Hoja de Reparto - ${numeroHoja}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error(error);
+            mostrarAlerta("Error al exportar PDF", "error");
+        }
+    };
+
+    if (cargando) return <LoadingOverlay visible={true} overlayProps={{ radius: "sm", blur: 2 }} />;
+
+    if (!hoja) return (
+        <Container size="sm" py="xl" ta="center">
+            <h3 className="titulo-seccion mb-4">No se encontró la hoja.</h3>
+            <Button variant="light" onClick={() => navigate(-1)}>Volver</Button>
+        </Container>
+    );
 
     return (
-        <div className="container mt-4">
-            <div className="card-sda">
-                <h3 className="titulo-seccion mb-4">Detalle de {hoja.numeroHoja}</h3>
+        <Container size="xl" py={40} pb={100}>
+            {/* 🔙 BACK BUTTON */}
+            <Button
+                variant="subtle"
+                color="gray"
+                leftSection={<ArrowLeft size={18} />}
+                onClick={() => navigate(-1)}
+                mb="md"
+                pl={0}
+            >
+                Volver al listado
+            </Button>
 
-                <div className="mb-3">
-                    <p className="mb-1">
-                        <span className="fw-semibold">Fecha:</span>{" "}
-                        {new Date(hoja.fecha).toLocaleDateString()}
-                    </p>
-                    <p className="mb-1">
-                        <p className="mb-1">
-                            <span className="fw-semibold">Chofer:</span> {hoja.chofer?.usuario?.nombre || "Sin datos"}
-                        </p>
+            {/* 🔹 HEADER EDITORIAL */}
+            <Group justify="space-between" align="start" mb={40}>
+                <Stack gap={0}>
+                    <Group gap="xs" mb={5}>
+                        <ThemeIcon variant="light" color="cyan" size="md" radius="md">
+                            <ClipboardList size={16} />
+                        </ThemeIcon>
+                        <Text tt="uppercase" c="cyan" fw={800} fz="xs" ls={1.5}>
+                            Detalle de Distribución
+                        </Text>
+                    </Group>
+                    <Title
+                        order={1}
+                        style={{
+                            fontSize: rem(42),
+                            fontWeight: 900,
+                            letterSpacing: '-1.5px',
+                            color: 'var(--mantine-color-dark-8)',
+                            lineHeight: 1.1
+                        }}
+                    >
+                        Hoja {hoja.numeroHoja}
+                    </Title>
+                    <Text c="dimmed" size="lg" mt="xs">
+                        Operación asignada al chofer {hoja.chofer?.usuario?.nombre}.
+                    </Text>
+                </Stack>
 
-                    </p>
-                    <p className="mb-1">
-                        <span className="fw-semibold">Vehículo:</span> {hoja.vehiculo?.patente}
-                    </p>
-                    <p className="mb-1">
-                        <span className="fw-semibold">Observaciones:</span>{" "}
-                        {hoja.observaciones || "Sin observaciones"}
-                    </p>
-                </div>
+                <Group align="center">
+                    <Badge
+                        size="xl"
+                        radius="md"
+                        variant="light"
+                        color={hoja.estado === 'cerrada' ? 'green' : hoja.estado === 'en reparto' ? 'blue' : 'gray'}
+                        h={42}
+                        style={{ display: 'flex', alignItems: 'center' }}
+                    >
+                        {hoja.estado?.toUpperCase()}
+                    </Badge>
+                    <Button
+                        variant="light"
+                        color="red"
+                        size="md"
+                        radius="md"
+                        leftSection={<FileText size={18} />}
+                        onClick={() => exportarHoja(hoja._id, hoja.numeroHoja)}
+                    >
+                        Exportar PDF
+                    </Button>
+                </Group>
+            </Group>
 
-                <hr className="my-4" />
+            {/* 🔹 INFO CARDS GRID */}
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md" mb={40}>
+                <Card shadow="sm" radius="md" padding="lg" withBorder>
+                    <Group>
+                        <ThemeIcon color="blue" variant="light" size={42} radius="md">
+                            <Calendar size={22} />
+                        </ThemeIcon>
+                        <div>
+                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Fecha Emisión</Text>
+                            <Text fw={700} size="md">{new Date(hoja.fecha).toLocaleDateString()}</Text>
+                        </div>
+                    </Group>
+                </Card>
+                <Card shadow="sm" radius="md" padding="lg" withBorder>
+                    <Group>
+                        <ThemeIcon color="cyan" variant="light" size={42} radius="md">
+                            <User size={22} />
+                        </ThemeIcon>
+                        <div>
+                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Chofer</Text>
+                            <Text fw={700} size="md" truncate w={150}>{hoja.chofer?.usuario?.nombre || "Sin datos"}</Text>
+                        </div>
+                    </Group>
+                </Card>
+                <Card shadow="sm" radius="md" padding="lg" withBorder>
+                    <Group>
+                        <ThemeIcon color="indigo" variant="light" size={42} radius="md">
+                            <Truck size={22} />
+                        </ThemeIcon>
+                        <div>
+                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Vehículo</Text>
+                            <Text fw={700} size="md">{hoja.vehiculo?.patente || "-"}</Text>
+                        </div>
+                    </Group>
+                </Card>
+                <Card shadow="sm" radius="md" padding="lg" withBorder>
+                    <Group>
+                        <ThemeIcon color="teal" variant="light" size={42} radius="md">
+                            <CheckCircle size={22} />
+                        </ThemeIcon>
+                        <div>
+                            <Text size="xs" c="dimmed" fw={700} tt="uppercase">Total Envíos</Text>
+                            <Text fw={700} size="md">{hoja.envios?.length || 0} Remitos</Text>
+                        </div>
+                    </Group>
+                </Card>
+            </SimpleGrid>
 
-                <h5 className="mb-3 fw-bold">Envíos incluidos:</h5>
-                <MapaEntregas envios={hoja.envios} />
+            {/* 🔹 TABS: CONTENT SEGREGATION */}
+            <Tabs value={activeTab} onChange={setActiveTab} color="cyan" radius="md">
+                <Tabs.List mb="lg">
+                    <Tabs.Tab value="lista" leftSection={<Package size={16} />}>
+                        Listado de Remitos
+                    </Tabs.Tab>
+                    <Tabs.Tab value="mapa" leftSection={<MapPin size={16} />}>
+                        Mapa de Ruta
+                    </Tabs.Tab>
+                </Tabs.List>
 
-                <div className="table-responsive mt-3">
-                    <table className="table tabla-montserrat text-center align-middle">
-                        <thead className="encabezado-moderno">
+                <Tabs.Panel value="lista">
+                    <Paper shadow="sm" radius="lg" withBorder>
+                        <Table.ScrollContainer minWidth={800}>
+                            <Table verticalSpacing="sm" withTableBorder={false}>
+                                <Table.Thead bg="gray.1">
+                                    <Table.Tr>
+                                        <Table.Th c="dimmed" tt="uppercase" fz="xs" fw={700}>Remito</Table.Th>
+                                        <Table.Th c="dimmed" tt="uppercase" fz="xs" fw={700}>Destinatario</Table.Th>
+                                        <Table.Th c="dimmed" tt="uppercase" fz="xs" fw={700}>Dirección</Table.Th>
+                                        <Table.Th c="dimmed" tt="uppercase" fz="xs" fw={700}>Localidad</Table.Th>
+                                        <Table.Th c="dimmed" tt="uppercase" fz="xs" fw={700} ta="center">Bultos</Table.Th>
+                                        <Table.Th c="dimmed" tt="uppercase" fz="xs" fw={700}>Tipo</Table.Th>
+                                    </Table.Tr>
+                                </Table.Thead>
+                                <Table.Tbody>
+                                    {hoja.envios?.length > 0 ? (
+                                        hoja.envios.map((envio) => (
+                                            <Table.Tr key={envio._id}>
+                                                <Table.Td>
+                                                    <Badge variant="outline" color="dark" radius="sm">
+                                                        {envio.remitoNumero || "-"}
+                                                    </Badge>
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    <Text fw={600} size="sm">{envio.destinatario?.nombre}</Text>
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    <Text c="dimmed" size="sm" truncate w={200}>
+                                                        {envio.destinatario?.direccion}
+                                                    </Text>
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    <Badge variant="dot" color="gray" size="sm">
+                                                        {envio.localidadDestino?.nombre}
+                                                    </Badge>
+                                                </Table.Td>
+                                                <Table.Td ta="center">
+                                                    <Badge circle size="lg" color="blue" variant="light">
+                                                        {envio.encomienda?.cantidad}
+                                                    </Badge>
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    <Badge variant="light" color="cyan" size="sm" w={100}>
+                                                        {envio.encomienda?.tipoPaquete}
+                                                    </Badge>
+                                                </Table.Td>
+                                            </Table.Tr>
+                                        ))
+                                    ) : (
+                                        <Table.Tr>
+                                            <Table.Td colSpan={6}>
+                                                <Text ta="center" py="xl" c="dimmed">No hay envíos en esta hoja.</Text>
+                                            </Table.Td>
+                                        </Table.Tr>
+                                    )}
+                                </Table.Tbody>
+                            </Table>
+                        </Table.ScrollContainer>
+                    </Paper>
+                </Tabs.Panel>
 
-                            <tr>
-                                <th></th>
-                                <th>Remito</th>
-                                <th>Localidad</th>
-                                <th>Destinatario</th>
-                                <th>Dirección</th>
-                                <th>Bultos</th>
-                                <th>Dimensiones</th>
-                                <th>Tipo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {hoja?.envios?.length > 0 ? (
-                                hoja.envios.map((envio) => (
-                                    <tr className="tabla-moderna-fila" key={envio._id}>
-                                        <td className="text-muted" style={{ fontSize: "1.2rem" }}>⋮⋮</td>
-                                        <td>{envio.remitoNumero || "-"}</td>
-                                        <td>{envio.localidadDestino?.nombre || "-"}</td>
-                                        <td>{envio.destinatario?.nombre || "-"}</td>
-                                        <td>{envio.destinatario?.direccion || "-"}</td>
-                                        <td>{envio.encomienda?.cantidad || "-"}</td>
-                                        <td>
-                                            {envio.encomienda?.dimensiones
-                                                ? `${envio.encomienda.dimensiones.largo}x${envio.encomienda.dimensiones.ancho}x${envio.encomienda.dimensiones.alto} cm`
-                                                : "-"}
-                                        </td>
-                                        <td>{envio.encomienda?.tipoPaquete || "-"}</td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="7" className="text-center">No hay envíos para esta hoja.</td>
-                                </tr>
-                            )}
-                        </tbody>
+                <Tabs.Panel value="mapa">
+                    {/* Key property forces remount when tab becomes active, fixing resize issues */}
+                    <Paper shadow="sm" radius="lg" withBorder p={0} overflow="hidden">
+                        <div style={{ height: '500px', width: '100%' }}>
+                            {activeTab === 'mapa' && <MapaEntregas envios={hoja.envios} />}
+                        </div>
+                    </Paper>
+                </Tabs.Panel>
+            </Tabs>
 
-                    </table>
-                </div>
-            </div>
-        </div>
+        </Container>
     );
 };
 

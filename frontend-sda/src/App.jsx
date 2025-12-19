@@ -4,14 +4,14 @@ import { useContext } from "react";
 import 'leaflet/dist/leaflet.css';
 import { useState, useEffect } from "react";
 import AlertaSistema from "./components/AlertaSistema";
-import { setMostrarAlertaCustom } from "./utils/alertaGlobal";
+import { setMostrarAlertaCustom } from "./utils/alertaGlobal.jsx";
 import "./styles/botonesSistema.css";
-
 
 // Components
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Sidebar from "./components/Sidebar";
+// import Sidebar from "./components/Sidebar"; // ❌ Deprecado por Mantine Login
+import { AppLayout } from "./components/AppLayout"; // ✅ Nuevo Layout Mantine
 import ProtectedByRole from "./components/protected/ProtectedByRole";
 
 // Pages
@@ -42,7 +42,6 @@ import DetalleHojaReparto from "./pages/hojaReparto/DetalleHojaReparto";
 import BuscarSeguimiento from "./pages/seguimiento/BuscarSeguimiento";
 import ResultadoSeguimiento from "./pages/seguimiento/ResultadoSeguimiento";
 
-
 // Cotizador
 import CotizacionViajes from "./components/cotizador/CotizacionViajes";
 import CotizacionEncomiendas from "./components/cotizador/CotizacionEncomiendas";
@@ -51,11 +50,10 @@ import HistorialEncomiendas from "./pages/admin/reportes/HistorialEncomiendas";
 import HistorialViajes from "./pages/admin/reportes/HistorialViajes";
 import ResultadoEncomienda from "./components/cotizador/ResultadoEncomienda";
 import ResultadoViaje from "./components/cotizador/ResultadoViaje";
+import CotizadorCordobaPage from "./pages/CotizadorCordoba";
 
 function App() {
   const { auth, setAuth, cargando } = useContext(AuthContext);
-
-
 
   const handleLogout = () => {
     localStorage.removeItem("usuario");
@@ -74,213 +72,207 @@ function App() {
       setShowAlerta(true);
     });
   }, []);
-  
+
   if (cargando) return null; // ⛔ No renderices nada hasta que auth esté listo
-  
+
   return (
     <Router>
-      <div className="flex">
-        {auth?._id && <Sidebar key={auth.fotoPerfil || "sin-foto"} handleLogout={handleLogout} />}
+      {auth?._id ? (
+        // ✅ Si está logueado, usar el AppLayout de Mantine
+        <AppLayout auth={auth} handleLogout={handleLogout}>
+          <Routes>
+            <Route path="/" element={<Inicio />} /> {/* Podríamos redirigir a Perfil */}
+            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/cotizacion-viajes" element={<CotizacionViajes />} />
+            <Route path="/cotizacion-encomiendas" element={<CotizacionEncomiendas />} />
+            <Route path="/historial" element={<Historial />} />
+            <Route path="/resultado-encomienda" element={<ResultadoEncomienda />} />
+            <Route path="/resultado-viaje" element={<ResultadoViaje />} />
+            <Route path="/seguimiento" element={<BuscarSeguimiento />} />
+            <Route path="/seguimiento/resultado/:codigo" element={<ResultadoSeguimiento />} />
+            <Route path="/admin/vehiculos" element={<VehiculosAdmin />} />
+            <Route path="/completar-perfil" element={<CompletarPerfilCliente />} />
+            <Route path="/cotizador-online" element={<CotizadorCordobaPage />} />
+            <Route path="/servicios" element={<Servicios />} />
 
-        <div className="page-wrapper">
-          {!auth?._id && <Navbar />}
-
-          <main className="page-content">
+            {/* Rutas Protegidas y Admin */}
+            <Route
+              path="/admin/usuarios"
+              element={
+                <ProtectedByRole allowedRoles="admin">
+                  <UsuariosAdmin />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/choferes"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <ChoferesAdmin />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/dashboard/admin"
+              element={
+                <ProtectedByRole allowedRoles="admin">
+                  <DashboardAdmin />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/rutas"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <RutasAdmin />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/reportes"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <Reportes />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/mis-envios"
+              element={
+                <ProtectedByRole allowedRoles="cliente">
+                  <MisEnvios />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/reportes/historial-encomiendas"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <HistorialEncomiendas />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/reportes/historial-viajes"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <HistorialViajes />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/cliente/perfil"
+              element={
+                <RutaProtegidaCliente>
+                  <CompletarPerfilCliente />
+                </RutaProtegidaCliente>
+              }
+            />
+            <Route
+              path="/admin/localidades"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <LocalidadesAdmin />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/envios/gestion"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <GestionEnvios />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/envios/nuevo"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <NuevoEnvio />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/envios/consultar"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <ConsultarEnvios />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/remitos/consultar"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <ConsultarRemitos />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/hojas-reparto"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <GestionHojasReparto />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/hojas-reparto/consultar"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <ConsultarHojasReparto />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/hojas-reparto/crear"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <CrearHojaReparto />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/hojas-reparto/:id"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <DetalleHojaReparto />
+                </ProtectedByRole>
+              }
+            />
+          </Routes>
+        </AppLayout>
+      ) : (
+        // 🔹 Si NO está logueado, mostrar Navbar pública + Content + Footer (Sticky Footer Fix)
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+          <Navbar />
+          <main style={{ flex: 1, paddingTop: 'calc(60px + 1rem)' }}>
             <Routes>
               <Route path="/" element={<Inicio />} />
               <Route path="/servicios" element={<Servicios />} />
               <Route path="/contacto" element={<Contacto />} />
               <Route path="/cotizacion-viajes" element={<CotizacionViajes />} />
               <Route path="/cotizacion-encomiendas" element={<CotizacionEncomiendas />} />
-              <Route path="/historial" element={<Historial />} />
               <Route path="/login" element={<Login />} />
               <Route path="/registro" element={<Registro />} />
-              <Route path="/resultado-encomienda" element={<ResultadoEncomienda />} />
-              <Route path="/resultado-viaje" element={<ResultadoViaje />} />
+              {/* Rutas públicas adicionales requeridas */}
+              <Route path="/cotizador-online" element={<CotizadorCordobaPage />} />
               <Route path="/seguimiento" element={<BuscarSeguimiento />} />
               <Route path="/seguimiento/resultado/:codigo" element={<ResultadoSeguimiento />} />
-              <Route path="/perfil" element={<Perfil />} />
-              <Route path="/admin/vehiculos" element={<VehiculosAdmin />} />
-              <Route path="/completar-perfil" element={<CompletarPerfilCliente />} />
-
-              <Route
-                path="/admin/usuarios"
-                element={
-                  <ProtectedByRole allowedRoles="admin">
-                    <UsuariosAdmin />
-                  </ProtectedByRole>
-                }
-              />
-
-              <Route
-                path="/admin/choferes"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <ChoferesAdmin />
-                  </ProtectedByRole>
-                }
-              />
-
-              <Route
-                path="/dashboard/admin"
-                element={
-                  <ProtectedByRole allowedRoles="admin">
-                    <DashboardAdmin />
-                  </ProtectedByRole>
-                }
-              />
-
-              <Route
-                path="/admin/rutas"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <RutasAdmin />
-                  </ProtectedByRole>
-                }
-              />
-              <Route
-                path="/admin/reportes"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <Reportes />
-                  </ProtectedByRole>
-                }
-              />
-
-              <Route
-                path="/mis-envios"
-                element={
-                  <ProtectedByRole allowedRoles="cliente">
-                    <MisEnvios />
-                  </ProtectedByRole>
-                }
-              />
-              <Route
-                path="/admin/reportes/historial-encomiendas"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <HistorialEncomiendas />
-                  </ProtectedByRole>
-                }
-              />
-
-              <Route
-                path="/admin/reportes/historial-viajes"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <HistorialViajes />
-                  </ProtectedByRole>
-                }
-              />
-              <Route
-                path="/cliente/perfil"
-                element={
-                  <RutaProtegidaCliente>
-                    <CompletarPerfilCliente />
-                  </RutaProtegidaCliente>
-                }
-              />
-              <Route
-                path="/admin/localidades"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <LocalidadesAdmin />
-                  </ProtectedByRole>
-                }
-              />
-              <Route
-                path="/envios/gestion"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <GestionEnvios />
-                  </ProtectedByRole>
-                }
-              />
-
-              <Route
-                path="/envios/nuevo"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <NuevoEnvio />
-                  </ProtectedByRole>
-                }
-              />
-
-              <Route
-                path="/envios/consultar"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <ConsultarEnvios />
-                  </ProtectedByRole>
-                }
-              />
-
-              <Route
-                path="/remitos/consultar"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <ConsultarRemitos />
-                  </ProtectedByRole>
-                }
-              />
-              <Route
-                path="/hojas-reparto"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <GestionHojasReparto />
-                  </ProtectedByRole>
-                }
-              />
-
-              <Route
-                path="/hojas-reparto"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <GestionHojasReparto />
-                  </ProtectedByRole>
-                }
-              />
-
-              <Route
-                path="/hojas-reparto/consultar"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <ConsultarHojasReparto />
-                  </ProtectedByRole>
-                }
-              />
-              <Route
-                path="/hojas-reparto/crear"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <CrearHojaReparto />
-                  </ProtectedByRole>
-                }
-              />
-              <Route
-                path="/hojas-reparto/:id"
-                element={
-                  <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                    <DetalleHojaReparto />
-                  </ProtectedByRole>
-                }
-              />
-
-
             </Routes>
           </main>
-
-          {!auth?._id && <Footer />}
+          <Footer />
         </div>
-      </div>
+      )
+      }
+
       <AlertaSistema
         show={showAlerta}
         mensaje={mensajeAlerta}
         tipo={tipoAlerta}
         onClose={() => setShowAlerta(false)}
       />
-
-    </Router>
+    </Router >
   );
 }
 

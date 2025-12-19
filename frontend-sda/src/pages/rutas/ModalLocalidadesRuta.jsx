@@ -1,31 +1,37 @@
 // components/rutas/ModalLocalidadesRuta.jsx
 import React from "react";
-import { Modal, Button, ListGroup } from "react-bootstrap";
-import "../../styles/botonesSistema.css";
-
+import { Modal, List, ThemeIcon, Text, Button, Group } from "@mantine/core";
+import { MapPin } from "lucide-react";
 
 const ModalLocalidadesRuta = ({ mostrar, onClose, localidades }) => {
   return (
-    <Modal show={mostrar} onHide={onClose} size="lg" centered>
-      <Modal.Header closeButton className="modal-header-sda">
-        <Modal.Title className="modal-title-sda">Localidades de la Ruta</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {localidades?.length > 0 ? (
-          <ListGroup>
-            {localidades.map((loc) => (
-              <ListGroup.Item key={loc._id}>{loc.nombre}</ListGroup.Item>
-            ))}
-          </ListGroup>
-        ) : (
-          <p>No hay localidades asociadas a esta ruta.</p>
-        )}
-      </Modal.Body>
-      <Modal.Footer>
-        <button className="btn-sda-principal" onClick={onClose}>
+    <Modal
+      opened={mostrar}
+      onClose={onClose}
+      title={<Text fw={700}>Localidades de la Ruta</Text>}
+      centered
+    >
+      {localidades?.length > 0 ? (
+        <List spacing="sm" icon={
+          <ThemeIcon color="cyan" size={20} radius="xl">
+            <MapPin size={12} />
+          </ThemeIcon>
+        }>
+          {localidades.map((loc) => (
+            <List.Item key={loc._id}>
+              {loc.nombre}
+            </List.Item>
+          ))}
+        </List>
+      ) : (
+        <Text c="dimmed" size="sm" ta="center">No hay localidades asociadas a esta ruta.</Text>
+      )}
+
+      <Group justify="flex-end" mt="md">
+        <Button variant="outline" color="gray" onClick={onClose}>
           Cerrar
-        </button>
-      </Modal.Footer>
+        </Button>
+      </Group>
     </Modal>
   );
 };

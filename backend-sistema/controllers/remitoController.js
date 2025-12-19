@@ -165,8 +165,10 @@ const generarRemitoPDF = async (req, res) => {
     await browser.close();
 
     // Si es una ruta HTTP, descargamos el archivo
-    if (res && typeof res.download === "function") {
-      return res.download(filePath, fileName);
+    if (res && typeof res.status === "function") {
+      res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+      res.setHeader("Content-Type", "application/pdf");
+      return res.sendFile(filePath);
     }
 
     // Si es llamado internamente, solo logueamos
@@ -187,8 +189,13 @@ const obtenerRemitosConFiltros = async (req, res) => {
     const pagina = parseInt(req.query.pagina) || 0;
     const limite = parseInt(req.query.limite) || 10;
     const numero = req.query.numero?.trim() || "";
-    const desde = req.query.desde ? new Date(req.query.desde) : null;
-    const hasta = req.query.hasta ? new Date(req.query.hasta) : null;
+
+    let desde = req.query.desde ? new Date(req.query.desde) : null;
+    let hasta = req.query.hasta ? new Date(req.query.hasta) : null;
+
+    // Validation: Ensure dates are valid
+    if (desde && isNaN(desde.getTime())) desde = null;
+    if (hasta && isNaN(hasta.getTime())) hasta = null;
 
     const filtro = {};
 

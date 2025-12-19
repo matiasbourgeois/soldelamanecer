@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Form } from "react-bootstrap";
-import "../../styles/formularioSistema.css";
-import "../../styles/botonesSistema.css";
-import { mostrarAlerta } from "../../utils/alertaGlobal";
-
+import { Modal, TextInput, Button, Group, Stack } from "@mantine/core";
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
 
 const FormularioLocalidad = ({ show, handleClose, guardar, localidad }) => {
   const [formData, setFormData] = useState({
@@ -43,7 +40,7 @@ const FormularioLocalidad = ({ show, handleClose, guardar, localidad }) => {
     e.preventDefault();
 
     if (!formData.nombre || !formData.frecuencia || !formData.horarios || !formData.codigoPostal) {
-      mostrarAlerta("Por favor, completá todos los campos.");
+      mostrarAlerta("⚠️ Por favor, completá todos los campos.", "warning");
       return;
     }
 
@@ -53,98 +50,54 @@ const FormularioLocalidad = ({ show, handleClose, guardar, localidad }) => {
     };
 
     guardar(datos);
-    cerrarFormulario(); // Reinicia después de guardar
+    // Note: Parent component handles closing, but we can reset form here if needed.
   };
 
-  const cerrarFormulario = () => {
-    setFormData({
-      nombre: "",
-      frecuencia: "",
-      horarios: "",
-      codigoPostal: "",
-    });
-    handleClose();
-  };
-
-  const esFormularioValido =
-    formData.nombre && formData.frecuencia && formData.horarios && formData.codigoPostal;
 
   return (
-    <Modal show={show} onHide={cerrarFormulario} centered>
-      <Modal.Header closeButton className="modal-header-sda">
-        <Modal.Title className="modal-title-sda">
-          {localidad ? "Editar Localidad" : "Nueva Localidad"}
-        </Modal.Title>
-      </Modal.Header>
+    <Modal opened={show} onClose={handleClose} title={localidad ? "Editar Localidad" : "Nueva Localidad"} centered>
+      <form onSubmit={handleSubmit}>
+        <Stack>
+          <TextInput
+            label="Nombre"
+            placeholder="Ej: Buenos Aires"
+            name="nombre"
+            value={formData.nombre}
+            onChange={handleChange}
+            required
+          />
+          <TextInput
+            label="Frecuencia"
+            placeholder="Ej: Lunes y Jueves"
+            name="frecuencia"
+            value={formData.frecuencia}
+            onChange={handleChange}
+            required
+          />
+          <TextInput
+            label="Horarios"
+            placeholder="Ej: 08:00 - 18:00"
+            name="horarios"
+            value={formData.horarios}
+            onChange={handleChange}
+            required
+          />
+          <TextInput
+            label="Código Postal"
+            placeholder="Ej: 1425"
+            name="codigoPostal"
+            type="number"
+            value={formData.codigoPostal}
+            onChange={handleChange}
+            required
+          />
 
-      <Modal.Body>
-        <Form onSubmit={handleSubmit}>
-          <Form.Group className="mb-3">
-            <label>Nombre</label>
-            <input
-              type="text"
-              name="nombre"
-              className="input-sistema"
-              value={formData.nombre}
-              onChange={handleChange}
-              required
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <label>Frecuencia</label>
-            <input
-              type="text"
-              name="frecuencia"
-              className="input-sistema"
-              value={formData.frecuencia}
-              onChange={handleChange}
-              required
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <label>Horarios</label>
-            <input
-              type="text"
-              name="horarios"
-              className="input-sistema"
-              value={formData.horarios}
-              onChange={handleChange}
-              required
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-4">
-            <label>Código Postal</label>
-            <input
-              type="number"
-              name="codigoPostal"
-              className="input-sistema"
-              value={formData.codigoPostal}
-              onChange={handleChange}
-              required
-            />
-          </Form.Group>
-
-          <div className="d-flex justify-content-end">
-            <button
-              type="button"
-              className="btn-soft-cancelar me-2"
-              onClick={cerrarFormulario}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn-soft-warning"
-              disabled={!esFormularioValido}
-            >
-              Guardar
-            </button>
-          </div>
-        </Form>
-      </Modal.Body>
+          <Group justify="flex-end" mt="md">
+            <Button variant="default" onClick={handleClose}>Cancelar</Button>
+            <Button type="submit" color="cyan">Guardar</Button>
+          </Group>
+        </Stack>
+      </form>
     </Modal>
   );
 };

@@ -1,12 +1,16 @@
-import "../styles/Footer.css";
+import { Container, Text, Group } from '@mantine/core';
 
 const Footer = () => {
   return (
-    <footer className="footer">
-      <div className="container">
-        <p className="mb-1">&copy; {new Date().getFullYear()} Sol del Amanecer SRL</p>
-      </div>
-    </footer>
+    <div style={{ backgroundColor: '#212529', color: 'white', padding: '15px 0', marginTop: 'auto' }}>
+      <Container size="lg">
+        <Group justify="center" align="center">
+          <Text size="sm" c="white" style={{ opacity: 0.8 }}>
+            &copy; {new Date().getFullYear()} Sol del Amanecer SRL
+          </Text>
+        </Group>
+      </Container>
+    </div>
   );
 };
 

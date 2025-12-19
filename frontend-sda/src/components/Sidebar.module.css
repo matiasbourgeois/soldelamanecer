@@ -1,0 +1,112 @@
+/* src/components/Sidebar.module.css (La joya de la corona) */
+
+.navbar {
+  height: 100%;
+  width: 100%;
+  padding: var(--mantine-spacing-md);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--mantine-color-gray-2);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); /* Degradado oscuro */
+}
+
+.navbarMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding-bottom: var(--mantine-spacing-md);
+  margin-bottom: calc(var(--mantine-spacing-md) * 1.5);
+  border-bottom: 1px solid var(--mantine-color-gray-6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.linksInner {
+  padding-right: var(--mantine-spacing-xs);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-gray-3);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+  font-weight: 500;
+  margin-bottom: var(--mantine-spacing-xs);
+  transition: background-color 0.15s ease, padding-left 0.15s ease;
+  border-left: 3px solid transparent; /* Para el efecto de hover */
+}
+
+.link:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding-left: calc(var(--mantine-spacing-sm) + 5px);
+  border-left-color: var(--mantine-color-cyan-4); /* Color del borde al pasar el ratón */
+  color: var(--mantine-color-white);
+}
+
+.linkActive {
+  &,
+  &:hover {
+    background-color: var(--mantine-color-cyan-7);
+    color: var(--mantine-color-white);
+    border-left-color: var(--mantine-color-cyan-7);
+    padding-left: var(--mantine-spacing-sm); /* Sin el extra padding */
+  }
+}
+
+.linkIcon {
+  margin-right: var(--mantine-spacing-sm);
+  width: 20px;
+  height: 20px;
+  color: var(--mantine-color-gray-4);
+}
+
+.linkActive .linkIcon {
+  color: var(--mantine-color-white);
+}
+
+.footer {
+  padding-top: var(--mantine-spacing-md);
+  margin-top: var(--mantine-spacing-md);
+  border-top: 1px solid var(--mantine-color-gray-6);
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+.user > div {
+  margin-left: var(--mantine-spacing-sm);
+}
+
+.logout {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-gray-3);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+  font-weight: 500;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.logout:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--mantine-color-white);
+}
+
+.logoutIcon {
+  margin-right: var(--mantine-spacing-sm);
+  width: 20px;
+  height: 20px;
+  color: var(--mantine-color-gray-4);
+}

@@ -1,8 +1,6 @@
 import React from "react";
-import { Modal, Form } from "react-bootstrap";
-
-import "../../styles/formularioSistema.css";
-import "../../styles/botonesSistema.css";
+import { Modal, Button, TextInput, Select, Stack, Group, Title, Divider } from "@mantine/core";
+import { Search } from "lucide-react";
 
 const FormularioChofer = ({
   mostrar,
@@ -13,157 +11,136 @@ const FormularioChofer = ({
   usuarioSeleccionado,
   handleSeleccionUsuario,
   formulario,
-  handleChangeFormulario,
+  handleFormularioChange,
   handleCrearChofer,
   handleActualizarChofer,
-  handleChangeUsuario, // nuevo handler para modificar datos base
+  handleUsuarioChange, // nuevo handler para modificar datos base
   modoEdicion = false,
 }) => {
+
+  // Adapt handlers to Mantine signature (value, name) if needed, 
+  // but ChoferesAdmin passed specific wrappers. Let's use them carefully.
+
+  console.log("FormularioChofer rendered. Mostrar:", mostrar);
   return (
-    <Modal show={mostrar} onHide={onHide} centered>
-      <Modal.Header closeButton className="modal-header-sda">
-        <Modal.Title className="modal-title-sda">
-
-          {modoEdicion ? "Editar Chofer" : "Agregar Chofer"}
-        </Modal.Title>
-      </Modal.Header>
-
-      <Modal.Body>
+    <Modal
+      opened={mostrar}
+      onClose={onHide}
+      title={modoEdicion ? "Editar Chofer" : "Agregar Chofer"}
+      size="lg"
+      centered
+    >
+      <Stack spacing="md">
         {!modoEdicion && (
           <>
             {!usuarioSeleccionado && (
-              <Form.Group controlId="busqueda" className="mb-3">
-                <label className="label-sistema">Buscar usuario por nombre o email</label>
-                <input
-                  type="text"
-                  className="input-sistema"
-                  placeholder="Buscar..."
-                  value={busqueda}
-                  onChange={handleBuscarUsuario}
-                />
-              </Form.Group>
+              <TextInput
+                label="Buscar usuario por nombre o email"
+                placeholder="Buscar..."
+                leftSection={<Search size={16} />}
+                value={busqueda}
+                onChange={handleBuscarUsuario}
+              />
             )}
 
-            <Form.Group controlId="usuarioSelect" className="mb-3">
-              <label className="label-sistema">Seleccionar usuario</label>
-              <select
-                className="select-sistema"
-                onChange={(e) => handleSeleccionUsuario(e.target.value)}
-                value={usuarioSeleccionado?._id || ""}
-              >
-                <option value="">-- Seleccione --</option>
-                {usuariosFiltrados?.map((u) => (
-                  <option key={u._id} value={u._id}>
-                    {u.nombre} ({u.email}) - Rol: {u.rol}
-                  </option>
-                ))}
-              </select>
-            </Form.Group>
+            <Select
+              label="Seleccionar usuario"
+              placeholder="-- Seleccione --"
+              onChange={(val) => handleSeleccionUsuario(val)}
+              value={usuarioSeleccionado?._id || null}
+              data={usuariosFiltrados?.map((u) => ({
+                value: u._id,
+                label: `${u.nombre} (${u.email}) - Rol: ${u.rol}`
+              })) || []}
+              searchable
+              nothingFoundMessage="No se encontraron usuarios"
+              allowDeselect={false}
+            />
           </>
         )}
 
         {(modoEdicion || usuarioSeleccionado) && (
           <>
-            <hr />
-            <h6 className="mb-3"> Datos del usuario</h6>
+            <Divider my="xs" label="Datos del Usuario" labelPosition="center" />
 
-            <Form.Group controlId="nombre" className="mb-3">
-              <label className="label-sistema">Nombre</label>
-              <input
-                type="text"
-                className="input-sistema"
+            <Group grow>
+              <TextInput
+                label="Nombre"
                 name="nombre"
                 value={usuarioSeleccionado?.nombre || ""}
-                onChange={handleChangeUsuario}
+                onChange={handleUsuarioChange}
               />
-            </Form.Group>
-
-            <Form.Group controlId="dni" className="mb-3">
-              <label className="label-sistema">DNI</label>
-              <input
-                type="text"
-                className="input-sistema"
+              <TextInput
+                label="DNI"
                 name="dni"
                 value={usuarioSeleccionado?.dni || ""}
-                onChange={handleChangeUsuario}
+                onChange={handleUsuarioChange}
               />
-            </Form.Group>
+            </Group>
 
-            <Form.Group controlId="telefono" className="mb-3">
-              <label className="label-sistema">Teléfono</label>
-              <input
-                type="text"
-                className="input-sistema"
+            <Group grow>
+              <TextInput
+                label="Teléfono"
                 name="telefono"
                 value={usuarioSeleccionado?.telefono || ""}
-                onChange={handleChangeUsuario}
+                onChange={handleUsuarioChange}
               />
-            </Form.Group>
-
-            <Form.Group controlId="direccion" className="mb-3">
-              <label className="label-sistema">Dirección</label>
-              <input
-                type="text"
-                className="input-sistema"
-                name="direccion"
-                value={usuarioSeleccionado?.direccion || ""}
-                onChange={handleChangeUsuario}
+              <TextInput
+                label="Email"
+                value={usuarioSeleccionado?.email || ""}
+                disabled
               />
-            </Form.Group>
+            </Group>
 
-            <Form.Group controlId="localidad" className="mb-3">
-              <label className="label-sistema">Localidad</label>
-              <input
-                type="text"
-                className="input-sistema"
+            <TextInput
+              label="Dirección"
+              name="direccion"
+              value={usuarioSeleccionado?.direccion || ""}
+              onChange={handleUsuarioChange}
+            />
+
+            <Group grow>
+              <TextInput
+                label="Localidad"
                 name="localidad"
                 value={usuarioSeleccionado?.localidad || ""}
-                onChange={handleChangeUsuario}
+                onChange={handleUsuarioChange}
               />
-            </Form.Group>
-
-            <Form.Group controlId="provincia" className="mb-3">
-              <label className="label-sistema">Provincia</label>
-              <input
-                type="text"
-                className="input-sistema"
+              <TextInput
+                label="Provincia"
                 name="provincia"
                 value={usuarioSeleccionado?.provincia || ""}
-                onChange={handleChangeUsuario}
+                onChange={handleUsuarioChange}
               />
-            </Form.Group>
+            </Group>
 
-            <hr />
-            <h6 className="mb-3">Datos del chofer</h6>
+            <Divider my="xs" label="Datos del Chofer" labelPosition="center" />
 
-            <Form.Group controlId="tipoVinculo" className="mb-3">
-              <label className="label-sistema">Tipo de contratación</label>
-              <select
-                name="tipoVinculo"
-                className="select-sistema"
-                value={formulario.tipoVinculo}
-                onChange={handleChangeFormulario}
-              >
-                <option value="contratado">Contratado</option>
-                <option value="relacionDependencia">Relación de dependencia</option>
-              </select>
-            </Form.Group>
+            <Select
+              label="Tipo de contratación"
+              name="tipoVinculo"
+              value={formulario.tipoVinculo}
+              onChange={(val) => handleFormularioChange("tipoVinculo", val)}
+              data={[
+                { value: "contratado", label: "Contratado" },
+                { value: "relacionDependencia", label: "Relación de dependencia" }
+              ]}
+              allowDeselect={false}
+            />
           </>
         )}
-      </Modal.Body>
 
-      <Modal.Footer>
-        <button className="btn-soft-cancelar me-2" onClick={onHide}>
-          Cancelar
-        </button>
-        <button
-          className="btn-soft me-2"
-          onClick={modoEdicion ? handleActualizarChofer : handleCrearChofer}
-          disabled={!formulario.tipoVinculo}
-        >
-          {modoEdicion ? "Guardar cambios" : "Crear chofer"}
-        </button>
-      </Modal.Footer>
+        <Group justify="flex-end" mt="md">
+          <Button variant="default" onClick={onHide}>Cancelar</Button>
+          <Button
+            color="cyan"
+            onClick={modoEdicion ? handleActualizarChofer : handleCrearChofer}
+            disabled={!formulario.tipoVinculo || (!usuarioSeleccionado)}
+          >
+            {modoEdicion ? "Guardar cambios" : "Crear chofer"}
+          </Button>
+        </Group>
+      </Stack>
     </Modal>
   );
 };

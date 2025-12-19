@@ -538,48 +538,48 @@ const obtenerHojasPorChofer = async (req, res) => {
 };
 const cerrarHojasVencidas = async (fechaReferencia) => {
     try {
-      // Definir rango desde 00:00 hasta 23:59 hora ARGENTINA (GMT-3), expresado en UTC
-      const inicio = new Date(fechaReferencia);
-      inicio.setUTCHours(3, 0, 0, 0); // 00:00 AR = 03:00 UTC
-  
-      const fin = new Date(fechaReferencia);
-      fin.setUTCHours(26, 59, 59, 999); // 23:59 AR = 02:59 del día siguiente UTC
-  
-      console.log("🔁 Buscando hojas vencidas entre:", inicio.toISOString(), "y", fin.toISOString());
-  
-      const hojas = await HojaReparto.find({
-        estado: "en reparto",
-        fecha: { $gte: inicio, $lte: fin },
-      }).populate("envios");
-  
-      for (const hoja of hojas) {
-        for (const envio of hoja.envios) {
-          if (envio.estado === "en reparto") {
-            console.log(`📦 Envío ${envio._id} sigue en reparto → reagendando`);
-            envio.estado = "reagendado";
-            envio.historialEstados.push({
-              estado: "reagendado",
-              sucursal: "Casa Central – Córdoba",
+        // Definir rango desde 00:00 hasta 23:59 hora ARGENTINA (GMT-3), expresado en UTC
+        const inicio = new Date(fechaReferencia);
+        inicio.setUTCHours(3, 0, 0, 0); // 00:00 AR = 03:00 UTC
+
+        const fin = new Date(fechaReferencia);
+        fin.setUTCHours(26, 59, 59, 999); // 23:59 AR = 02:59 del día siguiente UTC
+
+        console.log("🔁 Buscando hojas vencidas entre:", inicio.toISOString(), "y", fin.toISOString());
+
+        const hojas = await HojaReparto.find({
+            estado: "en reparto",
+            fecha: { $gte: inicio, $lte: fin },
+        }).populate("envios");
+
+        for (const hoja of hojas) {
+            for (const envio of hoja.envios) {
+                if (envio.estado === "en reparto") {
+                    console.log(`📦 Envío ${envio._id} sigue en reparto → reagendando`);
+                    envio.estado = "reagendado";
+                    envio.historialEstados.push({
+                        estado: "reagendado",
+                        sucursal: "Casa Central – Córdoba",
+                    });
+                    await envio.save();
+                }
+            }
+
+            hoja.estado = "cerrada";
+            hoja.cerradaAutomaticamente = true;
+            hoja.historialMovimientos.push({
+                usuario: null,
+                accion: "cerrado automático por vencimiento de fecha",
             });
-            await envio.save();
-          }
+            await hoja.save();
+            console.log(`✅ Hoja ${hoja.numeroHoja} cerrada automáticamente`);
         }
-  
-        hoja.estado = "cerrada";
-        hoja.cerradaAutomaticamente = true;
-        hoja.historialMovimientos.push({
-          usuario: null,
-          accion: "cerrado automático por vencimiento de fecha",
-        });
-        await hoja.save();
-        console.log(`✅ Hoja ${hoja.numeroHoja} cerrada automáticamente`);
-      }
     } catch (error) {
-      console.error("❌ Error al cerrar hojas vencidas:", error);
+        console.error("❌ Error al cerrar hojas vencidas:", error);
     }
-  };
-  
-  
+};
+
+
 
 const cerrarHojaManualmente = async (req, res) => {
     try {
@@ -627,14 +627,26 @@ const consultarHojasPaginado = async (req, res) => {
         const pagina = parseInt(req.query.pagina) || 0;
         const limite = parseInt(req.query.limite) || 10;
         const busqueda = req.query.busqueda || "";
+        const { desde, hasta, estado } = req.query; // New filters
 
-        // Filtrar SOLO hojas confirmadas o cerradas (no pendientes)
+        // Filtrar SOLO hojas confirmadas o cerradas (no pendientes) par defecto, pero permitir override
         const filtro = {
-            estado: { $ne: "pendiente" }
+            estado: estado ? estado : { $ne: "pendiente" }
         };
 
         if (busqueda) {
             filtro.numeroHoja = { $regex: busqueda, $options: "i" };
+        }
+
+        // Filtro de Fechas
+        if (desde || hasta) {
+            filtro.fecha = {};
+            if (desde) filtro.fecha.$gte = new Date(desde);
+            if (hasta) {
+                const dateHasta = new Date(hasta);
+                dateHasta.setHours(23, 59, 59, 999); // End of day
+                filtro.fecha.$lte = dateHasta;
+            }
         }
 
         const total = await HojaReparto.countDocuments(filtro);

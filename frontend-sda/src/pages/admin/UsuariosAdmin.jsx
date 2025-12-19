@@ -1,28 +1,38 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { FormControl } from "react-bootstrap";
 import { apiUsuariosApi } from "../../utils/api";
-import { Trash2 } from "lucide-react";
-import { FiCheck } from "react-icons/fi";
-import "../../styles/tablasSistema.css";
-import "../../styles/botonesSistema.css";
-import "../../styles/titulosSistema.css";
+import {
+  Table,
+  ScrollArea,
+  Text,
+  TextInput,
+  Select,
+  Badge,
+  ActionIcon,
+  Group,
+  Container,
+  Paper,
+  Title,
+  Pagination,
+  Loader,
+  Center,
+  Tooltip
+} from "@mantine/core";
+import { Trash2, CheckCircle, Search, User, AlertCircle } from "lucide-react";
 import AuthContext from "../../context/AuthProvider";
-import { mostrarAlerta } from "../../utils/alertaGlobal";
-import { confirmarAccion } from "../../utils/confirmarAccion";
-
-
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
+import { confirmarAccion } from "../../utils/confirmarAccion.jsx";
 
 const UsuariosAdmin = () => {
   const navigate = useNavigate();
   const { auth } = useContext(AuthContext);
 
   const [usuarios, setUsuarios] = useState([]);
-  const [paginaActual, setPaginaActual] = useState(0);
+  const [paginaActual, setPaginaActual] = useState(1); // Mantine pagination is 1-indexed
   const [limite] = useState(10);
   const [totalUsuarios, setTotalUsuarios] = useState(0);
   const [busqueda, setBusqueda] = useState("");
-
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -31,14 +41,14 @@ const UsuariosAdmin = () => {
     } else {
       fetchUsuarios();
     }
-  }, [auth, paginaActual, busqueda]); // ✅ agregamos busqueda
-
-
+  }, [auth, paginaActual, busqueda]); // Dep: paginaActual (1-based now)
 
   const fetchUsuarios = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const query = new URLSearchParams();
-      query.append("pagina", paginaActual);
+      query.append("pagina", paginaActual - 1); // Backend expects 0-indexed
       query.append("limite", limite);
       if (busqueda) query.append("busqueda", busqueda);
 
@@ -46,7 +56,7 @@ const UsuariosAdmin = () => {
         apiUsuariosApi(`/paginados?${query.toString()}`),
         {
           headers: { Authorization: `Bearer ${auth.token}` },
-        }
+        } // apiUsuariosApi resolves to full URL? Assuming yes based on original
       );
 
       const data = await response.json();
@@ -59,9 +69,10 @@ const UsuariosAdmin = () => {
     } catch (err) {
       console.error("Error al conectar con el backend:", err);
       setError("Error de conexión");
+    } finally {
+      setLoading(false);
     }
   };
-
 
   const handleChangeRol = async (userId, nuevoRol) => {
     try {
@@ -130,171 +141,162 @@ const UsuariosAdmin = () => {
     }
   };
 
+  const getRoleColor = (rol) => {
+    switch (rol) {
+      case 'admin': return 'red';
+      case 'administrativo': return 'blue';
+      case 'chofer': return 'orange';
+      default: return 'gray';
+    }
+  };
+
+  // Calculate total pages for Mantine Pagination
+  const totalPaginas = Math.ceil(totalUsuarios / limite);
+
   return (
-    <div className="container mt-4">
-      <h2 className="titulo-seccion">Gestión de Usuarios</h2>
+    <Container size="xl" py="md">
+      <Paper p="md" radius="md" shadow="sm" withBorder mb="lg">
+        <Group justify="space-between" mb="md">
+          <Title order={2} fw={700} c="dimmed">
+            Gestión de Usuarios
+          </Title>
+          <TextInput
+            placeholder="Buscar por nombre o email..."
+            leftSection={<Search size={16} />}
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPaginaActual(1);
+            }}
+            radius="md"
+            w={300}
+          />
+        </Group>
 
-      {error && (
-        <div className="alert alert-danger text-center" role="alert">
-          {error}
-        </div>
-      )}
-
-      <FormControl
-        className="input-sistema mb-3"
-        placeholder="Buscar por nombre o email"
-        value={busqueda}
-        onChange={(e) => {
-          setBusqueda(e.target.value);
-          setPaginaActual(0);
-        }}
-      />
-
-
-      <div className="table-responsive">
-        <table className="table tabla-montserrat align-middle text-center">
-          <thead className="encabezado-moderno">
-            <tr>
-              <th></th>
-              <th>Nombre</th>
-              <th>Email</th>
-              <th>Rol actual</th>
-              <th>Cambiar rol</th>
-              <th>Verificado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(usuarios) && usuarios.length > 0 ? (
-
-              usuarios.map((user) => (
-
-                <tr key={user._id} className="tabla-moderna-fila">
-                  <td className="text-muted" style={{ fontSize: "1.2rem" }}>⋮⋮</td>
-                  <td>{user.nombre}</td>
-                  <td>{user.email}</td>
-                  <td className="text-capitalize">{user.rol}</td>
-                  <td>
-                    <select
-                      defaultValue={user.rol}
-                      onChange={(e) => handleChangeRol(user._id, e.target.value)}
-                      className="form-select form-select-sm"
-                    >
-                      <option value="cliente">cliente</option>
-                      <option value="chofer">chofer</option>
-                      <option value="administrativo">administrativo</option>
-                      <option value="admin">admin</option>
-                    </select>
-                  </td>
-                  <td>
-                    {user.verificado ? (
-                      <span
-                        className="btn-soft-confirmar d-inline-flex align-items-center justify-content-center"
-                        style={{ padding: "6px 10px", fontSize: "0.9rem" }}
-                        title="Usuario verificado"
-                      >
-                        <FiCheck size={18} />
-                      </span>
-                    ) : (
-                      <button
-                        className="btn-soft -confirmar"
-                        onClick={() => handleVerificarUsuario(user._id)}
-                      >
-                        Verificar
-                      </button>
-                    )}
-                  </td>
-
-                  <td>
-                    <button
-                      className="btn-icono btn-eliminar"
-                      title="Eliminar usuario"
-                      onClick={() => handleEliminarUsuario(user._id)}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="7" className="text-center text-muted py-4">
-                  No se encontraron usuarios.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        {totalUsuarios > limite && (
-          <div className="paginacion-container mt-3">
-            <span className="paginacion-info">
-              Mostrando {usuarios.length} de {totalUsuarios} usuarios
-            </span>
-
-            <div className="paginacion-botones">
-              {(() => {
-                const totalPaginas = Math.ceil(totalUsuarios / limite);
-                const visiblePages = 5;
-                const totalGrupos = Math.ceil(totalPaginas / visiblePages);
-                const grupoActual = Math.floor(paginaActual / visiblePages);
-                const start = grupoActual * visiblePages;
-                const end = Math.min(start + visiblePages, totalPaginas);
-
-                return (
-                  <>
-                    {grupoActual > 0 && (
-                      <button
-                        className="paginacion-btn"
-                        onClick={() => setPaginaActual(start - visiblePages)}
-                      >
-                        ◀◀
-                      </button>
-                    )}
-                    {paginaActual > 0 && (
-                      <button
-                        className="paginacion-btn"
-                        onClick={() => setPaginaActual(paginaActual - 1)}
-                      >
-                        ◀
-                      </button>
-                    )}
-                    {Array.from({ length: end - start }).map((_, i) => {
-                      const pageIndex = start + i;
-                      return (
-                        <button
-                          key={pageIndex}
-                          className={`paginacion-btn ${paginaActual === pageIndex ? "activo" : ""}`}
-                          onClick={() => setPaginaActual(pageIndex)}
-                        >
-                          {pageIndex + 1}
-                        </button>
-                      );
-                    })}
-                    {paginaActual < totalPaginas - 1 && (
-                      <button
-                        className="paginacion-btn"
-                        onClick={() => setPaginaActual(paginaActual + 1)}
-                      >
-                        ▶
-                      </button>
-                    )}
-                    {grupoActual < totalGrupos - 1 && (
-                      <button
-                        className="paginacion-btn"
-                        onClick={() => setPaginaActual(end)}
-                      >
-                        ▶▶
-                      </button>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
-          </div>
+        {error && (
+          <Text c="red" ta="center" mb="md" fw={500}>
+            <AlertCircle size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> {error}
+          </Text>
         )}
 
-      </div>
-    </div>
+        <ScrollArea>
+          <Table striped highlightOnHover verticalSpacing="sm" withTableBorder={false}>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Usuario</Table.Th>
+                <Table.Th>Email</Table.Th>
+                <Table.Th>Rol</Table.Th>
+                <Table.Th>Estado</Table.Th>
+                <Table.Th ta="center">Acciones</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {loading ? (
+                <Table.Tr>
+                  <Table.Td colSpan={5}>
+                    <Center py="xl">
+                      <Loader color="cyan" type="dots" />
+                    </Center>
+                  </Table.Td>
+                </Table.Tr>
+              ) : usuarios.length > 0 ? (
+                usuarios.map((user) => (
+                  <Table.Tr key={user._id}>
+                    <Table.Td>
+                      <Group gap="sm">
+                        {/* 2. User Icon: Gray instead of Yellow */}
+                        <ActionIcon variant="light" color="gray" radius="xl" size="lg">
+                          <User size={18} />
+                        </ActionIcon>
+                        <Text fw={500}>{user.nombre}</Text>
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" c="dimmed">{user.email}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      {/* 3. Role Select: Cyan instead of Yellow */}
+                      <Select
+                        value={user.rol}
+                        onChange={(val) => handleChangeRol(user._id, val)}
+                        data={[
+                          { value: 'cliente', label: 'Cliente' },
+                          { value: 'chofer', label: 'Chofer' },
+                          { value: 'administrativo', label: 'Administrativo' },
+                          { value: 'admin', label: 'Admin' }
+                        ]}
+                        size="xs"
+                        radius="md"
+                        w={140}
+                        variant="filled"
+                        color="cyan"
+                        allowDeselect={false}
+                      />
+                    </Table.Td>
+                    <Table.Td>
+                      {user.verificado ? (
+                        <Badge color="green" variant="light" size="sm" radius="sm">
+                          Verificado
+                        </Badge>
+                      ) : (
+                        <Badge color="gray" variant="light" size="sm" radius="sm">
+                          Pendiente
+                        </Badge>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      <Group justify="center" gap={8}>
+                        {!user.verificado && (
+                          <Tooltip label="Verificar Usuario">
+                            <ActionIcon
+                              color="gray"
+                              variant="subtle"
+                              onClick={() => handleVerificarUsuario(user._id)}
+                              style={{ stroke: '#495057' }}
+                            >
+                              <CheckCircle size={18} />
+                            </ActionIcon>
+                          </Tooltip>
+                        )}
+                        <Tooltip label="Eliminar Usuario">
+                          <ActionIcon
+                            color="gray"
+                            variant="subtle"
+                            onClick={() => handleEliminarUsuario(user._id)}
+                            style={{ stroke: '#495057' }}
+                          >
+                            <Trash2 size={18} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))
+              ) : (
+                <Table.Tr>
+                  <Table.Td colSpan={5}>
+                    <Text ta="center" py="md" c="dimmed">
+                      No se encontraron usuarios
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        </ScrollArea>
+
+        <Group justify="flex-end" mt="md">
+          <Pagination
+            total={totalPaginas}
+            value={paginaActual}
+            onChange={setPaginaActual}
+            color="cyan"
+            radius="md"
+            withEdges
+          />
+        </Group>
+      </Paper>
+    </Container>
   );
 };
 

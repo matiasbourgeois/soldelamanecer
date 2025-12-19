@@ -21,18 +21,25 @@ const crearChofer = async (req, res) => {
       return res.status(404).json({ msg: "Usuario no encontrado." });
     }
 
-    if (usuarioDB.rol === "cliente") {
+    // Always ensure role is 'chofer'
+    if (usuarioDB.rol !== "chofer") {
       usuarioDB.rol = "chofer";
       await usuarioDB.save();
     }
 
-    if (!usuarioDB.verificado || !usuarioDB.activo) {
-      return res.status(400).json({ msg: "El usuario no está verificado o activo." });
-    }
+    // Check if user is inactive/unverified if needed?
+    // if (!usuarioDB.verificado || !usuarioDB.activo) { ... }
 
     const existeChofer = await Chofer.findOne({ usuario });
+
     if (existeChofer) {
-      return res.status(400).json({ msg: "Ya existe un chofer para este usuario." });
+      // UPSERT LOGIC: Update existing record
+      existeChofer.dni = dni;
+      existeChofer.telefono = telefono;
+      existeChofer.tipoVinculo = tipoVinculo;
+      existeChofer.activo = true; // Ensure it's active
+      await existeChofer.save();
+      return res.status(200).json({ msg: "Chofer actualizado/reactivado correctamente.", chofer: existeChofer });
     }
 
     const nuevoChofer = new Chofer({

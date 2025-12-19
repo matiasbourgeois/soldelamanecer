@@ -1,35 +1,32 @@
-import React, { useState, useEffect } from "react";
-import { Eye, EyeOff, Pencil, GripVertical } from "lucide-react";
-import { FormControl, InputGroup } from "react-bootstrap";
+import React from "react";
+import { Eye, EyeOff, Pencil, Trash2, Truck } from "lucide-react";
 import { apiSistema } from "../../utils/api";
-import "../../styles/tablasSistema.css";
-import { mostrarAlerta } from "../../utils/alertaGlobal";
-import { confirmarAccion } from "../../utils/confirmarAccion";
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
+import { confirmarAccion } from "../../utils/confirmarAccion.jsx";
+import {
+  Table,
+  ScrollArea,
+  ActionIcon,
+  Group,
+  Text,
+  Badge,
+  Pagination,
+  Loader,
+  Center,
+  Tooltip,
+  ThemeIcon
+} from "@mantine/core";
 
 const TablaVehiculos = ({
-  vehiculos,
+  vehiculos = [],
   onEditar,
   recargar,
   paginaActual,
   setPaginaActual,
   totalVehiculos,
-  setBusqueda
+  limite = 10,
+  loading = false
 }) => {
-
-  const [filtro, setFiltro] = useState("");
-  const [vehiculosFiltrados, setVehiculosFiltrados] = useState([]);
-
-  useEffect(() => {
-    const texto = filtro.toLowerCase();
-    const filtrados = vehiculos.filter((v) => {
-      return (
-        v.patente.toLowerCase().includes(texto) ||
-        v.marca.toLowerCase().includes(texto) ||
-        v.modelo.toLowerCase().includes(texto)
-      );
-    });
-    setVehiculosFiltrados(filtrados);
-  }, [filtro, vehiculos]);
 
   const toggleActivo = async (vehiculo) => {
     const confirmado = await confirmarAccion(
@@ -39,7 +36,7 @@ const TablaVehiculos = ({
         : "El vehículo estará nuevamente disponible para asignaciones.",
       "warning"
     );
-  
+
     if (!confirmado) return;
 
     try {
@@ -50,6 +47,7 @@ const TablaVehiculos = ({
       });
 
       if (res.ok) {
+        mostrarAlerta(vehiculo.activo ? "Vehículo desactivado" : "Vehículo reactivado", "success");
         recargar();
       } else {
         const data = await res.json();
@@ -61,144 +59,143 @@ const TablaVehiculos = ({
     }
   };
 
-  const limite = 10;
-  const paginasPorGrupo = 5;
+  const eliminarVehiculo = async (id) => {
+    const confirmado = await confirmarAccion("¿Eliminar Vehículo?", "Esta acción es irreversible.");
+    if (!confirmado) return;
+
+    try {
+      const res = await fetch(apiSistema(`/api/vehiculos/${id}`), { method: 'DELETE' });
+      if (res.ok) {
+        mostrarAlerta("Vehículo eliminado", "success");
+        recargar();
+      } else {
+        mostrarAlerta("Error al eliminar", "danger");
+      }
+    } catch (e) {
+      console.error(e);
+      mostrarAlerta("Error de conexión", "danger");
+    }
+  }
+
   const totalPaginas = Math.ceil(totalVehiculos / limite);
-  const totalGrupos = Math.ceil(totalPaginas / paginasPorGrupo);
-  const grupoActual = Math.floor(paginaActual / paginasPorGrupo);
-  const start = grupoActual * paginasPorGrupo;
-  const end = Math.min(start + paginasPorGrupo, totalPaginas);
 
-  const mostrarCantidad = () => {
-    const desde = paginaActual * limite + 1;
-    const hasta = Math.min((paginaActual + 1) * limite, totalVehiculos);
-    return `Mostrando ${desde} a ${hasta} de ${totalVehiculos} vehículos`;
+  const getEstadoBadge = (estado) => {
+    switch (estado.toLowerCase()) {
+      case 'disponible': return <Badge variant="light" color="teal" size="sm">Disponible</Badge>;
+      case 'en mantenimiento': return <Badge variant="light" color="orange" size="sm">Mantenimiento</Badge>;
+      case 'fuera de servicio': return <Badge variant="light" color="red" size="sm">Fuera de Servicio</Badge>;
+      default: return <Badge variant="light" color="gray" size="sm">{estado}</Badge>;
+    }
   };
-
 
   return (
     <>
-      <InputGroup className="mb-3">
-        <FormControl
-          className="input-sistema"
-          placeholder="Buscar vehículo por patente, marca o modelo..."
-          onChange={(e) => {
-            setBusqueda(e.target.value);
-            setPaginaActual(0);
-          }}
-        />
-      </InputGroup>
-
-
-      <div className="table-responsive">
-        <table className="table align-middle text-center shadow-sm rounded tabla-montserrat">
-          <thead className="encabezado-moderno">
-            <tr>
-              <th></th>
-              <th>Patente</th>
-              <th>Marca</th>
-              <th>Modelo</th>
-              <th>Capacidad (kg)</th>
-              <th>Estado</th>
-              <th>Tipo</th>
-              <th>Activo</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {vehiculosFiltrados.length > 0 ? (
-              vehiculosFiltrados.map((v) => (
-                <tr key={v._id} className="tabla-moderna-fila">
-                  <td>
-                    <GripVertical size={20} className="text-muted" />
-                  </td>
-                  <td>{v.patente}</td>
-                  <td>{v.marca}</td>
-                  <td>{v.modelo}</td>
-                  <td>{v.capacidadKg}</td>
-                  <td>{v.estado}</td>
-                  <td>{v.tipoPropiedad}</td>
-                  <td>
-                    <span className={v.activo ? "estado-activo" : "estado-inactivo"}>
-                      {v.activo ? "Sí" : "No"}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="d-flex justify-content-center gap-2">
-                      <button
-                        className="btn-icono btn-editar"
-                        title="Editar"
-                        onClick={() => onEditar(v)}
-                      >
-                        <Pencil size={18} />
-                      </button>
-                      <button
-                        className={`btn-icono ${v.activo ? "btn-desactivar" : "btn-activar"
-                          }`}
-                        title={v.activo ? "Desactivar" : "Reactivar"}
-                        onClick={() => toggleActivo(v)}
-                      >
-                        {v.activo ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+      <ScrollArea>
+        <Table verticalSpacing="xs" withTableBorder={false}>
+          <Table.Thead style={{ backgroundColor: '#f9fafb' }}>
+            <Table.Tr>
+              <Table.Th>Vehículo</Table.Th>
+              <Table.Th>Capacidad</Table.Th>
+              <Table.Th>Estado</Table.Th>
+              <Table.Th>Propiedad</Table.Th>
+              <Table.Th ta="center">Disponibilidad</Table.Th>
+              <Table.Th ta="right">Acciones</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {loading ? (
+              <Table.Tr>
+                <Table.Td colSpan={6}>
+                  <Center py="xl">
+                    <Loader color="cyan" type="dots" />
+                  </Center>
+                </Table.Td>
+              </Table.Tr>
+            ) : vehiculos.length > 0 ? (
+              vehiculos.map((v) => (
+                <Table.Tr key={v._id} style={{ transition: 'background-color 0.2s' }}>
+                  <Table.Td>
+                    <Group gap={6}>
+                      <ThemeIcon variant="filled" color="cyan" size="sm" radius="sm">
+                        <Truck size={14} style={{ stroke: 'white' }} stroke={1.5} />
+                      </ThemeIcon>
+                      <div>
+                        <Text fw={700} size="sm" c="dark.4">{v.marca} {v.modelo}</Text>
+                        <Text size="xs" c="dimmed" ff="monospace" fw={600} style={{ letterSpacing: 0.5 }}>
+                          {v.patente}
+                        </Text>
+                      </div>
+                    </Group>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" fw={500}>{v.capacidadKg.toLocaleString()} kg</Text>
+                  </Table.Td>
+                  <Table.Td>{getEstadoBadge(v.estado)}</Table.Td>
+                  <Table.Td>
+                    <Badge variant="outline" color="gray" size="sm" style={{ textTransform: 'capitalize' }}>
+                      {v.tipoPropiedad}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td ta="center">
+                    <Badge
+                      variant={v.activo ? "dot" : "outline"}
+                      color={v.activo ? "teal" : "gray"}
+                      size="sm"
+                    >
+                      {v.activo ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group justify="flex-end" gap={4}>
+                      <Tooltip label="Editar" withArrow>
+                        <ActionIcon variant="subtle" color="gray" onClick={() => onEditar(v)}>
+                          <Pencil size={18} stroke={1.5} style={{ stroke: '#495057' }} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label={v.activo ? "Desactivar" : "Reactivar"} withArrow>
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          onClick={() => toggleActivo(v)}
+                        >
+                          {v.activo ?
+                            <EyeOff size={18} stroke={1.5} style={{ stroke: '#495057' }} /> :
+                            <Eye size={18} stroke={1.5} style={{ stroke: '#495057' }} />
+                          }
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Eliminar" withArrow>
+                        <ActionIcon variant="subtle" color="gray" onClick={() => eliminarVehiculo(v._id)}>
+                          <Trash2 size={18} stroke={1.5} style={{ stroke: '#495057' }} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
               ))
             ) : (
-              <tr>
-                <td colSpan="9" className="text-muted py-4">
-                  No se encontraron vehículos.
-                </td>
-              </tr>
+              <Table.Tr>
+                <Table.Td colSpan={6}>
+                  <Text ta="center" py="xl" c="dimmed">No se encontraron vehículos.</Text>
+                </Table.Td>
+              </Table.Tr>
             )}
-          </tbody>
-        </table>
-        {totalPaginas > 1 && (
-          <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap">
-            <div className="text-muted small">{mostrarCantidad()}</div>
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
 
-            <div className="d-flex gap-1 flex-wrap">
-              {grupoActual > 0 && (
-                <button className="paginacion-btn" onClick={() => setPaginaActual(start - paginasPorGrupo)}>
-                  ◀◀
-                </button>
-              )}
-
-              {paginaActual > 0 && (
-                <button className="paginacion-btn" onClick={() => setPaginaActual(paginaActual - 1)}>
-                  ◀
-                </button>
-              )}
-
-              {Array.from({ length: end - start }).map((_, i) => {
-                const pageIndex = start + i;
-                return (
-                  <button
-                    key={pageIndex}
-                    className={`paginacion-btn ${paginaActual === pageIndex ? "activo" : ""}`}
-                    onClick={() => setPaginaActual(pageIndex)}
-                  >
-                    {pageIndex + 1}
-                  </button>
-                );
-              })}
-
-              {paginaActual < totalPaginas - 1 && (
-                <button className="paginacion-btn" onClick={() => setPaginaActual(paginaActual + 1)}>
-                  ▶
-                </button>
-              )}
-
-              {grupoActual < totalGrupos - 1 && (
-                <button className="paginacion-btn" onClick={() => setPaginaActual(end)}>
-                  ▶▶
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-      </div>
+      {totalPaginas > 1 && (
+        <Group justify="flex-end" mt="md">
+          <Pagination
+            total={totalPaginas}
+            value={paginaActual}
+            onChange={setPaginaActual}
+            color="cyan"
+            radius="md"
+            withEdges
+          />
+        </Group>
+      )}
     </>
   );
 };

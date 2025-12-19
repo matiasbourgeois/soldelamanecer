@@ -1,0 +1,133 @@
+/* ===============================
+   Cotizador Córdoba — UI compacta
+   (dropdown arriba y sin scroll)
+   =============================== */
+
+:root {
+  --sda-gold: #f2b632;
+  --sda-dark: #1f252b;
+  --sda-text: #111827;
+  --sda-subtext: #4b5563;
+  --sda-border: #e5e7eb;
+  --sda-surface: #ffffff;
+  --sda-surface-alt: #fafafa;
+  --sda-pastel: #fff2c2;
+}
+
+/* Contenedor */
+.cotizador-sda .container { max-width: 1100px; }
+
+/* Título: anulamos el mt-5 para no sumar altura */
+.cotizador-sda .sda-title { margin-top: 0 !important; letter-spacing: .2px; font-weight: 700; color: var(--sda-text); }
+
+/* ======= Densidad (menos alto en general) ======= */
+/* Menor gutter vertical y horizontal en filas g-3 */
+.cotizador-sda .row.g-3 { --bs-gutter-y: .5rem; --bs-gutter-x: .75rem; }
+
+/* Cards genéricas */
+.card-sda{
+  border-color: var(--sda-border) !important;
+  border-radius: 10px;
+  background: var(--sda-surface);
+  position: static;     /* evita stacking extra por defecto */
+  overflow: visible;    /* que no recorte dropdown */
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+/* Elevamos SOLO al interactuar (no con hover) para evitar pelear el dropdown */
+.card-sda:focus-within { z-index: 9999; box-shadow: 0 6px 18px rgba(0,0,0,.06); }
+.cotizador-sda .card-body,
+.cotizador-sda .result-card .card-body { padding: 10px 12px; } /* compacto */
+
+.card-sda { padding: 0px 12px; } 
+
+/* Resultado */
+.result-card{ background: var(--sda-pastel); border-color: var(--sda-border); border-radius: 10px; }
+
+/* Labels / helpers / chips */
+.label-sda{ font-size: 11.5px; color: var(--sda-subtext); margin-bottom: 4px; }
+.helper-sda{ font-size: 11.5px; color: var(--sda-subtext); margin-top: 4px; margin-bottom: 0; line-height: 1.3; }
+
+.badge-chip{
+  background: var(--sda-surface-alt);
+  border: 1px solid var(--sda-border);
+  color: var(--sda-text);
+  font-size: 11.5px;
+  padding: 5px 9px;         /* más bajo */
+  border-radius: 999px;
+  line-height: 1;
+}
+.badge-chip.muted{ color: var(--sda-subtext); }
+
+/* Inputs / selects compactos */
+.input-sda, .form-select.input-sda{
+  border-radius: 8px;
+  border-color: var(--sda-border);
+  background: var(--sda-surface);
+  padding: 5px 10px;        /* menos alto */
+  line-height: 1.2;
+  font-size: 14px;
+}
+.input-sda:focus, .form-select.input-sda:focus{
+  box-shadow: 0 0 0 .16rem rgba(242,182,50,.15);
+  border-color: var(--sda-gold);
+  outline: none;
+}
+.input-sda, .form-select.input-sda{ outline-offset: 0; }
+
+/* Botón principal */
+.btn-sda-primary{
+  background: var(--sda-gold);
+  color: var(--sda-dark);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;        /* -alto */
+  font-weight: 600;
+}
+.btn-sda-primary:hover{ filter: brightness(.98); }
+.btn-sda-primary:focus{ box-shadow: 0 0 0 .16rem rgba(242,182,50,.2); outline: none; }
+
+/* ======= ComboBox (dropdown) ======= */
+/* El contenedor del dropdown YA es position:absolute en JSX.
+   Le damos el z-index más alto y garantizamos que su card padre
+   se coloque arriba con :focus-within (arriba). */
+.dropdown-sda{
+  position: absolute;
+  z-index: 2147483647;   /* top del top */
+  max-height: 210px;     /* más bajo para evitar scroll de página */
+  overflow: auto;
+  border: 1px solid var(--sda-border);
+  border-radius: 10px;
+  background: #fff;
+}
+.combo-option{
+  text-decoration: none !important;
+  color: var(--sda-text) !important;
+  background: #fff;
+  border-radius: 0;
+  padding: 7px 12px;     /* compacto */
+}
+.combo-option:hover{ background: rgba(242,182,50,.08); }
+.combo-option.active{ background: rgba(242,182,50,.12); }
+
+/* Alertas */
+.alert[role="alert"]{ border-radius: 8px; padding-top: .5rem; padding-bottom: .5rem; }
+
+/* Motion reducido */
+@media (prefers-reduced-motion: reduce){
+  .btn-sda-primary{ transition: none; }
+}
+
+/* Override fuerte del foco (gana a Bootstrap) */
+.cotizador-sda .form-control.input-sda:focus,
+.cotizador-sda .form-select.input-sda:focus {
+  border-color: var(--sda-gold) !important;
+  box-shadow: 0 0 0 .16rem rgba(242,182,50,.15) !important;
+  outline: none;
+}
+.cotizador-sda .total-amount-gradient {
+  background: linear-gradient(180deg, var(--sda-gold), #d8a132);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: .2px;
+}

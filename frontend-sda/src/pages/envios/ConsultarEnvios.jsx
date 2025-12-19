@@ -1,57 +1,65 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
-import { Card, Form, InputGroup } from "react-bootstrap";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import "../../styles/datepicker-custom.css"; // Asegurate de que la ruta sea correcta
-import "../../styles/estadosSistema.css";
-import "../../styles/titulosSistema.css";
-import "../../styles/paginacion.css";
-import { FiCalendar } from "react-icons/fi";
-import { useContext } from "react";
-import AuthContext from "../../context/AuthProvider"; // ajustá la ruta si es distinta
-import { Trash2 } from "lucide-react";
+import {
+    Container, Paper, Title, Table, Group, TextInput, Select,
+    Button, Pagination, Badge, ActionIcon, Tooltip, Text, Loader, Center, Stack, ThemeIcon, Box, rem
+} from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
+import { IconSearch, IconTrash, IconCalendar, IconX } from "@tabler/icons-react"; // Or lucide-react if standard
+import { Search, Trash2, Calendar as CalendarIcon, X, Package } from "lucide-react"; // Using Lucide as per project standard
+import AuthContext from "../../context/AuthProvider";
 import { apiSistema } from "../../utils/api";
-import { mostrarAlerta } from "../../utils/alertaGlobal";
-import { confirmarAccion } from "../../utils/confirmarAccion";
-
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
+import { confirmarAccion } from "../../utils/confirmarAccion.jsx";
+import { useDebouncedValue } from "@mantine/hooks";
+import '@mantine/dates/styles.css'; // Ensure styles are imported if needed globally or here
 
 const ConsultarEnvios = () => {
-    const [envios, setEnvios] = useState([]);
-    const [filtroEstado, setFiltroEstado] = useState("");
-
-    const hoy = new Date();
-    const haceUnMes = new Date();
-    haceUnMes.setMonth(hoy.getMonth() - 1);
-
-    const [filtroFechaDesde, setFiltroFechaDesde] = useState(haceUnMes);
-    const [filtroFechaHasta, setFiltroFechaHasta] = useState(hoy);
-    const [renderListo, setRenderListo] = useState(false);
-    const [enviosListos, setEnviosListos] = useState(false);
-    const [paginaActual, setPaginaActual] = useState(0);
-    const [totalEnvios, setTotalEnvios] = useState(0);
     const { auth } = useContext(AuthContext);
+
+    // States
+    const [envios, setEnvios] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // Filters
+    // FIX: Default dates to null to show ALL recent history by default (Backend sorts desc)
+    const [filtroFechaDesde, setFiltroFechaDesde] = useState(null);
+    const [filtroFechaHasta, setFiltroFechaHasta] = useState(null);
+    const [filtroEstado, setFiltroEstado] = useState("");
     const [busqueda, setBusqueda] = useState("");
-    const datepickerDesdeRef = useRef(null);
-    const datepickerHastaRef = useRef(null);
+    const [debouncedBusqueda] = useDebouncedValue(busqueda, 500);
 
-
+    // Pagination
+    const [paginaActual, setPaginaActual] = useState(1); // Mantine starts at 1
+    const [totalEnvios, setTotalEnvios] = useState(0);
+    const LIMITE = 10;
 
     const fetchEnvios = async () => {
         if (!auth?.token || !auth?.rol) return;
+        setLoading(true);
+
+        const formatDateForApi = (date) => {
+            if (!date) return "";
+            try {
+                const d = new Date(date);
+                return isNaN(d.getTime()) ? "" : d.toISOString();
+            } catch (e) {
+                return "";
+            }
+        };
 
         try {
-            const desde = filtroFechaDesde.toISOString();
-            const hasta = filtroFechaHasta.toISOString();
+            const desde = formatDateForApi(filtroFechaDesde);
+            const hasta = formatDateForApi(filtroFechaHasta);
+            const pageIndex = paginaActual - 1;
 
             const res = await axios.get(apiSistema(
-                `/api/envios?pagina=${paginaActual}&limite=10&estado=${filtroEstado}&fechaDesde=${desde}&fechaHasta=${hasta}&busqueda=${busqueda}`
+                `/api/envios?pagina=${pageIndex}&limite=${LIMITE}&estado=${filtroEstado || ""}&fechaDesde=${desde}&fechaHasta=${hasta}&busqueda=${debouncedBusqueda}`
             ), {
-                headers: {
-                    Authorization: `Bearer ${auth.token}`,
-                },
+                headers: { Authorization: `Bearer ${auth.token}` },
             });
 
+            // Add permissions
             const enviosConPermisos = res.data.resultados.map((envio) => ({
                 ...envio,
                 permisoEliminar:
@@ -61,28 +69,20 @@ const ConsultarEnvios = () => {
 
             setEnvios(enviosConPermisos);
             setTotalEnvios(res.data.total);
-            setEnviosListos(true);
         } catch (error) {
             console.error("Error al obtener los envíos:", error);
+            mostrarAlerta("Error al cargar los envíos", "danger");
+        } finally {
+            setLoading(false);
         }
     };
 
+    // Effect for fetching
     useEffect(() => {
         if (auth?.rol) {
-            setRenderListo(true);
             fetchEnvios();
         }
-    }, [auth.rol, paginaActual, filtroEstado, filtroFechaDesde, filtroFechaHasta, busqueda]);
-
-
-    const aplicarFiltros = (envio) => {
-        const fecha = new Date(envio.fechaCreacion);
-        return (
-            (!filtroEstado || envio.estado === filtroEstado) &&
-            (!filtroFechaDesde || fecha >= filtroFechaDesde) &&
-            (!filtroFechaHasta || fecha <= filtroFechaHasta)
-        );
-    };
+    }, [auth.rol, paginaActual, filtroEstado, filtroFechaDesde, filtroFechaHasta, debouncedBusqueda]);
 
     const handleEliminarEnvio = async (id) => {
         const confirmar = await confirmarAccion("¿Eliminar envío?", "Esta acción no se puede deshacer");
@@ -90,263 +90,224 @@ const ConsultarEnvios = () => {
 
         try {
             await axios.delete(apiSistema(`/api/envios/${id}`), {
-                headers: {
-                    Authorization: `Bearer ${auth.token}`
-                },
+                headers: { Authorization: `Bearer ${auth.token}` },
             });
 
-            // Actualizar la tabla eliminando el envío eliminado
-            setEnvios(envios.filter((e) => e._id !== id));
+            setEnvios(prev => prev.filter((e) => e._id !== id));
             mostrarAlerta("Envío eliminado correctamente.", "success");
+            // Optional: Refetch to update pagination count
+            fetchEnvios();
         } catch (error) {
             console.error("❌ Error al eliminar el envío:", error);
             mostrarAlerta("No se pudo eliminar el envío.", "danger");
         }
     };
 
-    if (!auth?.rol || !enviosListos) {
-        return <div className="text-center mt-5">Cargando envíos...</div>;
-    }
+    const limpiarFiltros = () => {
+        setFiltroFechaDesde(null);
+        setFiltroFechaHasta(null);
+        setFiltroEstado("");
+        setBusqueda("");
+        setPaginaActual(1);
+    };
 
+    const getEstadoColor = (estado) => {
+        switch (estado?.toLowerCase()) {
+            case "pendiente": return "blue";
+            case "en reparto": return "yellow"; // Changed from 'info'/cyan to yellow for better visibility
+            case "entregado": return "green";
+            case "devuelto": return "orange";
+            case "rechazado": return "red";
+            case "no entregado": return "red";
+            case "reagendado": return "grape";
+            case "cancelado": return "gray";
+            default: return "gray";
+        }
+    };
 
+    if (!auth?.rol) return <Center p="xl"><Loader /></Center>;
 
     return (
-        <div className="container mt-4">
-            <h2 className="mb-4 titulo-seccion">Consultar Envíos</h2>
-            <div className="p-4 mb-4 border-0 rounded-4">
-                <Form className="row align-items-center g-3">
-                    <Form.Group className="col-md-12">
-                        <Form.Control
-                            type="text"
-                            placeholder="Buscar por remito o seguimiento..."
-                            className="input-sistema"
-                            value={busqueda}
-                            onChange={(e) => {
-                                setBusqueda(e.target.value);
-                                setPaginaActual(0); // Reinicia a la primera página
-                            }}
-                        />
-                    </Form.Group>
+        <Container size="xl" py="xl">
+            <Paper p="md" radius="md" shadow="sm" withBorder mb="lg">
+                {/* Header Section matching VehiculosAdmin */}
+                <Group justify="space-between" mb="md">
+                    <Title order={2} fw={700} c="dimmed">
+                        Consultar Envíos
+                    </Title>
+                    {/* Botón limpiar filtros si hay alguno activo */}
+                    {(filtroFechaDesde || filtroFechaHasta || filtroEstado || busqueda) && (
+                        <Button variant="subtle" color="red" leftSection={<X size={16} />} onClick={limpiarFiltros} size="xs">
+                            Limpiar Filtros
+                        </Button>
+                    )}
+                </Group>
 
-                    {/* Filtro por estado */}
-                    <Form.Group className="col-md-3 d-flex align-items-center">
-                        <label className="label-sistema me-2 mb-0">Estado</label>
-                        <Form.Select
-                            value={filtroEstado}
-                            onChange={(e) => {
-                                setFiltroEstado(e.target.value);
-                                setPaginaActual(0);
-                            }}
-                            className="input-sistema flex-grow-1"
-                        >
-                            <option value="">Todos</option>
-                            <option value="pendiente">Pendiente</option>
-                            <option value="en reparto">En reparto</option>
-                            <option value="entregado">Entregado</option>
-                            <option value="devuelto">Devuelto</option>
-                            <option value="rechazado">Rechazado</option>
-                            <option value="no entregado">No entregado</option>
-                            <option value="reagendado">Reagendado</option>
-                            <option value="cancelado">Cancelado</option>
-                        </Form.Select>
-                    </Form.Group>
+                {/* Filters Section - Adapted to fit cleanly */}
+                <Group mb="lg" align="flex-end">
+                    <TextInput
+                        label="Buscar"
+                        placeholder="Remito o seguimiento..."
+                        leftSection={<Search size={16} />}
+                        value={busqueda}
+                        onChange={(e) => {
+                            setBusqueda(e.target.value);
+                            setPaginaActual(1);
+                        }}
+                        w={{ base: "100%", sm: 300 }}
+                    />
+                    <Select
+                        label="Estado"
+                        placeholder="Todos"
+                        data={[
+                            { value: "", label: "Todos" },
+                            { value: "pendiente", label: "Pendiente" },
+                            { value: "en reparto", label: "En reparto" },
+                            { value: "entregado", label: "Entregado" },
+                            { value: "devuelto", label: "Devuelto" },
+                            { value: "rechazado", label: "Rechazado" },
+                            { value: "no entregado", label: "No entregado" },
+                            { value: "reagendado", label: "Reagendado" },
+                            { value: "cancelado", label: "Cancelado" },
+                        ]}
+                        value={filtroEstado}
+                        onChange={(val) => {
+                            setFiltroEstado(val || "");
+                            setPaginaActual(1);
+                        }}
+                        allowDeselect={false}
+                        w={{ base: "100%", sm: 200 }}
+                    />
+                    <DatePickerInput
+                        label="Desde"
+                        placeholder="dd/mm/aaaa"
+                        value={filtroFechaDesde}
+                        onChange={(date) => {
+                            setFiltroFechaDesde(date);
+                            setPaginaActual(1);
+                        }}
+                        leftSection={<CalendarIcon size={16} />}
+                        clearable
+                        w={{ base: "100%", sm: 180 }}
+                    />
+                    <DatePickerInput
+                        label="Hasta"
+                        placeholder="dd/mm/aaaa"
+                        value={filtroFechaHasta}
+                        onChange={(date) => {
+                            setFiltroFechaHasta(date);
+                            setPaginaActual(1);
+                        }}
+                        leftSection={<CalendarIcon size={16} />}
+                        clearable
+                        w={{ base: "100%", sm: 180 }}
+                    />
+                </Group>
 
-                    {/* Fecha Desde */}
-                    <Form.Group className="col-md-4 d-flex align-items-center">
-                        <label className="label-sistema me-2 mb-0">Desde</label>
-                        <InputGroup className="input-group-custom flex-grow-1">
-                            <DatePicker
-                                selected={filtroFechaDesde}
-                                onChange={(date) => {
-                                    setFiltroFechaDesde(date);
-                                    setPaginaActual(0);
-                                }}
-                                dateFormat="dd/MM/yyyy"
-                                placeholderText="Seleccionar fecha"
-                                className="form-control input-sistema"
-                                ref={datepickerDesdeRef}
-                            />
-                            <InputGroup.Text
-                                className="icono-input-sistema"
-                                onClick={() => datepickerDesdeRef.current?.setOpen(true)}
-                                style={{ cursor: "pointer" }}
-                            >
-                                <FiCalendar />
-                            </InputGroup.Text>
-                        </InputGroup>
-                    </Form.Group>
-
-
-                    {/* Fecha Hasta */}
-                    <Form.Group className="col-md-5 d-flex align-items-center">
-                        <label className="label-sistema me-2 mb-0">Hasta</label>
-                        <InputGroup className="input-group-custom flex-grow-1">
-                            <DatePicker
-                                selected={filtroFechaHasta}
-                                onChange={(date) => {
-                                    setFiltroFechaHasta(date);
-                                    setPaginaActual(0);
-                                }}
-                                dateFormat="dd/MM/yyyy"
-                                placeholderText="Seleccionar fecha"
-                                className="form-control input-sistema"
-                                ref={datepickerHastaRef}
-                            />
-                            <InputGroup.Text
-                                className="icono-input-sistema"
-                                onClick={() => datepickerHastaRef.current?.setOpen(true)}
-                                style={{ cursor: "pointer" }}
-                            >
-                                <FiCalendar />
-                            </InputGroup.Text>
-                        </InputGroup>
-                    </Form.Group>
-
-
-                </Form>
-            </div>
-
-
-            <div className="table-responsive">
-                <table className="table align-middle text-center shadow-sm rounded tabla-montserrat">
-
-                    <thead className="encabezado-moderno">
-                        <tr>
-                            <th></th>
-                            <th>Fecha</th>
-                            <th>Remitente</th>
-                            <th>Destinatario</th>
-                            <th>Localidad</th>
-                            <th>Remito</th>
-                            <th>Seguimiento</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {envios.map((envio) => (
-                            <tr key={`${envio._id}-${auth.rol}`} className="tabla-moderna-fila">
-                                <td className="text-muted" style={{ fontSize: "1.2rem" }}>⋮⋮</td>
-                                <td>{new Date(envio.fechaCreacion).toLocaleDateString()}</td>
-                                <td>{envio.clienteRemitente?.nombre || "-"}</td>
-                                <td>{envio.destinatario?.nombre || "-"}</td>
-                                <td>{envio.localidadDestino?.nombre || "-"}</td>
-                                <td>{envio.remitoNumero || "—"}</td>
-                                <td>
-                                    {envio.numeroSeguimiento ? (
-                                        <span className="text-dark">{envio.numeroSeguimiento}</span>
+                {/* Table Section matching TablaVehiculos style */}
+                {loading ? (
+                    <Center p="xl"><Loader color="cyan" type="dots" /></Center>
+                ) : (
+                    <>
+                        <Table.ScrollContainer minWidth={800}>
+                            <Table verticalSpacing="xs" withTableBorder={false}>
+                                <Table.Thead style={{ backgroundColor: '#f9fafb' }}>
+                                    <Table.Tr>
+                                        <Table.Th>Fecha</Table.Th>
+                                        <Table.Th>Remitente</Table.Th>
+                                        <Table.Th>Destinatario</Table.Th>
+                                        <Table.Th>Localidad</Table.Th>
+                                        <Table.Th>Remito</Table.Th>
+                                        <Table.Th>Seguimiento</Table.Th>
+                                        <Table.Th>Estado</Table.Th>
+                                        <Table.Th style={{ textAlign: 'right' }}>Acciones</Table.Th>
+                                    </Table.Tr>
+                                </Table.Thead>
+                                <Table.Tbody>
+                                    {envios.length > 0 ? (
+                                        envios.map((envio) => (
+                                            <Table.Tr key={envio._id} style={{ transition: 'background-color 0.2s' }}>
+                                                <Table.Td>
+                                                    <Text size="sm">{new Date(envio.fechaCreacion).toLocaleDateString()}</Text>
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    <Text size="sm" fw={500} c="dark.4">{envio.clienteRemitente?.nombre || "-"}</Text>
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    <Text size="sm" fw={500} c="dark.4">{envio.destinatario?.nombre || "-"}</Text>
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    <Text size="sm" c="dimmed">
+                                                        {envio.localidadDestino?.nombre || "-"}
+                                                    </Text>
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    <Text size="xs" c="dimmed" ff="monospace">
+                                                        {envio.remitoNumero || "—"}
+                                                    </Text>
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    <Text size="xs" c="blue" fw={600} ff="monospace">
+                                                        {envio.numeroSeguimiento || "—"}
+                                                    </Text>
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    <Badge
+                                                        color={getEstadoColor(envio.estado)}
+                                                        variant="light"
+                                                        size="sm"
+                                                        w={120}
+                                                        style={{ textTransform: 'capitalize' }}
+                                                    >
+                                                        {envio.estado}
+                                                    </Badge>
+                                                </Table.Td>
+                                                <Table.Td style={{ textAlign: 'right' }}>
+                                                    {envio.permisoEliminar && (
+                                                        <Tooltip label="Eliminar" withArrow>
+                                                            <ActionIcon
+                                                                color="gray"
+                                                                variant="subtle"
+                                                                onClick={() => handleEliminarEnvio(envio._id)}
+                                                            >
+                                                                <Trash2 size={18} stroke={1.5} style={{ stroke: '#495057' }} />
+                                                            </ActionIcon>
+                                                        </Tooltip>
+                                                    )}
+                                                </Table.Td>
+                                            </Table.Tr>
+                                        ))
                                     ) : (
-                                        <span className="text-muted">—</span>
+                                        <Table.Tr>
+                                            <Table.Td colSpan={8}>
+                                                <Center py="xl">
+                                                    <Text c="dimmed">No se encontraron envíos</Text>
+                                                </Center>
+                                            </Table.Td>
+                                        </Table.Tr>
                                     )}
-                                </td>
-                                <td>
-                                    <span className={`estado-chip estado-${envio.estado?.toLowerCase().replace(/\s+/g, "-")}`}>
-                                        {envio.estado}
-                                    </span>
-                                </td>
+                                </Table.Tbody>
+                            </Table>
+                        </Table.ScrollContainer>
 
-                                {/* ✅ NUEVA COLUMNA: Acciones */}
-                                <td>
-                                    <button
-                                        className="btn-icono btn-eliminar"
-                                        title="Eliminar"
-                                        onClick={() => handleEliminarEnvio(envio._id)}
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-
-
-                                </td>
-
-                            </tr>
-                        ))}
-
-                    </tbody>
-                </table>
-            </div>
-            {totalEnvios > 10 && (
-                <div className="paginacion-container mt-3">
-                    <span className="paginacion-info">
-                        Mostrando {envios.length} de {totalEnvios || 0} envíos
-                    </span>
-
-                    <div className="paginacion-botones">
-                        {(() => {
-                            const totalPaginas = Math.ceil(totalEnvios / 10);
-                            const visiblePages = 5;
-                            const totalGrupos = Math.ceil(totalPaginas / visiblePages);
-                            const grupoActual = Math.floor(paginaActual / visiblePages);
-                            const start = grupoActual * visiblePages;
-                            const end = Math.min(start + visiblePages, totalPaginas);
-
-                            return (
-                                <>
-                                    {/* ◀◀ Grupo anterior */}
-                                    {grupoActual > 0 && (
-                                        <button
-                                            className="paginacion-btn"
-                                            onClick={() => setPaginaActual(start - visiblePages)}
-                                        >
-                                            ◀◀
-                                        </button>
-                                    )}
-
-                                    {/* ◀ Página anterior */}
-                                    {paginaActual > 0 && (
-                                        <button
-                                            className="paginacion-btn"
-                                            onClick={() => setPaginaActual(paginaActual - 1)}
-                                        >
-                                            ◀
-                                        </button>
-                                    )}
-
-                                    {/* Botones de páginas */}
-                                    {Array.from({ length: end - start }).map((_, i) => {
-                                        const pageIndex = start + i;
-                                        return (
-                                            <button
-                                                key={pageIndex}
-                                                className={`paginacion-btn ${paginaActual === pageIndex ? "activo" : ""}`}
-                                                onClick={() => setPaginaActual(pageIndex)}
-                                            >
-                                                {pageIndex + 1}
-                                            </button>
-                                        );
-                                    })}
-
-                                    {/* ▶ Página siguiente */}
-                                    {paginaActual < totalPaginas - 1 && (
-                                        <button
-                                            className="paginacion-btn"
-                                            onClick={() => setPaginaActual(paginaActual + 1)}
-                                        >
-                                            ▶
-                                        </button>
-                                    )}
-
-                                    {/* ▶▶ Grupo siguiente */}
-                                    {grupoActual < totalGrupos - 1 && (
-                                        <button
-                                            className="paginacion-btn"
-                                            onClick={() => setPaginaActual(end)}
-                                        >
-                                            ▶▶
-                                        </button>
-                                    )}
-                                </>
-                            );
-                        })()}
-                    </div>
-                </div>
-            )}
-
-
-        </div>
-
-
+                        {/* Pagination matching TablaVehiculos */}
+                        {totalEnvios > 0 && (
+                            <Group justify="flex-end" mt="md">
+                                <Pagination
+                                    total={Math.ceil(totalEnvios / LIMITE)}
+                                    value={paginaActual}
+                                    onChange={setPaginaActual}
+                                    color="cyan"
+                                    radius="md"
+                                    withEdges
+                                />
+                            </Group>
+                        )}
+                    </>
+                )}
+            </Paper>
+        </Container>
     );
-
 };
 
 export default ConsultarEnvios;

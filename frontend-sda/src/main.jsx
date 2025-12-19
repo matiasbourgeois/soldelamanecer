@@ -8,13 +8,28 @@ import "react-datepicker/dist/react-datepicker.css";
 
 
 
-// IMPORTAMOS EL PROVIDER
 import { AuthProvider } from "./context/AuthProvider";
+import { MantineProvider, createTheme } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
+import { ModalsProvider } from "@mantine/modals";
+import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
+
+const theme = createTheme({
+  primaryColor: 'cyan',
+  fontFamily: 'Inter, sans-serif',
+  defaultRadius: 'md',
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <AuthProvider>
-      <App key={Date.now()} />
-    </AuthProvider>
+    <MantineProvider theme={theme}>
+      <Notifications position="top-right" zIndex={2077} />
+      <ModalsProvider labels={{ confirm: 'Confirmar', cancel: 'Cancelar' }}>
+        <AuthProvider>
+          <App key={Date.now()} />
+        </AuthProvider>
+      </ModalsProvider>
+    </MantineProvider>
   </React.StrictMode>
 );

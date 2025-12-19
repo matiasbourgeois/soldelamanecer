@@ -1,37 +1,52 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import {
-  FaEnvelope,
-  FaIdCard,
-  FaPhone,
-  FaMapMarkerAlt,
-  FaCity,
-} from "react-icons/fa";
+  Container,
+  Card,
+  Avatar,
+  Text,
+  Group,
+  Button,
+  SimpleGrid,
+  ThemeIcon,
+  LoadingOverlay,
+  Box,
+  Badge,
+  rem
+} from "@mantine/core";
+import {
+  IconMail,
+  IconId,
+  IconPhone,
+  IconMapPin,
+  IconBuildingSkyscraper,
+  IconMap,
+  IconEdit,
+  IconUser
+} from "@tabler/icons-react";
 import EditarPerfilModal from "../pages/EditarPerfilModal";
 import AuthContext from "../context/AuthProvider";
-
-import "../styles/botonesSistema.css";
-import "../styles/Perfil.css";
 import { apiUsuarios } from "../utils/api";
 
 const Perfil = () => {
   const { auth } = useContext(AuthContext);
   const [perfil, setPerfil] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const fetchPerfil = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(apiUsuarios("/api/usuarios/perfil"),
-        {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-          },
-        }
-      );
+      const response = await axios.get(apiUsuarios("/api/usuarios/perfil"), {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
       setPerfil(response.data.usuario);
     } catch (error) {
       console.error("❌ Error al obtener el perfil:", error);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -45,49 +60,89 @@ const Perfil = () => {
     setModalVisible(false);
   };
 
-  if (!perfil) {
-    return <div className="text-center mt-5">Cargando perfil...</div>;
+  if (!perfil && loading) {
+    return (
+      <Container size="xs" py="md" style={{ position: 'relative', minHeight: 300 }}>
+        <LoadingOverlay visible={true} overlayProps={{ radius: "sm", blur: 2 }} />
+      </Container>
+    );
   }
 
+  if (!perfil) return null;
+
+  // Ensure photo URL is correct. Assuming apiUsuarios handles the base path.
+  const fotoUrl = perfil.fotoPerfil
+    ? `${apiUsuarios(perfil.fotoPerfil)}?t=${new Date().getTime()}`
+    : null;
+
   return (
-    <div className="perfil-centrado-container">
-      <div className="perfil-card-elegante">
-        <div className="perfil-header-elegante">
-          <img
-            src={
-              perfil.fotoPerfil
-                ? `${apiUsuarios(perfil.fotoPerfil)}?t=${new Date().getTime()}`
-                : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-            }
+    <Container size="sm" py="xl" style={{ maxWidth: 600 }}> {/* Compact Container */}
+      <Card shadow="lg" padding="lg" radius="lg" withBorder style={{ overflow: 'visible', marginTop: 30 }}>
+        {/* Header with Background/Avatar - Reduced Height */}
+        <Box
+          h={90}
+          style={{
+            backgroundImage: 'linear-gradient(135deg, var(--mantine-color-yellow-5) 0%, var(--mantine-color-orange-6) 100%)',
+            borderRadius: 'var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0',
+            margin: 'calc(var(--mantine-spacing-lg) * -1)',
+            marginBottom: 40,
+          }}
+        />
 
-            alt="Foto de perfil"
-            className="perfil-avatar-elegante"
-          />
+        <Box style={{ marginTop: -80, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Avatar
+            src={fotoUrl}
+            size={120}
+            radius={120}
+            mx="auto"
+            style={{
+              border: '4px solid white',
+              boxShadow: '0 3px 10px rgba(0,0,0,0.15)',
+              backgroundColor: 'var(--mantine-color-gray-1)'
+            }}
+          >
+            {!fotoUrl && <IconUser size={60} color="gray" />}
+          </Avatar>
 
-          <div className="perfil-titulos">
-            <h2>{perfil.nombre?.toUpperCase()}</h2>
-            <span className="perfil-rol-elegante">{perfil.rol}</span>
-          </div>
-        </div>
+          <Text ta="center" fz={26} fw={800} mt="xs" style={{ letterSpacing: '-0.5px', lineHeight: 1.2 }}>
+            {perfil.nombre?.toUpperCase()}
+          </Text>
 
-        <div className="perfil-info-grid">
-          <p><FaEnvelope className="perfil-icon-elegante" /> {perfil.email}</p>
-          <p><FaIdCard className="perfil-icon-elegante" /> {perfil.dni || "-"}</p>
-          <p><FaPhone className="perfil-icon-elegante" /> {perfil.telefono || "-"}</p>
-          <p><FaMapMarkerAlt className="perfil-icon-elegante" /> {perfil.direccion || "-"}</p>
-          <p><FaCity className="perfil-icon-elegante" /> {perfil.localidad || "-"}</p>
-          <p><FaCity className="perfil-icon-elegante" /> {perfil.provincia || "-"}</p>
-        </div>
+          <Badge
+            size="md"
+            variant="gradient"
+            gradient={{ from: 'yellow', to: 'orange' }}
+            mt={4}
+            tt="uppercase"
+            px="md"
+          >
+            {perfil.rol}
+          </Badge>
+        </Box>
 
-        <div className="perfil-btn-container">
-          <button
-            className="btn-sda-principal"
+        <SimpleGrid cols={2} spacing="md" mt={30} verticalSpacing="xs">
+          <InfoItem icon={IconMail} label="Email" value={perfil.email} />
+          <InfoItem icon={IconId} label="DNI" value={perfil.dni || "-"} />
+          <InfoItem icon={IconPhone} label="Teléfono" value={perfil.telefono || "-"} />
+          <InfoItem icon={IconMapPin} label="Dirección" value={perfil.direccion || "-"} />
+          <InfoItem icon={IconBuildingSkyscraper} label="Localidad" value={perfil.localidad || "-"} />
+          <InfoItem icon={IconMap} label="Provincia" value={perfil.provincia || "-"} />
+        </SimpleGrid>
+
+        <Group justify="center" mt={30} mb="xs">
+          <Button
+            leftSection={<IconEdit size={18} />}
+            size="md"
+            radius="md"
+            color="yellow"
+            c="white"
             onClick={() => setModalVisible(true)}
+            style={{ boxShadow: '0 4px 12px rgba(250, 176, 5, 0.4)' }}
           >
             Editar Perfil
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Group>
+      </Card>
 
       <EditarPerfilModal
         show={modalVisible}
@@ -95,8 +150,24 @@ const Perfil = () => {
         datosUsuario={perfil}
         onPerfilActualizado={fetchPerfil}
       />
-    </div>
+    </Container>
   );
 };
+
+const InfoItem = ({ icon: Icon, label, value }) => (
+  <Group wrap="nowrap" gap="sm">
+    <ThemeIcon size={36} radius="md" variant="light" color="orange">
+      <Icon style={{ width: rem(18), height: rem(18) }} />
+    </ThemeIcon>
+    <div style={{ overflow: 'hidden' }}>
+      <Text size="10px" tt="uppercase" fw={700} c="dimmed" lh={1.1}>
+        {label}
+      </Text>
+      <Text fw={600} size="sm" truncate lh={1.2}>
+        {value}
+      </Text>
+    </div>
+  </Group>
+);
 
 export default Perfil;

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button, TextInput, Select, NumberInput, Stack, Group, SimpleGrid, Text } from "@mantine/core";
 import { apiSistema } from "../../utils/api";
-import { mostrarAlerta } from "../../utils/alertaGlobal";
-
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
 
 const FormularioVehiculo = ({ onClose, vehiculo, recargar }) => {
   const [formData, setFormData] = useState({
@@ -11,7 +10,7 @@ const FormularioVehiculo = ({ onClose, vehiculo, recargar }) => {
     modelo: "",
     capacidadKg: "",
     estado: "disponible",
-    tipoPropiedad: "propio",
+    tipoPropiedad: "externo",
   });
 
   useEffect(() => {
@@ -20,9 +19,13 @@ const FormularioVehiculo = ({ onClose, vehiculo, recargar }) => {
     }
   }, [vehiculo]);
 
-  const handleChange = (e) => {
+  const handleChange = (name, value) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -41,163 +44,110 @@ const FormularioVehiculo = ({ onClose, vehiculo, recargar }) => {
       });
 
       if (res.ok) {
-        mostrarAlerta(vehiculo ? "Vehículo actualizado" : "Vehículo creado", "success");
-        onClose();
+        mostrarAlerta(vehiculo ? "✅ Vehículo actualizado" : "✅ Vehículo creado", "success");
         recargar();
+        onClose();
       } else {
         const data = await res.json();
-        mostrarAlerta(data.error || "Error al guardar vehículo", "danger");
+        mostrarAlerta(data.error || "❌ Error al guardar vehículo", "danger");
       }
     } catch (error) {
       console.error("Error al guardar vehículo:", error);
-      mostrarAlerta("Error de conexión", "danger");
+      mostrarAlerta("❌ Error de conexión", "danger");
     }
   };
 
   return (
-    <>
-      <style>{`
-        .modal-body {
-          font-family: 'Montserrat', sans-serif;
-        }
+    <Modal
+      opened={true}
+      onClose={onClose}
+      title={
+        <Text fw={700} size="lg" c="dark.4">
+          {vehiculo ? "Editar Vehículo" : "Nuevo Vehículo"}
+        </Text>
+      }
+      centered
+      size="lg"
+      radius="md"
+      overlayProps={{ blur: 3, backgroundOpacity: 0.55 }}
+    >
+      <form onSubmit={handleSubmit}>
+        <Stack gap="md">
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+            <TextInput
+              label="Patente"
+              name="patente"
+              value={formData.patente}
+              onChange={handleInputChange}
+              required
+              placeholder="Ej: AA123BB"
+              variant="filled"
+            />
+            <TextInput
+              label="Marca"
+              name="marca"
+              value={formData.marca}
+              onChange={handleInputChange}
+              required
+              placeholder="Ej: Toyota"
+              variant="filled"
+            />
+            <TextInput
+              label="Modelo"
+              name="modelo"
+              value={formData.modelo}
+              onChange={handleInputChange}
+              required
+              placeholder="Ej: Hilux"
+              variant="filled"
+            />
+            <NumberInput
+              label="Capacidad (kg)"
+              value={formData.capacidadKg}
+              onChange={(val) => handleChange("capacidadKg", val)}
+              min={0}
+              step={100}
+              required
+              variant="filled"
+            />
+            <Select
+              label="Estado"
+              value={formData.estado}
+              onChange={(val) => handleChange("estado", val)}
+              data={[
+                { value: "disponible", label: "Disponible" },
+                { value: "en mantenimiento", label: "En Mantenimiento" },
+                { value: "fuera de servicio", label: "Fuera de Servicio" }
+              ]}
+              allowDeselect={false}
+              variant="filled"
+            />
+            <Select
+              label="Tipo de Propiedad"
+              value={formData.tipoPropiedad}
+              onChange={(val) => handleChange("tipoPropiedad", val)}
+              data={[
+                { value: "propio", label: "Propio" },
+                { value: "externo", label: "Tercero" }
+              ]}
+              allowDeselect={false}
+              variant="filled"
+            />
+          </SimpleGrid>
 
-        .form-control,
-        .form-select {
-          border-radius: 10px;
-          border: 1px solid #dee2e6;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-          transition: all 0.2s ease-in-out;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-          border-color: #f1c40f;
-          box-shadow: 0 0 0 0.2rem rgba(241, 196, 15, 0.25);
-        }
-
-        .btn-soft {
-          border: none;
-          border-radius: 50px;
-          padding: 8px 20px;
-          font-weight: 600;
-          font-size: 0.9rem;
-          transition: all 0.2s ease;
-          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-        }
-
-        .btn-soft:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .btn-soft:focus,
-        .btn-soft:active,
-        .btn-soft:focus-visible {
-          background-color: inherit !important;
-          color: inherit !important;
-          box-shadow: 0 0 0 0.2rem rgba(241, 196, 15, 0.3) !important;
-          outline: none !important;
-          border-color: transparent !important;
-        }
-      `}</style>
-
-      <Modal show onHide={onClose} backdrop="static" centered>
-        <Modal.Header closeButton className="modal-header-sda">
-          <Modal.Title className="modal-title-sda">
-            {vehiculo ? "Editar Vehículo" : "Agregar Vehículo"}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group controlId="patente" className="mb-3">
-              <Form.Label>Patente</Form.Label>
-              <Form.Control
-                type="text"
-                name="patente"
-                value={formData.patente}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group controlId="marca" className="mb-3">
-              <Form.Label>Marca</Form.Label>
-              <Form.Control
-                type="text"
-                name="marca"
-                value={formData.marca}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group controlId="modelo" className="mb-3">
-              <Form.Label>Modelo</Form.Label>
-              <Form.Control
-                type="text"
-                name="modelo"
-                value={formData.modelo}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group controlId="capacidadKg" className="mb-3">
-              <Form.Label>Capacidad (kg)</Form.Label>
-              <Form.Control
-                type="number"
-                name="capacidadKg"
-                value={formData.capacidadKg}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group controlId="estado" className="mb-3">
-              <Form.Label>Estado</Form.Label>
-              <Form.Select
-                name="estado"
-                value={formData.estado}
-                onChange={handleChange}
-              >
-                <option value="disponible">Disponible</option>
-                <option value="en mantenimiento">En Mantenimiento</option>
-                <option value="fuera de servicio">Fuera de Servicio</option>
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group controlId="tipoPropiedad" className="mb-4">
-              <Form.Label>Tipo de Propiedad</Form.Label>
-              <Form.Select
-                name="tipoPropiedad"
-                value={formData.tipoPropiedad}
-                onChange={handleChange}
-              >
-                <option value="propio">Propio</option>
-                <option value="externo">Externo</option>
-              </Form.Select>
-            </Form.Group>
-
-            <div className="d-flex justify-content-end">
-              <Button
-                className="btn-soft me-2"
-                style={{ backgroundColor: "#f0f0f0", color: "#6b7280" }}
-                onClick={onClose}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="btn-soft"
-                style={{ backgroundColor: "#fff8dc", color: "#8b6f00" }}
-              >
-                {vehiculo ? "Actualizar" : "Crear"}
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
-    </>
+          <Group justify="flex-end" mt="lg">
+            <Button variant="subtle" color="gray" onClick={onClose}>Cancelar</Button>
+            <Button
+              type="submit"
+              variant="filled"
+              color="cyan"
+            >
+              {vehiculo ? "Actualizar Vehículo" : "Crear Vehículo"}
+            </Button>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 };
 

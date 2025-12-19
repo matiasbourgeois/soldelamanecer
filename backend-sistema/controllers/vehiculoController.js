@@ -8,9 +8,13 @@ const crearVehiculo = async (req, res) => {
     res.status(201).json(nuevoVehiculo);
   } catch (error) {
     console.error("Error al crear vehículo:", error);
+    if (error.code === 11000 || error.code === '11000' || (error.keyPattern && error.keyPattern.patente) || (error.message && /duplicate/i.test(error.message))) {
+      return res.status(400).json({ error: "La patente ya está registrada." });
+    }
     res.status(500).json({ error: "Error al crear vehículo" });
   }
-};
+}
+
 
 // 🔍 Obtener todos los vehículos
 const obtenerVehiculos = async (req, res) => {
@@ -38,6 +42,9 @@ const actualizarVehiculo = async (req, res) => {
     res.json(vehiculoActualizado);
   } catch (error) {
     console.error("Error al actualizar vehículo:", error);
+    if (error.code === 11000 || error.code === '11000' || (error.message && /duplicate/i.test(error.message)) || (error.message && /E11000/i.test(error.message))) {
+      return res.status(400).json({ error: "La patente ya está registrada." });
+    }
     res.status(500).json({ error: "Error al actualizar vehículo" });
   }
 };
@@ -91,11 +98,29 @@ const obtenerVehiculosPaginado = async (req, res) => {
 };
 
 
+
+// 🗑️ Eliminar vehículo
+const eliminarVehiculo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const vehiculoEliminado = await Vehiculo.findByIdAndDelete(id);
+
+    if (!vehiculoEliminado) {
+      return res.status(404).json({ error: "Vehículo no encontrado" });
+    }
+
+    res.json({ message: "Vehículo eliminado correctamente" });
+  } catch (error) {
+    console.error("Error al eliminar vehículo:", error);
+    res.status(500).json({ error: "Error al eliminar vehículo" });
+  }
+};
+
 module.exports = {
   crearVehiculo,
   obtenerVehiculos,
   actualizarVehiculo,
   cambiarEstadoActivo,
   obtenerVehiculosPaginado,
-
+  eliminarVehiculo,
 };

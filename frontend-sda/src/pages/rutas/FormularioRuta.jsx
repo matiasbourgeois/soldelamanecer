@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
-import Select from "react-select";
+import { Modal, Button, TextInput, Select, MultiSelect, Group, Stack, LoadingOverlay } from "@mantine/core";
 import { apiSistema } from "../../utils/api";
-import { mostrarAlerta } from "../../utils/alertaGlobal";
-
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
 
 const FormularioRuta = ({ onClose, ruta, recargar }) => {
+  // Mantine MultiSelect works with string arrays for values.
   const [formData, setFormData] = useState({
     codigo: "",
     horaSalida: "",
     frecuencia: "",
     descripcion: "",
-    localidades: [],
+    localidades: [], // IDs array
     choferAsignado: "",
     vehiculoAsignado: "",
   });
@@ -19,6 +18,7 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
   const [localidadesDisponibles, setLocalidadesDisponibles] = useState([]);
   const [choferes, setChoferes] = useState([]);
   const [vehiculos, setVehiculos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDatos = async () => {
@@ -36,6 +36,8 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
         setVehiculos(await vRes.json());
       } catch (error) {
         console.error("Error al cargar datos relacionados:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchDatos();
@@ -43,32 +45,25 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
 
   useEffect(() => {
     if (ruta) {
-      const localidadesFormateadas = ruta.localidades.map((loc) => {
-        if (typeof loc === "string") {
-          const encontrada = localidadesDisponibles.find((l) => l._id === loc);
-          return {
-            value: loc,
-            label: encontrada ? encontrada.nombre : loc,
-          };
-        } else if (loc._id && loc.nombre) {
-          return { value: loc._id, label: loc.nombre };
-        } else {
-          return { value: loc.value, label: loc.label };
-        }
+      // Map existing localities to just IDs for Mantine MultiSelect
+      const localidadesIDs = ruta.localidades.map((loc) => {
+        if (typeof loc === 'string') return loc;
+        if (loc._id) return loc._id;
+        return loc.value || ""; // Fallback
       });
 
       setFormData({
         ...ruta,
-        localidades: localidadesFormateadas,
+        localidades: localidadesIDs,
         choferAsignado:
-        ruta.choferAsignado &&
-        typeof ruta.choferAsignado === "object" &&
-        ruta.choferAsignado._id
-          ? ruta.choferAsignado._id
-          : typeof ruta.choferAsignado === "string"
-          ? ruta.choferAsignado
-          : "",
-      
+          ruta.choferAsignado &&
+            typeof ruta.choferAsignado === "object" &&
+            ruta.choferAsignado._id
+            ? ruta.choferAsignado._id
+            : typeof ruta.choferAsignado === "string"
+              ? ruta.choferAsignado
+              : "",
+
         vehiculoAsignado:
           ruta.vehiculoAsignado && typeof ruta.vehiculoAsignado === "object"
             ? ruta.vehiculoAsignado._id
@@ -79,20 +74,18 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
 
 
   const handleChange = (e) => {
+    // For standard inputs
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLocalidadesChange = (selected) => {
-    setFormData({ ...formData, localidades: selected });
+  // Handlers for Mantine custom inputs (Select/MultiSelect) returns value directly
+  const handleSelectChange = (name, value) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const localidadesSoloIDs = formData.localidades.map((loc) =>
-      typeof loc === "string" ? loc : loc.value
-    );
 
     const url = ruta ? apiSistema(`/api/rutas/${ruta._id}`) : apiSistema("/api/rutas");
     const method = ruta ? "PATCH" : "POST";
@@ -101,7 +94,7 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
       ...formData,
       choferAsignado: formData.choferAsignado || null,
       vehiculoAsignado: formData.vehiculoAsignado || null,
-      localidades: localidadesSoloIDs,
+      // localidades is already an array of IDs
     };
 
     try {
@@ -113,191 +106,123 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
 
 
       if (res.ok) {
-        mostrarAlerta(ruta ? "Ruta actualizada" : "Ruta creada", "success");
+        mostrarAlerta(ruta ? "✅ Ruta actualizada" : "✅ Ruta creada", "success");
         onClose();
         recargar();
       } else {
         const data = await res.json();
-        mostrarAlerta(data.error || "Error al guardar la ruta", "danger");
+        mostrarAlerta(data.error || "❌ Error al guardar la ruta", "danger");
       }
     } catch (error) {
       console.error("Error al guardar ruta:", error);
-      mostrarAlerta("Error de conexión", "danger");
+      mostrarAlerta("❌ Error de conexión", "danger");
     }
   };
 
-  const opcionesLocalidades = localidadesDisponibles.map((l) => ({
-    value: l._id,
-    label: l.nombre,
+  // Prepare data for Mantine Selects
+  const opcionesLocalidades = localidadesDisponibles
+    .filter((l) => l.activa || (ruta && ruta.localidades.some(rLoc => {
+      // Handle potential different formats of ruta.localidades items (string ID or object)
+      const rId = typeof rLoc === 'string' ? rLoc : rLoc._id;
+      return rId === l._id;
+    })))
+    .map((l) => ({
+      value: l._id,
+      label: l.nombre,
+    }));
+
+  const opcionesChoferes = Array.isArray(choferes) ? choferes.map((c) => ({
+    value: c._id,
+    label: c.usuario?.nombre ? `${c.usuario.nombre} ${c.usuario.apellido || ""}` : "Sin nombre"
+  })) : [];
+
+  const opcionesVehiculos = vehiculos.map((v) => ({
+    value: v._id,
+    label: `${v.patente} - ${v.modelo}`
   }));
 
   return (
-    <>
-      <style>{`
-        .modal-body {
-          font-family: 'Montserrat', sans-serif;
-        }
+    <Modal opened={true} onClose={onClose} title={ruta ? "Editar Ruta" : "Agregar Ruta"} size="lg" centered>
+      <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
+      <form onSubmit={handleSubmit}>
+        <Stack>
+          <TextInput
+            label="Código de Ruta"
+            placeholder="Ej: R-001"
+            name="codigo"
+            value={formData.codigo}
+            onChange={handleChange}
+            required
+          />
 
-        .form-control,
-        .form-select {
-          border-radius: 10px;
-          border: 1px solid #dee2e6;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-          transition: all 0.2s ease-in-out;
-        }
+          <Group grow>
+            <TextInput
+              label="Hora de Salida"
+              placeholder="Ej: 08:30"
+              name="horaSalida"
+              value={formData.horaSalida}
+              onChange={handleChange}
+              required
+            />
+            <TextInput
+              label="Frecuencia"
+              placeholder="Ej: Lunes a Viernes"
+              name="frecuencia"
+              value={formData.frecuencia}
+              onChange={handleChange}
+              required
+            />
+          </Group>
 
-        .form-control:focus,
-        .form-select:focus {
-          border-color: #f1c40f;
-          box-shadow: 0 0 0 0.2rem rgba(241, 196, 15, 0.25);
-        }
+          <TextInput
+            label="Descripción"
+            placeholder="Descripción breve del recorrido..."
+            name="descripcion"
+            value={formData.descripcion}
+            onChange={handleChange}
+          />
 
-        .btn-soft {
-          border: none;
-          border-radius: 50px;
-          padding: 8px 20px;
-          font-weight: 600;
-          font-size: 0.9rem;
-          transition: all 0.2s ease;
-          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-        }
+          <MultiSelect
+            label="Localidades"
+            placeholder="Seleccionar localidades..."
+            data={opcionesLocalidades}
+            value={formData.localidades}
+            onChange={(val) => handleSelectChange("localidades", val)}
+            searchable
+            clearable
+            maxDropdownHeight={200}
+          />
 
-        .btn-soft:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
+          <Group grow>
+            <Select
+              label="Chofer Asignado"
+              placeholder="Seleccionar chofer (opcional)"
+              data={opcionesChoferes}
+              value={formData.choferAsignado}
+              onChange={(val) => handleSelectChange("choferAsignado", val)}
+              searchable
+              clearable
+            />
+            <Select
+              label="Vehículo Asignado"
+              placeholder="Seleccionar vehículo (opcional)"
+              data={opcionesVehiculos}
+              value={formData.vehiculoAsignado}
+              onChange={(val) => handleSelectChange("vehiculoAsignado", val)}
+              searchable
+              clearable
+            />
+          </Group>
 
-        .btn-soft:focus,
-        .btn-soft:active,
-        .btn-soft:focus-visible {
-          background-color: inherit !important;
-          color: inherit !important;
-          box-shadow: 0 0 0 0.2rem rgba(241, 196, 15, 0.3) !important;
-          outline: none !important;
-          border-color: transparent !important;
-        }
-      `}</style>
-
-      <Modal show onHide={onClose} backdrop="static" centered>
-      <Modal.Header closeButton className="modal-header-sda">
-          <Modal.Title className="modal-title-sda">{ruta ? "Editar Ruta" : "Agregar Ruta"}</Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Label>Código</Form.Label>
-              <Form.Control
-                name="codigo"
-                value={formData.codigo}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Hora de Salida</Form.Label>
-              <Form.Control
-                name="horaSalida"
-                value={formData.horaSalida}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Frecuencia</Form.Label>
-              <Form.Control
-                name="frecuencia"
-                value={formData.frecuencia}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Descripción</Form.Label>
-              <Form.Control
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleChange}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Localidades</Form.Label>
-              <Select
-                isMulti
-                options={opcionesLocalidades}
-                value={formData.localidades}
-                onChange={handleLocalidadesChange}
-                placeholder="Escribí para buscar localidades..."
-                className="basic-multi-select"
-                classNamePrefix="select"
-              />
-              <Form.Text className="text-muted">
-                Podés escribir para buscar una localidad por nombre.
-              </Form.Text>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Chofer asignado (opcional)</Form.Label>
-              <Form.Select
-                name="choferAsignado"
-                value={formData.choferAsignado || ""}
-                onChange={handleChange}
-              >
-                <option value="">Sin asignar</option>
-                {Array.isArray(choferes) &&
-                  choferes.map((c) => {
-                    const nombreChofer = c.usuario?.nombre || "Sin nombre";
-                    return (
-                      <option key={c._id} value={c._id}>
-                        {nombreChofer}
-                      </option>
-                    );
-                  })}
-
-              </Form.Select>
-
-            </Form.Group>
-
-            <Form.Group className="mb-4">
-              <Form.Label>Vehículo asignado (opcional)</Form.Label>
-              <Form.Select
-                name="vehiculoAsignado"
-                value={formData.vehiculoAsignado || ""}
-                onChange={handleChange}
-              >
-                <option value="">Sin asignar</option>
-                {vehiculos.map((v) => (
-                  <option key={v._id} value={v._id}>
-                    {v.patente}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            <div className="d-flex justify-content-end">
-              <Button
-                className="btn-soft me-2"
-                style={{ backgroundColor: "#f0f0f0", color: "#6b7280" }}
-                onClick={onClose}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="btn-soft"
-                style={{ backgroundColor: "#fff8dc", color: "#8b6f00" }}
-              >
-                {ruta ? "Actualizar" : "Crear"}
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
-    </>
+          <Group justify="flex-end" mt="lg">
+            <Button variant="default" onClick={onClose}>Cancelar</Button>
+            <Button type="submit" color="cyan">
+              {ruta ? "Actualizar" : "Crear"}
+            </Button>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 };
 

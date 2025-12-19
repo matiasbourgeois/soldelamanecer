@@ -1,87 +1,129 @@
 import React from "react";
 import {
   Pencil,
-  Eye,
-  EyeOff,
   Trash2,
-  GripVertical
+  MapPin,
+  Check,
+  X
 } from "lucide-react";
+import {
+  Table,
+  ScrollArea,
+  ActionIcon,
+  Group,
+  Text,
+  Badge,
+  Pagination,
+  Loader,
+  Center,
+  Tooltip,
+  Switch
+} from "@mantine/core";
 
-// ✅ Importar los estilos externos
-import '../../styles/tablasSistema.css';
-import '../../styles/botonesSistema.css';
-import '../../styles/estadosSistema.css';
+const TablaLocalidades = ({
+  localidades,
+  onEdit,
+  onToggleEstado,
+  onDelete,
+  loading = false,
+  paginaActual,
+  setPaginaActual,
+  totalLocalidades,
+  limite = 10
+}) => {
 
-const TablaLocalidades = ({ localidades, onEdit, onToggleEstado, onDelete }) => {
+  const totalPaginas = Math.ceil(totalLocalidades / limite);
+
   return (
-    <div className="table-responsive">
-      <table className="table align-middle text-center shadow-sm rounded tabla-montserrat">
-        <thead className="encabezado-moderno">
-          <tr>
-            <th></th>
-            <th>Nombre</th>
-            <th>Frecuencia</th>
-            <th>Horarios</th>
-            <th>Código Postal</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {localidades.length === 0 ? (
-            <tr>
-              <td colSpan="7" className="text-muted py-4">
-                No hay localidades registradas.
-              </td>
-            </tr>
-          ) : (
-            localidades.map((loc) => (
-              <tr key={loc._id} className="tabla-moderna-fila">
-                <td>
-                  <GripVertical size={20} className="text-muted" />
-                </td>
-                <td>{loc.nombre}</td>
-                <td>{loc.frecuencia}</td>
-                <td>{loc.horarios}</td>
-                <td>{loc.codigoPostal}</td>
-                <td>
-                  <span className={loc.activa ? "estado-activo" : "estado-inactivo"}>
-                    {loc.activa ? "Activa" : "Inactiva"}
-                  </span>
-                </td>
-                <td>
-                  <div className="d-flex justify-content-center gap-2">
-                    <button
-                      className="btn-icono btn-editar"
-                      title="Editar"
-                      onClick={() => onEdit(loc)}
-                    >
-                      <Pencil size={18} />
-                    </button>
-                    <button
-                      className={`btn-icono ${
-                        loc.activa ? "btn-desactivar" : "btn-activar"
-                      }`}
-                      title={loc.activa ? "Desactivar" : "Activar"}
-                      onClick={() => onToggleEstado(loc._id)}
-                    >
-                      {loc.activa ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                    <button
-                      className="btn-icono btn-eliminar"
-                      title="Eliminar"
-                      onClick={() => onDelete(loc._id)}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <ScrollArea>
+        <Table striped highlightOnHover verticalSpacing="sm" withTableBorder={false}>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Nombre</Table.Th>
+              <Table.Th>Frecuencia</Table.Th>
+              <Table.Th>Horarios</Table.Th>
+              <Table.Th>Código Postal</Table.Th>
+              <Table.Th ta="center">Estado</Table.Th>
+              <Table.Th ta="center">Acciones</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+
+          <Table.Tbody>
+            {loading ? (
+              <Table.Tr>
+                <Table.Td colSpan={6}>
+                  <Center py="xl">
+                    <Loader color="cyan" type="dots" />
+                  </Center>
+                </Table.Td>
+              </Table.Tr>
+            ) : localidades.length === 0 ? (
+              <Table.Tr>
+                <Table.Td colSpan={6}>
+                  <Text ta="center" py="md" c="dimmed">
+                    No hay localidades registradas.
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+            ) : (
+              localidades.map((loc) => (
+                <Table.Tr key={loc._id}>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <MapPin size={16} color="gray" style={{ stroke: '#495057' }} />
+                      <Text fw={500}>{loc.nombre}</Text>
+                    </Group>
+                  </Table.Td>
+                  <Table.Td><Text size="sm">{loc.frecuencia}</Text></Table.Td>
+                  <Table.Td><Text size="sm">{loc.horarios}</Text></Table.Td>
+                  <Table.Td><Badge variant="outline" color="gray">{loc.codigoPostal}</Badge></Table.Td>
+                  <Table.Td ta="center">
+                    <Tooltip label={loc.activa ? "Desactivar" : "Activar"}>
+                      <Switch
+                        checked={loc.activa}
+                        onChange={() => onToggleEstado(loc._id)}
+                        color="teal"
+                        size="sm"
+                        onLabel={<Check size={12} style={{ display: 'block' }} />}
+                        offLabel={<X size={12} style={{ display: 'block' }} />}
+                      />
+                    </Tooltip>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group justify="center" gap={8}>
+                      <Tooltip label="Editar">
+                        <ActionIcon variant="subtle" color="gray" onClick={() => onEdit(loc)} style={{ stroke: '#495057' }}>
+                          <Pencil size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Eliminar">
+                        <ActionIcon variant="subtle" color="gray" onClick={() => onDelete(loc._id)} style={{ stroke: '#495057' }}>
+                          <Trash2 size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))
+            )}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
+
+      {totalPaginas > 1 && (
+        <Group justify="flex-end" mt="md">
+          <Pagination
+            total={totalPaginas}
+            value={paginaActual}
+            onChange={setPaginaActual}
+            color="cyan"
+            radius="md"
+            withEdges
+          />
+        </Group>
+      )}
+    </>
   );
 };
 

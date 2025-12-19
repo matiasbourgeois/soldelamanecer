@@ -1,17 +1,29 @@
 import React, { useState } from "react";
 import ModalLocalidadesRuta from "./ModalLocalidadesRuta";
-import { Pencil, Trash2 } from "lucide-react";
-import "../../styles/paginacion.css";
-
+import { Pencil, Trash2, MapPin } from "lucide-react";
+import {
+  Table,
+  ScrollArea,
+  ActionIcon,
+  Group,
+  Text,
+  Badge,
+  Pagination,
+  Loader,
+  Center,
+  Tooltip,
+  Button
+} from "@mantine/core";
 
 const TablaRutas = ({
   rutas = [],
   onEditar,
   onEliminar,
   recargar,
-  paginaActual = 0,
+  paginaActual = 1,
   totalRutas = 0,
-  setPaginaActual
+  setPaginaActual,
+  loading = false
 }) => {
 
   const [mostrarModal, setMostrarModal] = useState(false);
@@ -22,159 +34,143 @@ const TablaRutas = ({
     setMostrarModal(true);
   };
 
+  const totalPaginas = Math.ceil(totalRutas / 10);
+
   return (
     <>
-      <div className="table-responsive">
-        <table className="table align-middle text-center shadow-sm rounded tabla-montserrat">
-          <thead className="encabezado-moderno">
-            <tr>
-              <th></th>
-              <th>Código</th>
-              <th>Hora de Salida</th>
-              <th>Frecuencia</th>
-              <th>Descripción</th>
-              <th>Chofer</th>
-              <th>Vehículo</th>
-              <th>Localidades</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(rutas) && rutas.length > 0 ? (
+      <ScrollArea>
+        <Table striped highlightOnHover verticalSpacing="sm" withTableBorder={false}>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Código</Table.Th>
+              <Table.Th>Salida</Table.Th>
+              <Table.Th>Frecuencia</Table.Th>
+              <Table.Th>Descripción</Table.Th>
+              <Table.Th>Chofer</Table.Th>
+              <Table.Th>Vehículo</Table.Th>
+              <Table.Th>Localidades</Table.Th>
+              <Table.Th ta="center">Acciones</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {loading ? (
+              <Table.Tr>
+                <Table.Td colSpan={8}>
+                  <Center py="xl">
+// LOADER
+                    <Loader color="cyan" type="dots" />
+                  </Center>
+                </Table.Td>
+              </Table.Tr>
+            ) : Array.isArray(rutas) && rutas.length > 0 ? (
               rutas.map((r) => (
-                <tr key={r._id} className="tabla-moderna-fila">
-                  <td className="text-muted" style={{ fontSize: "1.2rem" }}>⋮⋮</td>
-                  <td>{r.codigo}</td>
-                  <td>{r.horaSalida}</td>
-                  <td>{r.frecuencia}</td>
-                  <td>{r.descripcion}</td>
-                  <td>
-                    {r.choferAsignado?.usuario?.nombre
-                      ? `${r.choferAsignado.usuario.nombre} ${r.choferAsignado.usuario.apellido || ""}`.trim()
-                      : "Sin asignar"}
-                  </td>
-                  <td>{r.vehiculoAsignado?.patente || "Sin asignar"}</td>
-                  <td>
-                  {r.localidades?.length > 1 ? (
-                      <button
-                        className="btn-pill-texto"
+                <Table.Tr key={r._id}>
+                  <Table.Td>
+                    <Badge color="cyan" variant="light" size="lg" w={100} style={{ display: 'flex', justifyContent: 'center' }}>
+                      {r.codigo}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>{r.horaSalida}</Table.Td>
+                  <Table.Td>
+                    <Text size="sm">{r.frecuencia}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" c="dimmed" lineClamp={1} w={200} title={r.descripcion}>
+                      {r.descripcion}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    {r.choferAsignado?.usuario?.nombre ? (
+                      <Text fw={500} size="sm">
+                        {r.choferAsignado.usuario.nombre} {r.choferAsignado.usuario.apellido || ""}
+                      </Text>
+                    ) : (
+                      <Text c="dimmed" size="xs">Sin asignar</Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td>
+                    {r.vehiculoAsignado ? (
+                      <Badge color="gray" variant="outline" w={100} style={{ display: 'flex', justifyContent: 'center' }}>
+                        {r.vehiculoAsignado.patente}
+                      </Badge>
+                    ) : (
+                      <Text c="dimmed" size="xs">-</Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td>
+                    {r.localidades?.length > 1 ? (
+                      <Button
+                        variant="light"
+                        color="cyan"
+                        size="xs"
+                        px={8}
+                        leftSection={<MapPin size={14} style={{ marginRight: -4 }} />}
                         onClick={() => abrirModalLocalidades(r.localidades)}
                       >
                         Ver Localidades
-                      </button>
+                      </Button>
                     ) : (
-                      r.localidades?.map((l) => l.nombre).join(", ")
+                      <Text size="sm">{r.localidades?.[0]?.nombre || "-"}</Text>
                     )}
-                  </td>
-                  <td>
-                    <div className="d-flex justify-content-center gap-2">
-                      <button
-                        className="btn-icono btn-editar"
-                        title="Editar"
-                        onClick={() => onEditar(r)}
-                      >
-                        <Pencil size={18} />
-                      </button>
-                      <button
-                        className="btn-icono btn-eliminar"
-                        title="Eliminar"
-                        onClick={() => onEliminar(r._id)}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group justify="center" gap={8}>
+                      <Tooltip label="Editar Ruta">
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          onClick={() => onEditar(r)}
+                          style={{ stroke: '#495057' }}
+                        >
+                          <Pencil size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Eliminar Ruta">
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          onClick={() => onEliminar(r._id)}
+                          style={{ stroke: '#495057' }}
+                        >
+                          <Trash2 size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
               ))
             ) : (
-              <tr>
-                <td colSpan="9" className="text-muted py-4">
-                  No hay rutas registradas.
-                </td>
-              </tr>
+              <Table.Tr>
+                <Table.Td colSpan={8}>
+                  <Text ta="center" py="md" c="dimmed">
+                    No se encontraron rutas registradas.
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
             )}
-          </tbody>
+          </Table.Tbody>
+        </Table>
+      </ScrollArea >
 
-        </table>
-      </div>
+      {totalPaginas > 1 && (
+        <Group justify="flex-end" mt="md">
+          <Pagination
+            total={totalPaginas}
+            value={paginaActual}
+            onChange={setPaginaActual}
+            color="cyan"
+            radius="md"
+            withEdges
+          />
+        </Group>
+      )
+      }
 
       <ModalLocalidadesRuta
         mostrar={mostrarModal}
         onClose={() => setMostrarModal(false)}
         localidades={localidadesModal}
       />
-      {totalRutas > 10 && (
-        <div className="paginacion-container mt-3">
-          <span className="paginacion-info">
-            Mostrando {rutas.length} de {totalRutas} rutas
-          </span>
-
-          <div className="paginacion-botones">
-            {(() => {
-              const totalPaginas = Math.ceil(totalRutas / 10);
-              const visiblePages = 5;
-              const totalGrupos = Math.ceil(totalPaginas / visiblePages);
-              const grupoActual = Math.floor(paginaActual / visiblePages);
-              const start = grupoActual * visiblePages;
-              const end = Math.min(start + visiblePages, totalPaginas);
-
-              return (
-                <>
-                  {grupoActual > 0 && (
-                    <button
-                      className="paginacion-btn"
-                      onClick={() => setPaginaActual(start - visiblePages)}
-                    >
-                      ◀◀
-                    </button>
-                  )}
-
-                  {paginaActual > 0 && (
-                    <button
-                      className="paginacion-btn"
-                      onClick={() => setPaginaActual(paginaActual - 1)}
-                    >
-                      ◀
-                    </button>
-                  )}
-
-                  {Array.from({ length: end - start }).map((_, i) => {
-                    const pageIndex = start + i;
-                    return (
-                      <button
-                        key={pageIndex}
-                        className={`paginacion-btn ${paginaActual === pageIndex ? "activo" : ""}`}
-                        onClick={() => setPaginaActual(pageIndex)}
-                      >
-                        {pageIndex + 1}
-                      </button>
-                    );
-                  })}
-
-                  {paginaActual < totalPaginas - 1 && (
-                    <button
-                      className="paginacion-btn"
-                      onClick={() => setPaginaActual(paginaActual + 1)}
-                    >
-                      ▶
-                    </button>
-                  )}
-
-                  {grupoActual < totalGrupos - 1 && (
-                    <button
-                      className="paginacion-btn"
-                      onClick={() => setPaginaActual(end)}
-                    >
-                      ▶▶
-                    </button>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      )}
-
     </>
   );
 };

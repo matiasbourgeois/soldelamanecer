@@ -2,18 +2,10 @@ import React, { useEffect, useState } from "react";
 import TablaRutas from "./TablaRutas";
 import FormularioRuta from "./FormularioRuta";
 import { apiSistema } from "../../utils/api";
-import { FormControl, InputGroup } from "react-bootstrap";
-import { Link } from "react-router-dom";
-import { mostrarAlerta } from "../../utils/alertaGlobal";
-import { confirmarAccion } from "../../utils/confirmarAccion";
-
-
-
-// ✅ Importar estilos globales
-import "../../styles/botonesSistema.css";
-import "../../styles/tablasSistema.css";
-import "../../styles/formularioSistema.css";
-import "../../styles/titulosSistema.css";
+import { Container, Paper, Title, Group, Button, TextInput, Transition } from "@mantine/core";
+import { Plus, Map, Search } from "lucide-react";
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
+import { confirmarAccion } from "../../utils/confirmarAccion.jsx";
 
 const RutasAdmin = () => {
   const [rutas, setRutas] = useState([]);
@@ -22,23 +14,32 @@ const RutasAdmin = () => {
   const [rutaEditando, setRutaEditando] = useState(null);
   const [filtro, setFiltro] = useState("");
   const [totalRutas, setTotalRutas] = useState(0);
-  const [paginaActual, setPaginaActual] = useState(0);
+  const [paginaActual, setPaginaActual] = useState(1); // Mantine uses 1-based index
+  const [loading, setLoading] = useState(false);
 
+  const limite = 10;
 
-
-  const fetchRutas = async (pagina = 0, busqueda = "") => {
+  const fetchRutas = async (pagina = 1, busqueda = "") => {
+    setLoading(true);
     try {
-      const res = await fetch(apiSistema(`/api/rutas?pagina=${pagina}&busqueda=${busqueda}`));
+      // Backend usually expects 0-based index if not changed, let's adjust if needed.
+      // Based on previous code: fetchRutas(paginaActual, filtro) where paginaActual was 0 initial.
+      const pageIndex = pagina - 1;
+      const res = await fetch(apiSistema(`/api/rutas?pagina=${pageIndex}&busqueda=${busqueda}`));
       const data = await res.json();
-      setRutas(data.rutas);
-      setTotalRutas(data.total);
-      setPaginaActual(pagina);
+      if (res.ok) {
+        setRutas(data.rutas);
+        setTotalRutas(data.total);
+        setPaginaActual(pagina);
+      } else {
+        console.error("Error fetching rutas:", data.error);
+      }
     } catch (error) {
       console.error("Error al obtener rutas:", error);
+    } finally {
+      setLoading(false);
     }
   };
-
-
 
   const fetchLocalidades = async () => {
     try {
@@ -53,12 +54,13 @@ const RutasAdmin = () => {
   useEffect(() => {
     const timeout = setTimeout(() => {
       fetchRutas(paginaActual, filtro);
-    }, 300); // espera 300ms luego de dejar de escribir
-
-    return () => clearTimeout(timeout); // limpia si el usuario sigue escribiendo
+    }, 300);
+    return () => clearTimeout(timeout);
   }, [paginaActual, filtro]);
 
-
+  useEffect(() => {
+    fetchLocalidades();
+  }, []); // Load once
 
   const abrirModal = (ruta = null) => {
     setRutaEditando(ruta);
@@ -83,72 +85,80 @@ const RutasAdmin = () => {
       });
 
       if (res.ok) {
-        mostrarAlerta("Ruta eliminada correctamente.", "success");
-        fetchRutas();
+        mostrarAlerta("✅ Ruta eliminada correctamente.", "success");
+        fetchRutas(paginaActual, filtro);
       } else {
         const data = await res.json();
-        mostrarAlerta(data.error || "Error al eliminar la ruta", "danger");
+        mostrarAlerta(data.error || "❌ Error al eliminar la ruta", "danger");
       }
     } catch (error) {
       console.error("Error al eliminar ruta:", error);
-      mostrarAlerta("Error de conexión", "danger");
+      mostrarAlerta("❌ Error de conexión", "danger");
     }
   };
 
-
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="titulo-seccion">Gestión de Rutas</h2>
+    <Container size="xl" py="md">
+      <Paper p="md" radius="md" shadow="sm" withBorder mb="lg">
+        <Group justify="space-between" mb="md">
+          <Title order={2} fw={700} c="dimmed">
+            Gestión de Rutas
+          </Title>
+          <Group>
+            <Button
+              leftSection={<Map size={18} />}
+              variant="default"
+              component="a" // Use 'a' or Link if needed, but original used Link.
+              href="/admin/localidades" // better to use Link component if internal.
+              onClick={(e) => { e.preventDefault(); window.location.href = '/admin/localidades'; }} // Simple nav
+            >
+              Gestionar Localidades
+            </Button>
+            <Button
+              leftSection={<Plus size={18} />}
+              color="cyan"
+              variant="filled"
+              onClick={() => abrirModal()}
+            >
+              Nueva Ruta
+            </Button>
+          </Group>
+        </Group>
 
-        <div className="d-flex">
-          <button className="btn-sda-principal me-2" onClick={() => abrirModal()}>
-            Agregar nueva ruta
-          </button>
-
-          <Link
-            to="/admin/localidades"
-            className="btn-sda-secundario"
-          >
-            Gestionar Localidades
-          </Link>
-
-        </div>
-      </div>
-
-      <InputGroup className="mb-3">
-        <FormControl
-          className="input-sistema"
+        <TextInput
           placeholder="Buscar por código de ruta..."
+          leftSection={<Search size={16} />}
           value={filtro}
           onChange={(e) => {
             setFiltro(e.target.value);
-            setPaginaActual(0); // Esto solo reinicia la paginación, luego el useEffect se encarga
+            setPaginaActual(1); // Reset to first page on search
           }}
+          mb="md"
+          radius="md"
+          w={{ base: "100%", sm: 300 }}
         />
 
-      </InputGroup>
-
-      <TablaRutas
-        rutas={rutas}
-        onEditar={abrirModal}
-        onEliminar={eliminarRuta}
-        recargar={fetchRutas}
-        paginaActual={paginaActual}
-        totalRutas={totalRutas}
-        setPaginaActual={setPaginaActual}
-      />
-
+        <TablaRutas
+          rutas={rutas}
+          onEditar={abrirModal}
+          onEliminar={eliminarRuta}
+          paginaActual={paginaActual}
+          totalRutas={totalRutas}
+          setPaginaActual={setPaginaActual}
+          loading={loading}
+          recargar={() => fetchRutas(paginaActual, filtro)}
+        />
+      </Paper>
 
       {mostrarModal && (
         <FormularioRuta
           onClose={cerrarModal}
           ruta={rutaEditando}
           localidades={localidades}
-          recargar={fetchRutas}
+          recargar={() => fetchRutas(paginaActual, filtro)}
         />
       )}
-    </div>
+    </Container>
   );
 };
 

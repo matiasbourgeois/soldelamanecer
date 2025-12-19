@@ -3,40 +3,38 @@ import TablaLocalidades from "./TablaLocalidades";
 import FormularioLocalidad from "./FormularioLocalidad";
 import axios from "axios";
 import { apiSistema } from "../../utils/api";
-import { InputGroup, FormControl } from "react-bootstrap";
-import { mostrarAlerta } from "../../utils/alertaGlobal";
-import { confirmarAccion } from "../../utils/confirmarAccion";
-
-
-
-// ✅ Estilos globales
-import "../../styles/botonesSistema.css";
-import "../../styles/formularioSistema.css";
-import "../../styles/titulosSistema.css";
-
+import { Container, Paper, Title, Group, Button, TextInput, Transition } from "@mantine/core";
+import { Plus, Search, MapPin } from "lucide-react";
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
+import { confirmarAccion } from "../../utils/confirmarAccion.jsx";
 
 const LocalidadesAdmin = () => {
   const [localidades, setLocalidades] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [localidadSeleccionada, setLocalidadSeleccionada] = useState(null);
-  const [paginaActual, setPaginaActual] = useState(0);
+  const [paginaActual, setPaginaActual] = useState(1); // Mantine uses 1-based
   const [limite] = useState(10);
   const [totalLocalidades, setTotalLocalidades] = useState(0);
   const [filtro, setFiltro] = useState("");
+  const [loading, setLoading] = useState(false);
 
 
-  const obtenerLocalidades = async () => {
+  const obtenerLocalidades = async (pagina = 1, busqueda = "") => {
+    setLoading(true);
     try {
       const query = new URLSearchParams();
-      query.append("pagina", paginaActual);
+      // Backend expects 0-indexed page
+      query.append("pagina", pagina - 1);
       query.append("limite", limite);
-      if (filtro) query.append("busqueda", filtro);
+      if (busqueda) query.append("busqueda", busqueda);
 
       const { data } = await axios.get(apiSistema(`/api/localidades/paginadas?${query.toString()}`));
       setLocalidades(data.resultados);
       setTotalLocalidades(data.total);
     } catch (error) {
       console.error("❌ Error al obtener localidades:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,7 +46,8 @@ const LocalidadesAdmin = () => {
       } else {
         await axios.post(apiSistema("/api/localidades"), localidad);
       }
-      obtenerLocalidades();
+      mostrarAlerta(localidad._id ? "✅ Localidad actualizada" : "✅ Localidad creada", "success");
+      obtenerLocalidades(paginaActual, filtro);
       cerrarFormulario();
     } catch (error) {
       console.error("❌ Error al guardar localidad:", error);
@@ -61,10 +60,11 @@ const LocalidadesAdmin = () => {
       "¿Eliminar localidad?",
       "Esta acción no se puede deshacer"
     );
-    if (!confirmado) return;    
+    if (!confirmado) return;
     try {
       await axios.delete(apiSistema(`/api/localidades/${id}`));
-      obtenerLocalidades();
+      mostrarAlerta("✅ Localidad eliminada", "success");
+      obtenerLocalidades(paginaActual, filtro);
     } catch (error) {
       console.error("❌ Error al eliminar localidad:", error);
       mostrarAlerta("Error al eliminar la localidad", "danger");
@@ -74,9 +74,11 @@ const LocalidadesAdmin = () => {
   const cambiarEstado = async (id) => {
     try {
       await axios.patch(apiSistema(`/api/localidades/estado/${id}`));
-      obtenerLocalidades();
+      // Optimistic or refresh? Refresh is safer.
+      obtenerLocalidades(paginaActual, filtro);
     } catch (error) {
       console.error("❌ Error al cambiar estado:", error);
+      mostrarAlerta("Error al cambiar estado", "danger");
     }
   };
 
@@ -91,91 +93,55 @@ const LocalidadesAdmin = () => {
   };
 
   useEffect(() => {
-    obtenerLocalidades();
+    const timeout = setTimeout(() => {
+      obtenerLocalidades(paginaActual, filtro);
+    }, 300);
+    return () => clearTimeout(timeout);
   }, [paginaActual, filtro]);
 
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="titulo-seccion">Gestión de Localidades</h2>
-        <button className="btn-sda-principal" onClick={() => setShowForm(true)}>
-          Agregar nueva localidad
-        </button>
-      </div>
+    <Container size="xl" py="md">
+      <Paper p="md" radius="md" shadow="sm" withBorder mb="lg">
+        <Group justify="space-between" mb="md">
+          <Title order={2} fw={700} c="dimmed">
+            Gestión de Localidades
+          </Title>
+          <Button
+            leftSection={<Plus size={18} />}
+            color="cyan"
+            variant="filled"
+            onClick={() => setShowForm(true)}
+          >
+            Nueva Localidad
+          </Button>
+        </Group>
 
-      <InputGroup className="mb-3">
-        <FormControl
-          className="input-sistema"
+        <TextInput
           placeholder="Buscar localidad por nombre..."
+          leftSection={<Search size={16} />}
           value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
+          onChange={(e) => {
+            setFiltro(e.target.value);
+            setPaginaActual(1);
+          }}
+          mb="md"
+          radius="md"
+          w={{ base: "100%", sm: 300 }}
         />
-      </InputGroup>
 
-      <TablaLocalidades
-        localidades={localidades}
-        onEdit={editarLocalidad}
-        onDelete={eliminarLocalidad}
-        onToggleEstado={cambiarEstado}
-      />
-
-      {totalLocalidades > limite && (
-        <div className="paginacion-container mt-3">
-          <span className="paginacion-info">
-            Mostrando {localidades.length} de {totalLocalidades} localidades
-          </span>
-
-          <div className="paginacion-botones">
-            {(() => {
-              const totalPaginas = Math.ceil(totalLocalidades / limite);
-              const visiblePages = 5;
-              const totalGrupos = Math.ceil(totalPaginas / visiblePages);
-              const grupoActual = Math.floor(paginaActual / visiblePages);
-              const start = grupoActual * visiblePages;
-              const end = Math.min(start + visiblePages, totalPaginas);
-
-              return (
-                <>
-                  {grupoActual > 0 && (
-                    <button className="paginacion-btn" onClick={() => setPaginaActual(start - visiblePages)}>
-                      ◀◀
-                    </button>
-                  )}
-                  {paginaActual > 0 && (
-                    <button className="paginacion-btn" onClick={() => setPaginaActual(paginaActual - 1)}>
-                      ◀
-                    </button>
-                  )}
-                  {Array.from({ length: end - start }).map((_, i) => {
-                    const pageIndex = start + i;
-                    return (
-                      <button
-                        key={pageIndex}
-                        className={`paginacion-btn ${paginaActual === pageIndex ? "activo" : ""}`}
-                        onClick={() => setPaginaActual(pageIndex)}
-                      >
-                        {pageIndex + 1}
-                      </button>
-                    );
-                  })}
-                  {paginaActual < totalPaginas - 1 && (
-                    <button className="paginacion-btn" onClick={() => setPaginaActual(paginaActual + 1)}>
-                      ▶
-                    </button>
-                  )}
-                  {grupoActual < totalGrupos - 1 && (
-                    <button className="paginacion-btn" onClick={() => setPaginaActual(end)}>
-                      ▶▶
-                    </button>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      )}
-
+        <TablaLocalidades
+          localidades={localidades}
+          onEdit={editarLocalidad}
+          onDelete={eliminarLocalidad}
+          onToggleEstado={cambiarEstado}
+          loading={loading}
+          paginaActual={paginaActual}
+          setPaginaActual={setPaginaActual}
+          totalLocalidades={totalLocalidades}
+          limite={limite}
+        />
+      </Paper>
 
       <FormularioLocalidad
         show={showForm}
@@ -183,7 +149,7 @@ const LocalidadesAdmin = () => {
         guardar={guardarLocalidad}
         localidad={localidadSeleccionada}
       />
-    </div>
+    </Container>
   );
 };
 

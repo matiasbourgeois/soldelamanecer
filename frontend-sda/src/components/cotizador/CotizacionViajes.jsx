@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiCotizador } from "../../utils/api";
-import { mostrarAlerta } from "../../utils/alertaGlobal";
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
 
 
 
@@ -63,62 +63,62 @@ function CotizacionViajes() {
   };
 
   return (
-<div className="container mt-5 d-flex justify-content-center">
-<div className="p-4 border rounded bg-white" style={{ maxWidth: "700px", width: "100%" }}>
-          <h2 className="text-center mb-4 text-warning">Cotización de Viajes</h2>
-          <form onSubmit={handleSubmit}>
-  
-            {/* Tipo de Vehículo */}
-            <div className="mb-3">
-              <label className="form-label">Tipo de Vehículo:</label>
-              <select name="tipoVehiculo" className="form-control" onChange={handleChange} required>
-                <option value="">Seleccionar...</option>
-                <option value="Chico">Chico</option>
-                <option value="Mediano">Mediano</option>
-                <option value="Grande">Grande</option>
-                <option value="Camión">Camión</option>
-              </select>
+    <div className="container mt-5 d-flex justify-content-center">
+      <div className="p-4 border rounded bg-white" style={{ maxWidth: "700px", width: "100%" }}>
+        <h2 className="text-center mb-4 text-warning">Cotización de Viajes</h2>
+        <form onSubmit={handleSubmit}>
+
+          {/* Tipo de Vehículo */}
+          <div className="mb-3">
+            <label className="form-label">Tipo de Vehículo:</label>
+            <select name="tipoVehiculo" className="form-control" onChange={handleChange} required>
+              <option value="">Seleccionar...</option>
+              <option value="Chico">Chico</option>
+              <option value="Mediano">Mediano</option>
+              <option value="Grande">Grande</option>
+              <option value="Camión">Camión</option>
+            </select>
+          </div>
+
+          {/* Mostrar información del vehículo */}
+          {infoVehiculo && (
+            <div className="p-3 bg-light text-dark border rounded mb-3 text-center" style={{ fontSize: "16px", fontWeight: "normal" }}>
+              {infoVehiculo}
             </div>
-  
-            {/* Mostrar información del vehículo */}
-            {infoVehiculo && (
-              <div className="p-3 bg-light text-dark border rounded mb-3 text-center" style={{ fontSize: "16px", fontWeight: "normal" }}>
-                {infoVehiculo}
-              </div>
-            )}
-  
-            {/* Zona */}
+          )}
+
+          {/* Zona */}
+          <div className="mb-3">
+            <label className="form-label">Zona:</label>
+            <select name="zona" className="form-control" onChange={handleChange} required>
+              <option value="">Seleccionar...</option>
+              <option value="Córdoba Ciudad">Córdoba Ciudad</option>
+              <option value="Córdoba Interior">Córdoba Interior</option>
+            </select>
+          </div>
+
+          {/* Kilómetros (solo si es Córdoba Interior) */}
+          {isKilometrosEnabled && (
             <div className="mb-3">
-              <label className="form-label">Zona:</label>
-              <select name="zona" className="form-control" onChange={handleChange} required>
-                <option value="">Seleccionar...</option>
-                <option value="Córdoba Ciudad">Córdoba Ciudad</option>
-                <option value="Córdoba Interior">Córdoba Interior</option>
-              </select>
+              <label className="form-label">Kilómetros:</label>
+              <input
+                type="number"
+                name="kilometros"
+                className="form-control"
+                onChange={handleChange}
+                required
+                min="1"
+              />
             </div>
-  
-            {/* Kilómetros (solo si es Córdoba Interior) */}
-            {isKilometrosEnabled && (
-              <div className="mb-3">
-                <label className="form-label">Kilómetros:</label>
-                <input 
-                  type="number" 
-                  name="kilometros" 
-                  className="form-control" 
-                  onChange={handleChange} 
-                  required 
-                  min="1"
-                />
-              </div>
-            )}
-  
-            <button type="submit" className="btn btn-warning w-100">Cotizar Viaje</button>
-          </form>
-        </div>
+          )}
+
+          <button type="submit" className="btn btn-warning w-100">Cotizar Viaje</button>
+        </form>
       </div>
+    </div>
 
   );
-  
+
 }
 
 export default CotizacionViajes;

@@ -1,8 +1,23 @@
-import { FaShippingFast, FaShieldAlt, FaHandshake } from "react-icons/fa";
+import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  Container,
+  Title,
+  Text,
+  Grid,
+  Button,
+  ThemeIcon,
+  List,
+  Image,
+  Group,
+  Box
+} from "@mantine/core";
+import { IconTruckDelivery, IconShieldCheck, IconFriends } from "@tabler/icons-react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+
+// Revertir a la imagen original del sistema
+const IMG_SOURCE = "/images/cajasLogistica.png";
 
 const Servicios = () => {
   useEffect(() => {
@@ -10,61 +25,120 @@ const Servicios = () => {
   }, []);
 
   return (
-    <section className="py-5" style={{ backgroundColor: "#fff" }}>
-      <div className="container">
-        <div className="text-center mb-5">
-          <h2 className="display-5 fw-bold text-dark" data-aos="fade-up">
-            Soluciones de Logística Inteligente
-          </h2>
-          <p className="lead text-secondary" data-aos="fade-up" data-aos-delay="200">
-            Tecnología avanzada y eficiencia garantizada para optimizar tu logística.
-          </p>
-        </div>
+    <div style={{
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
+    }}>
+      <Container size="xl" w="100%">
+        <Grid gutter={50} align="stretch" justify="center">
 
-        <div className="row align-items-center">
-          <div className="col-lg-6 mb-4 mb-lg-0" data-aos="fade-right">
-            <img
-              src="/images/cajasLogistica.png"
-              alt="Servicio logístico"
-              className="img-fluid"
+          {/* Lado Imagen */}
+          <Grid.Col span={{ base: 12, md: 6 }} order={{ base: 2, md: 2 }} data-aos="fade-left" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Image
+              src={IMG_SOURCE}
+              alt="Logística"
+              h="100%"
+              w="auto"
+              fit="contain"
+              style={{ maxHeight: '450px' }}
             />
-          </div>
+          </Grid.Col>
 
-          <div className="col-lg-6" data-aos="fade-left">
-            <h3 className="fw-bold text-warning mb-3">
-              Gestión Integral de Transporte
-            </h3>
-            <p className="text-secondary">
-              Optimizamos rutas, garantizamos seguridad y realizamos monitoreo en tiempo real.
-            </p>
-
-            <ul className="list-unstyled mt-4">
-              <li className="d-flex align-items-center mb-3">
-                <FaShippingFast className="me-3 fs-4 text-warning" />
-                <span className="text-dark">Entregas express a nivel provincial</span>
-              </li>
-              <li className="d-flex align-items-center mb-3">
-                <FaShieldAlt className="me-3 fs-4 text-warning" />
-                <span className="text-dark">Seguridad y monitoreo 24/7</span>
-              </li>
-              <li className="d-flex align-items-center mb-3">
-                <FaHandshake className="me-3 fs-4 text-warning" />
-                <span className="text-dark">Atención personalizada a empresas</span>
-              </li>
-            </ul>
-
-            <div className="mt-4">
-              <Link
-                to="/Contacto"
-                className="btn btn-warning fw-semibold px-4 py-2 shadow-sm"
+          {/* Lado Texto */}
+          <Grid.Col span={{ base: 12, md: 6 }} order={{ base: 1, md: 1 }} data-aos="fade-right" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            {/* Wrapper para limitar el ancho al Título ("LOGÍSTICA INTEGRADA") aprox 530px */}
+            <Box style={{ width: '100%', maxWidth: '530px' }}>
+              <Title
+                order={1}
+                fw={900}
+                c="dark"
+                mb="xs"
+                style={{ fontFamily: 'sans-serif', lineHeight: 1.1 }}
+                size={40}
               >
-                Solicitar Cotización
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+                LOGÍSTICA <span style={{ color: '#fab005' }}>INTEGRADA</span>
+              </Title>
+              <Text c="dimmed" size="lg" mb="lg" lh={1.3}>
+                Conexiones estratégicas. Tu carga segura y a tiempo, fluyendo a través de nuestra red inteligente.
+              </Text>
+
+              <List
+                spacing="sm"
+                size="md"
+                center
+                mb="lg"
+                icon={
+                  <ThemeIcon color="yellow" size={24} radius="xl">
+                    <IconTruckDelivery size={14} />
+                  </ThemeIcon>
+                }
+              >
+                <List.Item
+                  icon={
+                    <ThemeIcon color="yellow" size={26} radius="xl" variant="light">
+                      <IconTruckDelivery size={16} />
+                    </ThemeIcon>
+                  }
+                >
+                  <Text fw={700}>Envíos Express Garantizados</Text>
+                </List.Item>
+
+                <List.Item
+                  icon={
+                    <ThemeIcon color="yellow" size={26} radius="xl" variant="light">
+                      <IconShieldCheck size={16} />
+                    </ThemeIcon>
+                  }
+                >
+                  <Text fw={700}>Seguridad Punto a Punto</Text>
+                </List.Item>
+
+                <List.Item
+                  icon={
+                    <ThemeIcon color="yellow" size={26} radius="xl" variant="light">
+                      <IconFriends size={16} />
+                    </ThemeIcon>
+                  }
+                >
+                  <Text fw={700}>Gestión Corporativa</Text>
+                </List.Item>
+              </List>
+
+              {/* Botones: Mismo ancho (grow) y dentro del Box limitado */}
+              <Group mt="xl" grow>
+                <Button
+                  component={Link}
+                  to="/Contacto"
+                  size="md"
+                  color="dark"
+                  radius="md"
+                  variant="default"
+                >
+                  Contactanos
+                </Button>
+
+                <Button
+                  component={Link}
+                  to="/cotizador-online"
+                  size="md"
+                  color="yellow"
+                  radius="md"
+                  variant="filled"
+                >
+                  Cotizar Ahora Online
+                </Button>
+              </Group>
+            </Box>
+          </Grid.Col>
+        </Grid>
+      </Container>
+    </div>
   );
 };
 

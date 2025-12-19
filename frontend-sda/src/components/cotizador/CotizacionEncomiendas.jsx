@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import { apiUsuarios, apiCotizador } from "../../utils/api";
-import { mostrarAlerta } from "../../utils/alertaGlobal";
+import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
 
 
 
