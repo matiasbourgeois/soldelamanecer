@@ -3,51 +3,68 @@ import AuthContext from "./context/AuthProvider";
 import { useContext } from "react";
 import 'leaflet/dist/leaflet.css';
 import { useState, useEffect } from "react";
-import AlertaSistema from "./components/AlertaSistema";
-import { setMostrarAlertaCustom } from "./utils/alertaGlobal.jsx";
+import AlertaSistema from "./components/feedback/AlertaSistema";
+import { setMostrarAlertaCustom } from "./core/utils/alertaGlobal.jsx";
 import "./styles/botonesSistema.css";
 
 // Components
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-// import Sidebar from "./components/Sidebar"; // ❌ Deprecado por Mantine Login
-import { AppLayout } from "./components/AppLayout"; // ✅ Nuevo Layout Mantine
+import Navbar from "./components/layout/Navbar";
+import Footer from "./components/layout/Footer";
+// import Sidebar from "./components/layout/Sidebar"; // ❌ Deprecado por Mantine Login
+import { AppLayout } from "./components/layout/AppLayout"; // ✅ Nuevo Layout Mantine
 import ProtectedByRole from "./components/protected/ProtectedByRole";
 
 // Pages
-import Inicio from "./pages/Inicio";
-import Servicios from "./pages/Servicios";
-import Contacto from "./pages/Contacto";
-import Login from "./pages/Login";
-import Registro from "./pages/Registro";
-import Perfil from "./pages/Perfil";
-import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
-import RutasAdmin from "./pages/rutas/RutasAdmin";
-import MisEnvios from "./pages/clientes/MisEnvios";
-import Reportes from "./pages/admin/reportes/Reportes";
-import ChoferesAdmin from "./pages/admin/ChoferesAdmin";
-import VehiculosAdmin from "./pages/vehiculos/VehiculosAdmin";
-import DashboardAdmin from "./pages/admin/DashboardAdmin";
-import CompletarPerfilCliente from "./pages/clientes/CompletarPerfilCliente";
-import RutaProtegidaCliente from "./rutas/RutaProtegidaCliente";
-import LocalidadesAdmin from "./pages/localidades/LocalidadesAdmin";
-import GestionEnvios from "./pages/envios/GestionEnvios";
-import NuevoEnvio from "./pages/envios/NuevoEnvio";
-import ConsultarEnvios from "./pages/envios/ConsultarEnvios";
-import ConsultarRemitos from "./pages/envios/ConsultarRemitos";
-import GestionHojasReparto from "./pages/hojaReparto/GestionHojasReparto";
-import CrearHojaReparto from "./pages/hojaReparto/CrearHojaReparto";
-import ConsultarHojasReparto from "./pages/hojaReparto/ConsultarHojasReparto";
-import DetalleHojaReparto from "./pages/hojaReparto/DetalleHojaReparto";
-import BuscarSeguimiento from "./pages/seguimiento/BuscarSeguimiento";
-import ResultadoSeguimiento from "./pages/seguimiento/ResultadoSeguimiento";
+// Pages - Auth
+import Login from "./modules/auth/pages/Login";
+import Registro from "./modules/auth/pages/Registro";
+
+// Pages - Public
+import Inicio from "./modules/public/pages/Inicio";
+import Servicios from "./modules/public/pages/Servicios";
+import Contacto from "./modules/public/pages/Contacto";
+import CotizadorCordobaPage from "./modules/public/pages/CotizadorCordoba"; // Moved
+
+// Pages - Admin & Users
+import Perfil from "./modules/auth/pages/Perfil"; // Moved to Auth
+import UsuariosAdmin from "./modules/admin/pages/UsuariosAdmin";
+import DashboardAdmin from "./modules/admin/pages/DashboardAdmin";
+import ChoferesAdmin from "./modules/admin/pages/ChoferesAdmin";
+import Reportes from "./modules/admin/pages/reportes/Reportes"; // Assuming subfolder moved
+
+// Pages - Logistica (Envios)
+import GestionEnvios from "./modules/logistica/envios/pages/GestionEnvios";
+import NuevoEnvio from "./modules/logistica/envios/pages/NuevoEnvio";
+import ConsultarEnvios from "./modules/logistica/envios/pages/ConsultarEnvios";
+import ConsultarRemitos from "./modules/logistica/envios/pages/ConsultarRemitos";
+
+// Pages - Logistica (Hojas Reparto)
+import GestionHojasReparto from "./modules/logistica/hoja-reparto/pages/GestionHojasReparto";
+import CrearHojaReparto from "./modules/logistica/hoja-reparto/pages/CrearHojaReparto";
+import ConsultarHojasReparto from "./modules/logistica/hoja-reparto/pages/ConsultarHojasReparto";
+import DetalleHojaReparto from "./modules/logistica/hoja-reparto/pages/DetalleHojaReparto";
+
+// Pages - Logistica (Vehiculos & Rutas)
+import VehiculosAdmin from "./modules/logistica/vehiculos/pages/VehiculosAdmin";
+import RutasAdmin from "./modules/logistica/rutas/pages/RutasAdmin";
+
+// Pages - Clientes
+import MisEnvios from "./modules/clientes/pages/MisEnvios";
+import CompletarPerfilCliente from "./modules/clientes/pages/CompletarPerfilCliente";
+
+// Pages - Seguimiento
+import BuscarSeguimiento from "./modules/public/seguimiento/pages/BuscarSeguimiento";
+import ResultadoSeguimiento from "./modules/public/seguimiento/pages/ResultadoSeguimiento";
+
+// Pages - Localidades
+import LocalidadesAdmin from "./modules/logistica/localidades/pages/LocalidadesAdmin";
 
 // Cotizador
 import CotizacionViajes from "./components/cotizador/CotizacionViajes";
 import CotizacionEncomiendas from "./components/cotizador/CotizacionEncomiendas";
 import Historial from "./components/cotizador/Historial";
-import HistorialEncomiendas from "./pages/admin/reportes/HistorialEncomiendas";
-import HistorialViajes from "./pages/admin/reportes/HistorialViajes";
+import HistorialEncomiendas from "./modules/admin/pages/reportes/HistorialEncomiendas";
+import HistorialViajes from "./modules/admin/pages/reportes/HistorialViajes";
 import ResultadoEncomienda from "./components/cotizador/ResultadoEncomienda";
 import ResultadoViaje from "./components/cotizador/ResultadoViaje";
 import CotizadorCordobaPage from "./pages/CotizadorCordoba";
