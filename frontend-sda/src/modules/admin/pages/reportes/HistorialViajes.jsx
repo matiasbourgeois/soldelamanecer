@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiCotizador } from "../../../utils/api";
+import { apiCotizador } from "../../../../core/api/apiSistema";
 import { useContext } from "react";
-import AuthContext from "../../../context/AuthProvider";
+import AuthContext from "../../../../core/context/AuthProvider";
 
 
 

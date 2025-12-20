@@ -25,8 +25,8 @@ import {
   IconUser
 } from "@tabler/icons-react";
 import EditarPerfilModal from "../pages/EditarPerfilModal";
-import AuthContext from "../../../core/context/AuthProvider";
-import { apiUsuarios } from "../../../core/api/apiSistema";
+import AuthContext from "@core/context/AuthProvider";
+import { apiUsuarios } from "@core/api/apiSistema";
 
 const Perfil = () => {
   const { auth } = useContext(AuthContext);

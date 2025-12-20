@@ -2,9 +2,9 @@ import React, { useState, useEffect, useContext } from "react";
 import { Modal, TextInput, Button, Group, FileButton, Image, Text, Stack, Alert } from "@mantine/core";
 import { IconUpload, IconDeviceFloppy, IconX, IconAlertTriangle } from "@tabler/icons-react";
 import axios from "axios";
-import AuthContext from "../../../core/context/AuthProvider";
-import { apiUsuarios } from "../../../core/api/apiSistema";
-import { mostrarAlerta } from "../../../core/utils/alertaGlobal";
+import AuthContext from "@core/context/AuthProvider";
+import { apiUsuarios } from "@core/api/apiSistema";
+import { mostrarAlerta } from "@core/utils/alertaGlobal";
 
 const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizado }) => {
   const { auth, setAuth } = useContext(AuthContext);

@@ -1,6 +1,6 @@
 import React from "react";
 import { Toast, ToastContainer } from "react-bootstrap";
-import "../styles/alertaSistema.css";
+import "@styles/alertaSistema.css";
 
 const AlertaSistema = ({ show, mensaje, tipo = "warning", onClose }) => {
   return (

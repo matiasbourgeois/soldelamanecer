@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Clock } from "lucide-react";
-import "../../styles/seguimientoSistema.css";
+import "@styles/seguimientoSistema.css";
 import { useContext } from "react";
-import AuthContext from "../../../core/context/AuthProvider";
-import { apiSistema } from "../../../core/api/apiSistema";
+import AuthContext from "@core/context/AuthProvider";
+import { apiSistema } from "@core/api/apiSistema";
 
 
 

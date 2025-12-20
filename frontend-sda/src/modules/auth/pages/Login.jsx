@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
-import { apiUsuarios } from "../../../core/api/apiSistema";
-import AuthContext from "../../../core/context/AuthProvider";
+import { apiUsuarios } from "@core/api/apiSistema";
+import AuthContext from "@core/context/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import {
   TextInput,

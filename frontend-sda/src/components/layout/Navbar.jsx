@@ -1,9 +1,9 @@
 import { User } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "../styles/Navbar.css";
+import "@styles/Navbar.css";
 import { useContext } from "react";
-import AuthContext from "../context/AuthProvider";
+import AuthContext from "@core/context/AuthProvider";
 
 
 const Navbar = () => {

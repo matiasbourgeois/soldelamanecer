@@ -1,5 +1,5 @@
 import React from "react";
-import "../../styles/DashboardAdmin.css";
+import "@styles/DashboardAdmin.css";
 import { useNavigate } from "react-router-dom";
 import { Users, BarChart, Settings } from "lucide-react";
 

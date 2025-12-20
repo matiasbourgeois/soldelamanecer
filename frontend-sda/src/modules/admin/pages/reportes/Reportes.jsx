@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, BarChart3 } from "lucide-react";
 import { useContext } from "react";
-import AuthContext from "../../../context/AuthProvider";
-import "../../../styles/DashboardAdmin.css";
+import AuthContext from "../../../../core/context/AuthProvider";
+import "../../../../styles/DashboardAdmin.css";
 
 function Reportes() {
   const navigate = useNavigate();

@@ -1,8 +1,8 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import AuthContext from "../../../core/context/AuthProvider";
-import { apiUsuariosApi } from "../../../core/api/apiSistema";
+import AuthContext from "@core/context/AuthProvider";
+import { apiUsuariosApi } from "@core/api/apiSistema";
 import {
   Container,
   Paper,

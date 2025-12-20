@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
-import TablaChoferes from "../../components/choferes/TablaChoferes";
-import FormularioChofer from "../../components/choferes/FormularioChofer";
-import AuthContext from "../../context/AuthProvider";
-import { apiSistema, apiUsuariosApi } from "../../utils/api";
-import { confirmarAccion } from "../../utils/confirmarAccion.jsx";
+import TablaChoferes from "@components/choferes/TablaChoferes";
+import FormularioChofer from "@components/choferes/FormularioChofer";
+import AuthContext from "@core/context/AuthProvider";
+import { apiSistema, apiUsuariosApi } from "@core/api/apiSistema";
+import { confirmarAccion } from "@core/utils/confirmarAccion.jsx";
 import { Container, Paper, Title, Group, Button, TextInput } from "@mantine/core";
 import { Plus, Search } from "lucide-react";
-import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
+import { mostrarAlerta } from "@core/utils/alertaGlobal.jsx";
 
 const ChoferesAdmin = () => {
   const { auth } = useContext(AuthContext);

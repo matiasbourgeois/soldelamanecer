@@ -1,18 +1,18 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import AuthContext from "./context/AuthProvider";
+import AuthContext from "@core/context/AuthProvider";
 import { useContext } from "react";
 import 'leaflet/dist/leaflet.css';
 import { useState, useEffect } from "react";
-import AlertaSistema from "./components/feedback/AlertaSistema";
-import { setMostrarAlertaCustom } from "./core/utils/alertaGlobal.jsx";
-import "./styles/botonesSistema.css";
+import AlertaSistema from "@components/feedback/AlertaSistema";
+import { setMostrarAlertaCustom } from "@core/utils/alertaGlobal.jsx";
+import "@styles/botonesSistema.css";
 
 // Components
-import Navbar from "./components/layout/Navbar";
-import Footer from "./components/layout/Footer";
-// import Sidebar from "./components/layout/Sidebar"; // ❌ Deprecado por Mantine Login
-import { AppLayout } from "./components/layout/AppLayout"; // ✅ Nuevo Layout Mantine
-import ProtectedByRole from "./components/protected/ProtectedByRole";
+import Navbar from "@components/layout/Navbar";
+import Footer from "@components/layout/Footer";
+// import Sidebar from "@components/layout/Sidebar"; // ❌ Deprecado por Mantine Login
+import { AppLayout } from "@components/layout/AppLayout"; // ✅ Nuevo Layout Mantine
+import ProtectedByRole from "@components/protected/ProtectedByRole";
 
 // Pages
 // Pages - Auth
@@ -60,14 +60,14 @@ import ResultadoSeguimiento from "./modules/public/seguimiento/pages/ResultadoSe
 import LocalidadesAdmin from "./modules/logistica/localidades/pages/LocalidadesAdmin";
 
 // Cotizador
-import CotizacionViajes from "./components/cotizador/CotizacionViajes";
-import CotizacionEncomiendas from "./components/cotizador/CotizacionEncomiendas";
-import Historial from "./components/cotizador/Historial";
+import CotizacionViajes from "@components/cotizador/CotizacionViajes";
+import CotizacionEncomiendas from "@components/cotizador/CotizacionEncomiendas";
+import Historial from "@components/cotizador/Historial";
 import HistorialEncomiendas from "./modules/admin/pages/reportes/HistorialEncomiendas";
 import HistorialViajes from "./modules/admin/pages/reportes/HistorialViajes";
-import ResultadoEncomienda from "./components/cotizador/ResultadoEncomienda";
-import ResultadoViaje from "./components/cotizador/ResultadoViaje";
-import CotizadorCordobaPage from "./pages/CotizadorCordoba";
+import ResultadoEncomienda from "@components/cotizador/ResultadoEncomienda";
+import ResultadoViaje from "@components/cotizador/ResultadoViaje";
+
 
 function App() {
   const { auth, setAuth, cargando } = useContext(AuthContext);
@@ -180,9 +180,9 @@ function App() {
             <Route
               path="/cliente/perfil"
               element={
-                <RutaProtegidaCliente>
+                <ProtectedByRole allowedRoles="cliente">
                   <CompletarPerfilCliente />
-                </RutaProtegidaCliente>
+                </ProtectedByRole>
               }
             />
             <Route

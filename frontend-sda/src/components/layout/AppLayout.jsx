@@ -33,7 +33,7 @@ import {
     Mail as IconMail,
     ChevronRight as IconChevronRight
 } from 'lucide-react';
-import { apiUsuarios } from '../utils/api';
+import { apiUsuarios } from '../../core/api/apiSistema';
 
 import { useState } from 'react';
 

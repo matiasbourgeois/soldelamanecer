@@ -15,7 +15,7 @@ import {
 import { Pencil, Trash2, User } from "lucide-react";
 
 // ✅ Importar estilos globales (Mantine doesn't need these but keeping for reference if needed, removing bootstrap dependent ones)
-// import "../../styles/tablasSistema.css"; // Removed
+// import "@styles/tablasSistema.css"; // Removed
 
 const TablaChoferes = ({
   choferes = [],

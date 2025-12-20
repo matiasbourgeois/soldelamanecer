@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiCotizador } from "../../utils/api";
-import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
+import { apiCotizador } from "@core/api/apiSistema";
+import { mostrarAlerta } from "@core/utils/alertaGlobal.jsx";
 
 
 

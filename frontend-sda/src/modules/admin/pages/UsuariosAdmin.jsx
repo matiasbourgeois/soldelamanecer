@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiUsuariosApi } from "../../utils/api";
+import { apiUsuariosApi } from "@core/api/apiSistema";
 import {
   Table,
   ScrollArea,
@@ -19,9 +19,9 @@ import {
   Tooltip
 } from "@mantine/core";
 import { Trash2, CheckCircle, Search, User, AlertCircle } from "lucide-react";
-import AuthContext from "../../context/AuthProvider";
-import { mostrarAlerta } from "../../utils/alertaGlobal.jsx";
-import { confirmarAccion } from "../../utils/confirmarAccion.jsx";
+import AuthContext from "@core/context/AuthProvider";
+import { mostrarAlerta } from "@core/utils/alertaGlobal.jsx";
+import { confirmarAccion } from "@core/utils/confirmarAccion.jsx";
 
 const UsuariosAdmin = () => {
   const navigate = useNavigate();

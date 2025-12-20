@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiCotizador } from "../../../utils/api";
-import AuthContext from "../../../context/AuthProvider";
+import { apiCotizador } from "../../../../core/api/apiSistema";
+import AuthContext from "../../../../core/context/AuthProvider";
 
 function HistorialEncomiendas() {
   const [encomiendas, setEncomiendas] = useState([]);

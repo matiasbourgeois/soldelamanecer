@@ -5,9 +5,9 @@ import { Spinner } from "react-bootstrap";
 import { useContext } from "react";
 import AuthContext from "../../../../core/context/AuthProvider";
 import { apiSistema } from "../../../../core/api/apiSistema";
-import "../../styles/formularioSistema.css";
-import "../../styles/botonesSistema.css";
-import "../../styles/titulosSistema.css";
+import "../../../../styles/formularioSistema.css";
+import "../../../../styles/botonesSistema.css";
+import "../../../../styles/titulosSistema.css";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
 import { confirmarAccion } from "../../../../core/utils/confirmarAccion.jsx";
 

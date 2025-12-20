@@ -15,7 +15,7 @@ import { ThemeIcon, Text, Badge, ScrollArea, Divider, Group } from "@mantine/cor
 import { IconPackage, IconTruck, IconUser } from "@tabler/icons-react";
 import "leaflet/dist/leaflet.css";
 import "leaflet-polylinedecorator";
-import "../../styles/ClusterStyles.css"; // Custom cluster styles
+import "../../../../styles/ClusterStyles.css"; // Custom cluster styles
 
 // 🎨 Marcador Premium Vectorial
 const createCustomIcon = (index, isLast) => {

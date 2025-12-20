@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiUsuarios } from "../../../core/api/apiSistema";
+import { apiUsuarios } from "@core/api/apiSistema";
 import {
   TextInput,
   PasswordInput,
