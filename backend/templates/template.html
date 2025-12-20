@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Hoja de Reparto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      position: relative;
+      width: 210mm;
+      height: 297mm;
+      font-family: 'Montserrat', sans-serif;
+      background: url('{{imagen_fondo}}') no-repeat center top;
+      background-size: cover;
+    }
+
+    .campo {
+      position: absolute;
+      font-size: 15px;
+      color: #231f20;
+    }
+
+    .campo1 {
+      position: absolute;
+      font-size: 18px;
+      color: #231f20;
+      text-align: right;
+    }
+
+    .nro {
+      top: 5mm;
+      left: 155mm;
+      font-weight: 800;
+      font-size: 24px !important;
+    }
+
+    .ruta {
+      top: 13mm;
+      left: 155mm;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .fecha {
+      top: 19mm;
+      left: 155mm;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .chofer {
+      top: 30mm;
+      left: 25mm;
+      font-weight: 600;
+    }
+
+    .vehiculo {
+      top: 37mm;
+      left: 25mm;
+      font-weight: 600;
+    }
+
+    .tabla {
+      position: absolute;
+      top: 60mm;
+      left: 20mm;
+      width: 180mm;
+      font-size: 12px;
+    }
+
+    .tabla table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .tabla th {
+      color: #231f20;
+      text-align: left;
+      padding: 4px 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      border-bottom: 2px solid #231f20;
+    }
+
+    .tabla td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #ffc107;
+    }
+
+    .firma-chofer {
+      position: absolute;
+      width: 70mm;
+      text-align: center;
+      font-size: 11px;
+      bottom:  12mm;
+      right: 20mm;
+    }
+
+    .firma-chofer .linea {
+      border-bottom: 1px solid #ffc107;
+      width: 100%;
+      height: 20px;
+    }
+
+    .firma-chofer .etiqueta {
+      margin-top: 5px;
+      text-transform: uppercase;
+      color: #231f20;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="campo1 nro">{{nro}}</div>
+  <div class="campo1 ruta">RUTA: {{ruta}}</div>
+  <div class="campo1 fecha">FECHA: {{fecha}}</div>
+
+  <div class="campo chofer">CHOFER: {{chofer}} - DNI: {{dniChofer}}</div>
+  <div class="campo vehiculo">VEHICULO: {{vehiculo}} - MARCA: {{marcaVehiculo}} MODELO: {{modeloVehiculo}}</div>
+
+  <div class="campo tabla">
+    <table>
+      <thead>
+        <tr>
+          <th>NRO</th>
+          <th>Remitente</th>
+          <th>Destinatario</th>
+          <th>Localidad</th>
+          <th>Dirección</th>
+          <th>Bultos</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{tablaRemitos}}
+      </tbody>
+    </table>
+  </div>
+  <div class="firma-chofer">
+    <div class="linea"></div>
+    <div class="etiqueta">Firma del Chofer</div>
+  </div>
+
+</body>
+
+</html>

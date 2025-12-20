@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Remito</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      color: #231f20;
+      background: url('{{imagen_fondo}}') no-repeat center top;
+      background-size: cover;
+      padding: 30mm 20mm;
+      /* Aplica margen solo al contenido, no al fondo */
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 30px;
+      color: #f1c40f;
+    }
+
+    h2 {
+      font-size: 14px;
+      margin-top: 25px;
+      margin-bottom: 8px;
+      color: #231f20;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 3px;
+    }
+
+    .dato {
+      margin-bottom: 3px;
+    }
+
+    .seccion {
+      margin-bottom: 15px;
+    }
+
+    .tabla-encomienda {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .tabla-encomienda th,
+    .tabla-encomienda td {
+      border-bottom: 1px solid #f1c40f;
+      padding: 6px;
+      text-align: left;
+    }
+
+    .footer {
+      margin-top: 50px;
+      font-size: 10px;
+      color: #231f20;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Remito Nº {{numeroRemito}}</h1>
+  <div style="text-align: center; font-size: 13px; color: #333; margin-top: -15px;">
+    N° de seguimiento: <strong style="color: #f1c40f;">{{numeroSeguimiento}}</strong>
+  </div>
+
+
+  <div class="seccion">
+    <div class="dato">Fecha de emisión: {{fecha}}</div>
+  </div>
+
+  <div class="seccion">
+    <h2>Datos del Remitente</h2>
+    <div class="dato">Nombre: {{nombreRemitente}}</div>
+    <div class="dato">Email: {{emailRemitente}}</div>
+  </div>
+
+  <div class="seccion">
+    <h2>Datos del Destinatario</h2>
+    <div class="dato">Nombre: {{nombreDestinatario}}</div>
+    <div class="dato">DNI: {{dniDestinatario}}</div>
+    <div class="dato">Dirección: {{direccionDestinatario}}</div>
+    <div class="dato">Teléfono: {{telefonoDestinatario}}</div>
+    <div class="dato">Email: {{emailDestinatario}}</div>
+    <div class="dato">Localidad: {{localidadDestinatario}}</div>
+  </div>
+
+  <div class="seccion">
+    <h2>Detalle de la Encomienda</h2>
+    <table class="tabla-encomienda">
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Peso</th>
+          <th>Dimensiones</th>
+          <th>Bultos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{tipo}}</td>
+          <td>{{peso}}</td>
+          <td>{{dimensiones}}</td>
+          <td>{{cantidad}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <p>Podés consultar el estado de tu envío en <strong>soldelamanecer.ar</strong> usando el número de seguimiento.</p>
+    Remito generado automáticamente por Sol del Amanecer SRL
+  </div>
+
+</body>
+
+</html>
