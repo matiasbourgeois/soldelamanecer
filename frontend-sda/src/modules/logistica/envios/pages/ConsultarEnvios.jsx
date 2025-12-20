@@ -98,7 +98,7 @@ const ConsultarEnvios = () => {
             // Optional: Refetch to update pagination count
             fetchEnvios();
         } catch (error) {
-            console.error("❌ Error al eliminar el envío:", error);
+            console.error("Error al eliminar el envío:", error);
             mostrarAlerta("No se pudo eliminar el envío.", "danger");
         }
     };

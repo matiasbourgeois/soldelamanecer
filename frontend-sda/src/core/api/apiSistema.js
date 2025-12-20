@@ -12,9 +12,13 @@ const API_SISTEMA = import.meta.env.VITE_API_SISTEMA;
 // 🔁 Backend de localidades (nuevo módulo independiente, en tu VPS)
 const API_LOCALIDADES = import.meta.env.VITE_API_LOCALIDADES;
 
+// 🔁 Backend de clientes (Búsqueda para logística)
+const API_CLIENTES = import.meta.env.VITE_API_CLIENTES;
+
 export const apiUsuarios = (ruta) => `${API_USUARIOS}${ruta}`;
 export const apiCotizador = (ruta) => `${API_COTIZADOR}${ruta}`;
 export const apiSistema = (ruta) => `${API_SISTEMA}${ruta}`;
+export const apiClientes = (ruta) => `${API_CLIENTES}${ruta}`; // ✅ helper nuevo
 export const apiLocalidades = (ruta) => `${API_LOCALIDADES}${ruta}`; // ✅ agregado
 
 // 🧩 Rutas internas del backend de usuarios (por ejemplo: /api/usuarios/perfil-completo)

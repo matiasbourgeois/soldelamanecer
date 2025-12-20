@@ -28,7 +28,6 @@ import {
     BarChart as IconChartBar,
     Navigation as IconSteeringWheel,
     Map as IconMapRoute,
-    Calculator as IconCalculator,
     FileText as IconFileDescription,
     Mail as IconMail,
     ChevronRight as IconChevronRight
@@ -81,19 +80,7 @@ export function AppLayout({ children, auth, handleLogout }) {
                     {...getLinkProps('/perfil')}
                 />
 
-                <NavLink
-                    label="Cotizar Viajes"
-                    leftSection={<IconCalculator size={20} stroke={1.5} />}
-                    rightSection={isActive('/cotizacion-viajes') && <IconChevronRight size={14} />}
-                    {...getLinkProps('/cotizacion-viajes')}
-                />
 
-                <NavLink
-                    label="Cotizar Encomiendas"
-                    leftSection={<IconTruckDelivery size={20} stroke={1.5} />}
-                    rightSection={isActive('/cotizacion-encomiendas') && <IconChevronRight size={14} />}
-                    {...getLinkProps('/cotizacion-encomiendas')}
-                />
 
                 <NavLink
                     label="Seguimiento de Envíos"

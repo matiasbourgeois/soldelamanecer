@@ -8,7 +8,7 @@ import {
 import {
   Package, User, MapPin, Truck, Plus, Search, X, ArrowRight, Check
 } from "lucide-react";
-import { apiSistema } from "../../../../core/api/apiSistema";
+import { apiSistema, apiClientes } from "../../../../core/api/apiSistema";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
 
 const NuevoEnvio = () => {
@@ -85,7 +85,7 @@ const NuevoEnvio = () => {
       }
 
       try {
-        const res = await axios.get(apiSistema("/api/usuarios/buscar-clientes"), {
+        const res = await axios.get(apiClientes("/buscar-clientes"), {
           params: {
             busqueda: busquedaRemitente,
             pagina: 0,
@@ -94,7 +94,7 @@ const NuevoEnvio = () => {
         });
         setRemitenteSugerencias(res.data.resultados);
       } catch (error) {
-        console.error("❌ Error al buscar remitentes:", error);
+        console.error("Error al buscar remitentes:", error);
       }
     };
 
@@ -105,14 +105,21 @@ const NuevoEnvio = () => {
 
   useEffect(() => {
     const obtenerDatos = async () => {
+      // 1. Obtener Clientes (Remitentes)
       try {
-        const clientesRes = await axios.get(apiSistema("/api/usuarios/clientes"));
+        const clientesRes = await axios.get(apiSistema("/api/clientes")); // Corregido endpoint
         setClientes(clientesRes.data);
+      } catch (error) {
+        console.error("Error al obtener clientes:", error);
+      }
 
+      // 2. Obtener Localidades (Destinatarios)
+      try {
         const localidadesRes = await axios.get(apiSistema("/api/localidades"));
+        console.log("📍 Localidades loaded:", localidadesRes.data?.length || 0);
         setLocalidades(localidadesRes.data);
       } catch (error) {
-        console.error("Error al obtener datos:", error);
+        console.error("Error al obtener localidades:", error);
       }
     };
 
@@ -150,7 +157,7 @@ const NuevoEnvio = () => {
       mostrarAlerta("Envío creado con éxito", "success");
       navigate("/perfil");
     } catch (error) {
-      console.error("❌ Error al crear envío:", error);
+      console.error("Error al crear envío:", error);
     }
   };
 
@@ -164,7 +171,7 @@ const NuevoEnvio = () => {
     try {
       const res = await axios.post(apiSistema("/api/destinatarios"), nuevoDestinatario);
 
-      // 🟡 Hacer una segunda llamada con populate
+      // Hacer una segunda llamada con populate
       const resPopulado = await axios.get(apiSistema(`/api/destinatarios/${res.data._id}`));
 
       setDestinatarioId(resPopulado.data._id);
@@ -523,6 +530,7 @@ const NuevoEnvio = () => {
             variant="filled"
             radius="md"
             searchable
+            comboboxProps={{ zIndex: 20000, withinPortal: true }} // Fix Z-Index issue in Modal
           />
 
           <TextInput label="Dirección" placeholder="Calle y Número" variant="filled" radius="md" value={nuevoDestinatario.direccion} onChange={(e) => setNuevoDestinatario({ ...nuevoDestinatario, direccion: e.target.value })} />

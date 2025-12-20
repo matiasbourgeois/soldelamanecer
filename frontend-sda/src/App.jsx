@@ -10,8 +10,7 @@ import "@styles/botonesSistema.css";
 // Components
 import Navbar from "@components/layout/Navbar";
 import Footer from "@components/layout/Footer";
-// import Sidebar from "@components/layout/Sidebar"; // ❌ Deprecado por Mantine Login
-import { AppLayout } from "@components/layout/AppLayout"; // ✅ Nuevo Layout Mantine
+import { AppLayout } from "@components/layout/AppLayout"; // Layout Mantine
 import ProtectedByRole from "@components/protected/ProtectedByRole";
 
 // Pages
@@ -59,14 +58,8 @@ import ResultadoSeguimiento from "./modules/public/seguimiento/pages/ResultadoSe
 // Pages - Localidades
 import LocalidadesAdmin from "./modules/logistica/localidades/pages/LocalidadesAdmin";
 
-// Cotizador
-import CotizacionViajes from "@components/cotizador/CotizacionViajes";
-import CotizacionEncomiendas from "@components/cotizador/CotizacionEncomiendas";
-import Historial from "@components/cotizador/Historial";
-import HistorialEncomiendas from "./modules/admin/pages/reportes/HistorialEncomiendas";
-import HistorialViajes from "./modules/admin/pages/reportes/HistorialViajes";
-import ResultadoEncomienda from "@components/cotizador/ResultadoEncomienda";
-import ResultadoViaje from "@components/cotizador/ResultadoViaje";
+// Cotizador Online
+
 
 
 function App() {
@@ -100,11 +93,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Inicio />} /> {/* Podríamos redirigir a Perfil */}
             <Route path="/perfil" element={<Perfil />} />
-            <Route path="/cotizacion-viajes" element={<CotizacionViajes />} />
-            <Route path="/cotizacion-encomiendas" element={<CotizacionEncomiendas />} />
-            <Route path="/historial" element={<Historial />} />
-            <Route path="/resultado-encomienda" element={<ResultadoEncomienda />} />
-            <Route path="/resultado-viaje" element={<ResultadoViaje />} />
+            <Route path="/perfil" element={<Perfil />} />
             <Route path="/seguimiento" element={<BuscarSeguimiento />} />
             <Route path="/seguimiento/resultado/:codigo" element={<ResultadoSeguimiento />} />
             <Route path="/admin/vehiculos" element={<VehiculosAdmin />} />
@@ -161,22 +150,8 @@ function App() {
                 </ProtectedByRole>
               }
             />
-            <Route
-              path="/admin/reportes/historial-encomiendas"
-              element={
-                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                  <HistorialEncomiendas />
-                </ProtectedByRole>
-              }
-            />
-            <Route
-              path="/admin/reportes/historial-viajes"
-              element={
-                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                  <HistorialViajes />
-                </ProtectedByRole>
-              }
-            />
+
+
             <Route
               path="/cliente/perfil"
               element={
@@ -268,8 +243,6 @@ function App() {
               <Route path="/" element={<Inicio />} />
               <Route path="/servicios" element={<Servicios />} />
               <Route path="/contacto" element={<Contacto />} />
-              <Route path="/cotizacion-viajes" element={<CotizacionViajes />} />
-              <Route path="/cotizacion-encomiendas" element={<CotizacionEncomiendas />} />
               <Route path="/login" element={<Login />} />
               <Route path="/registro" element={<Registro />} />
               {/* Rutas públicas adicionales requeridas */}
