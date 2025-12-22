@@ -1,6 +1,16 @@
+
 import React, { useState, useEffect, useContext } from "react";
-import { Modal, TextInput, Button, Group, FileButton, Image, Text, Stack, Alert } from "@mantine/core";
-import { IconUpload, IconDeviceFloppy, IconX, IconAlertTriangle } from "@tabler/icons-react";
+import { Modal, TextInput, Button, Group, FileButton, Image, Text, Stack, Alert, ThemeIcon } from "@mantine/core";
+import {
+  IconUpload,
+  IconDeviceFloppy,
+  IconX,
+  IconAlertTriangle,
+  IconId,
+  IconPhone,
+  IconMapPin,
+  IconBuilding
+} from "@tabler/icons-react";
 import axios from "axios";
 import AuthContext from "@core/context/AuthProvider";
 import { apiUsuarios } from "@core/api/apiSistema";
@@ -35,7 +45,6 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
       });
 
       if (datosUsuario.fotoPerfil) {
-        // Ensure correct URL construction
         setFoto(apiUsuarios(datosUsuario.fotoPerfil));
       } else {
         setFoto(null);
@@ -62,14 +71,13 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
 
     try {
       let rutaFotoSubida = datosUsuario.fotoPerfil;
-      const baseUrl = import.meta.env.VITE_API_USUARIOS; // Use explicit ENV for safety
+      const baseUrl = import.meta.env.VITE_API_USUARIOS;
 
       // 1. Upload photo if exists
       if (archivoOriginal) {
         const formDataFoto = new FormData();
         formDataFoto.append("foto", archivoOriginal);
 
-        // Use direct URL construction to avoid helper ambiguity during complex uploads
         const uploadUrl = `${baseUrl}/api/usuarios/subir-foto`;
 
         const respuesta = await axios.post(
@@ -109,7 +117,6 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
       // 3. Sync & Finish
       await onPerfilActualizado();
 
-      // Context Update (Preserving Logic)
       if (setAuth) {
         setAuth((prevAuth) => ({
           ...prevAuth,
@@ -135,9 +142,10 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
       opened={show}
       onClose={handleClose}
       centered
-      title={<Text fw={700} size="lg" c="yellow.8">Editar Perfil</Text>}
-      size="md"
+      title={<Text fw={700} size="lg" c="cyan.8">Editar Perfil</Text>}
+      size="lg"
       radius="md"
+      overlayProps={{ opacity: 0.5, blur: 3 }}
     >
       <form onSubmit={handleSubmit}>
         <Stack>
@@ -148,7 +156,7 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
           )}
 
           {/* Photo Upload Section */}
-          <div style={{ textAlign: 'center', marginBottom: 10 }}>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
             <div style={{ position: 'relative', display: 'inline-block' }}>
               <Image
                 src={foto}
@@ -156,7 +164,7 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
                 h={100}
                 radius={100}
                 fallbackSrc="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                style={{ border: '3px solid var(--mantine-color-yellow-4)', objectFit: 'cover' }}
+                style={{ border: '4px solid var(--mantine-color-blue-2)', objectFit: 'cover' }}
               />
             </div>
             <div style={{ marginTop: 8 }}>
@@ -164,9 +172,10 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
                 {(props) => (
                   <Button
                     {...props}
-                    variant="subtle"
-                    color="yellow"
+                    variant="light"
+                    color="cyan"
                     size="xs"
+                    radius="xl"
                     leftSection={<IconUpload size={14} />}
                   >
                     Cambiar Foto
@@ -177,15 +186,16 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
           </div>
 
           {/* Form Fields - Grid Layout */}
-          <Stack gap="sm">
+          <Stack gap="md">
             <TextInput
-              label="Nombre"
+              label="Nombre Completo"
               name="nombre"
               value={formData.nombre}
               onChange={handleChange}
               radius="md"
-              color="yellow"
+              leftSection={<ThemeIcon variant="transparent" color="gray"><IconId size={16} /></ThemeIcon>}
             />
+
             <Group grow>
               <TextInput
                 label="DNI"
@@ -193,6 +203,7 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
                 value={formData.dni}
                 onChange={handleChange}
                 radius="md"
+                leftSection={<IconId size={16} color="gray" />}
               />
               <TextInput
                 label="Teléfono"
@@ -200,15 +211,19 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
                 value={formData.telefono}
                 onChange={handleChange}
                 radius="md"
+                leftSection={<IconPhone size={16} color="gray" />}
               />
             </Group>
+
             <TextInput
               label="Dirección"
               name="direccion"
               value={formData.direccion}
               onChange={handleChange}
               radius="md"
+              leftSection={<IconMapPin size={16} color="gray" />}
             />
+
             <Group grow>
               <TextInput
                 label="Localidad"
@@ -216,6 +231,7 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
                 value={formData.localidad}
                 onChange={handleChange}
                 radius="md"
+                leftSection={<IconBuilding size={16} color="gray" />}
               />
               <TextInput
                 label="Provincia"
@@ -223,22 +239,22 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
                 value={formData.provincia}
                 onChange={handleChange}
                 radius="md"
+                leftSection={<IconMapPin size={16} color="gray" />}
               />
             </Group>
           </Stack>
 
-          <Group justify="flex-end" mt={25}>
-            <Button variant="default" onClick={handleClose} disabled={loading} leftSection={<IconX size={16} />}>
+          <Group justify="flex-end" mt={30}>
+            <Button variant="subtle" color="gray" onClick={handleClose} disabled={loading}>
               Cancelar
             </Button>
             <Button
               type="submit"
-              color="yellow"
-              c="white"
+              color="cyan"
               loading={loading}
               leftSection={<IconDeviceFloppy size={18} />}
             >
-              Guardar
+              Guardar Cambios
             </Button>
           </Group>
         </Stack>

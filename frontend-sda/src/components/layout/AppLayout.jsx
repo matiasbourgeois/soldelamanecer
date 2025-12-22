@@ -30,7 +30,8 @@ import {
     Map as IconMapRoute,
     FileText as IconFileDescription,
     Mail as IconMail,
-    ChevronRight as IconChevronRight
+    ChevronRight as IconChevronRight,
+    Calculator as IconCalculator
 } from 'lucide-react';
 import { apiUsuarios } from '../../core/api/apiSistema';
 
@@ -87,6 +88,21 @@ export function AppLayout({ children, auth, handleLogout }) {
                     leftSection={<IconPackage size={20} stroke={1.5} />}
                     rightSection={isActive('/seguimiento') && <IconChevronRight size={14} />}
                     {...getLinkProps('/seguimiento')}
+                />
+
+                <NavLink
+                    label="Cotizador Online de Cargas Dedicadas"
+                    leftSection={<IconCalculator size={20} stroke={1.5} />}
+                    component="a"
+                    href="https://cotizadorlogistico.site/"
+                    target="_blank"
+                    variant="subtle"
+                    color="cyan"
+                    style={{
+                        borderRadius: theme.radius.md,
+                        marginBottom: 4,
+                        fontWeight: 500,
+                    }}
                 />
 
                 {/* ROLE: CLIENTE */}

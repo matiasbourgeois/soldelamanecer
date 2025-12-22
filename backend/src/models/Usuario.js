@@ -31,7 +31,7 @@ const UsuarioSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
-  
+
 });
 
 // 🔐 Encriptar contraseña antes de guardar
@@ -41,6 +41,7 @@ UsuarioSchema.pre("save", async function (next) {
   this.contrasena = await bcrypt.hash(this.contrasena, salt);
   next();
 });
+
 
 const Usuario = mongoose.model("Usuario", UsuarioSchema);
 module.exports = Usuario;

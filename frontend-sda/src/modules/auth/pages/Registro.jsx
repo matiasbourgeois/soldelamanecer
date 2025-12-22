@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiUsuarios } from "@core/api/apiSistema";
@@ -15,9 +16,14 @@ import {
   Box,
   rem,
   Checkbox,
-  Badge
+  Badge,
+  Modal,
+  List,
+  ThemeIcon,
+  Group,
+  ScrollArea
 } from "@mantine/core";
-import { IconAlertCircle, IconCheck } from "@tabler/icons-react";
+import { IconAlertCircle, IconCheck, IconX, IconShieldLock } from "@tabler/icons-react";
 
 function Registro() {
   const navigate = useNavigate();
@@ -30,6 +36,20 @@ function Registro() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+
+  // Password Validation Logic
+  const validatePassword = (password) => {
+    const minLength = 8;
+    const hasTwoNumbers = (password.match(/\d/g) || []).length >= 2;
+    const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(password);
+
+    if (password.length < minLength) return "Debe tener al menos 8 caracteres";
+    if (!hasTwoNumbers) return "Debe tener al menos 2 números";
+    if (!hasSymbol) return "Debe tener al menos 1 símbolo";
+
+    return null;
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -39,6 +59,12 @@ function Registro() {
     e.preventDefault();
     if (!termsAccepted) {
       setError("Debes aceptar los términos y condiciones.");
+      return;
+    }
+
+    const passwordError = validatePassword(formData.contrasena);
+    if (passwordError) {
+      setError(`Contraseña insegura: ${passwordError}`);
       return;
     }
 
@@ -68,6 +94,18 @@ function Registro() {
       setLoading(false);
     }
   };
+
+  // Helper for password requirements list
+  const getRequirementIcon = (met) => (
+    <ThemeIcon color={met ? "teal" : "gray"} size="xs" radius="xl">
+      {met ? <IconCheck size={10} /> : <IconX size={8} />}
+    </ThemeIcon>
+  );
+
+  const pwd = formData.contrasena;
+  const hasMinLength = pwd.length >= 8;
+  const hasTwoNums = (pwd.match(/\d/g) || []).length >= 2;
+  const hasSym = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(pwd);
 
   return (
     <div style={{ height: '100%', minHeight: '600px', display: 'flex', backgroundColor: '#f8f9fa', flex: 1 }}>
@@ -106,31 +144,52 @@ function Registro() {
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleChange}
+                  autoComplete="off"
+                  readOnly={true}
+                  onFocus={(e) => e.target.readOnly = false}
                 />
 
                 <TextInput
                   label="Correo electrónico"
-                  placeholder="tu@soldelamanecer.com"
+                  placeholder="tu@mail.com"
                   required
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  autoComplete="new-email" // Non-standard but effective
+                  readOnly={true}
+                  onFocus={(e) => e.target.readOnly = false}
                 />
 
-                <PasswordInput
-                  label="Contraseña"
-                  placeholder="Tu contraseña"
-                  required
-                  name="contrasena"
-                  value={formData.contrasena}
-                  onChange={handleChange}
-                />
+                <Box>
+                  <PasswordInput
+                    label="Contraseña"
+                    placeholder="Mínimo 8 caracteres"
+                    required
+                    name="contrasena"
+                    value={formData.contrasena}
+                    onChange={handleChange}
+                    autoComplete="new-password"
+                    readOnly={true}
+                    onFocus={(e) => e.target.readOnly = false}
+                  />
+                  {/* Password Requirements Hint */}
+                  <List size="xs" spacing={4} mt={5} center>
+                    <List.Item icon={getRequirementIcon(hasMinLength)}>Mínimo 8 caracteres</List.Item>
+                    <List.Item icon={getRequirementIcon(hasTwoNums)}>Al menos 2 números</List.Item>
+                    <List.Item icon={getRequirementIcon(hasSym)}>Al menos 1 símbolo (ej. @, #, $)</List.Item>
+                  </List>
+                </Box>
 
-                <Checkbox
-                  label="Acepto los términos y condiciones"
-                  checked={termsAccepted}
-                  onChange={(event) => setTermsAccepted(event.currentTarget.checked)}
-                />
+                <Group align="center" gap="xs">
+                  <Checkbox
+                    checked={termsAccepted}
+                    onChange={(event) => setTermsAccepted(event.currentTarget.checked)}
+                  />
+                  <Text size="sm">
+                    Acepto los <Anchor component="button" type="button" onClick={() => setShowTerms(true)} size="sm">términos y condiciones</Anchor>
+                  </Text>
+                </Group>
 
                 <Button fullWidth mt="xl" type="submit" loading={loading} size="md">
                   Crear cuenta
@@ -141,7 +200,7 @@ function Registro() {
         </Container>
       </div>
 
-      {/* RIGHT SIDE: HERO IMAGE (Same style as Login for consistency) */}
+      {/* RIGHT SIDE: HERO IMAGE */}
       <div style={{
         flex: 1,
         background: 'linear-gradient(135deg, #1098ad 0%, #0b7285 100%)',
@@ -198,6 +257,47 @@ function Registro() {
           div[style*="maxWidth: '600px'"] { maxWidth: '100%' !important; flex: 1; }
         }
       `}</style>
+
+      {/* T&C Modal */}
+      <Modal
+        opened={showTerms}
+        onClose={() => setShowTerms(false)}
+        title={<Text fw={700}>Términos y Condiciones</Text>}
+        size="lg"
+        centered
+        scrollAreaComponent={ScrollArea.Autosize}
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Bienvenido a la plataforma de Sol del Amanecer. Al registrarte, aceptas los siguientes términos de uso:
+          </Text>
+
+          <Title order={5}>1. Uso del Servicio</Title>
+          <Text size="sm">
+            Esta plataforma está destinada exclusivamente para la gestión de envíos y logística. El uso indebido o fraudulento de la cuenta resultará en su suspensión inmediata.
+          </Text>
+
+          <Title order={5}>2. Privacidad de Datos</Title>
+          <Text size="sm">
+            Sus datos personales serán tratados con estricta confidencialidad y utilizados únicamente para fines operativos del servicio de transporte y facturación.
+          </Text>
+
+          <Title order={5}>3. Responsabilidad</Title>
+          <Text size="sm">
+            El usuario es responsable de mantener la confidencialidad de sus credenciales de acceso. Sol del Amanecer no se hace responsable por accesos no autorizados derivados de negligencia del usuario.
+          </Text>
+
+          <Title order={5}>4. Modificaciones</Title>
+          <Text size="sm" mb="lg">
+            Nos reservamos el derecho de modificar estos términos en cualquier momento. Se notificará a los usuarios sobre cambios relevantes.
+          </Text>
+
+          <Group justify="flex-end">
+            <Button onClick={() => setShowTerms(false)}>Entendido</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
     </div>
   );
 }

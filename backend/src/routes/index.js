@@ -15,4 +15,7 @@ router.use("/destinatarios", require("./destinatarios"));
 router.use("/hojas-reparto", require("./hojaRepartoRoutes"));
 router.use("/seguimiento", require("./seguimiento"));
 
+// Rutas de Reportes
+router.use("/reportes", require("./reportes.routes"));
+
 module.exports = router;

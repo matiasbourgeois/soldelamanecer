@@ -114,7 +114,7 @@ function Login() {
               <Stack>
                 <TextInput
                   label="Correo electrónico"
-                  placeholder="tu@soldelamanecer.com"
+                  placeholder="tu@mail.com"
                   required
                   name="email"
                   value={formData.email}

@@ -1,4 +1,7 @@
 const Usuario = require("../../models/Usuario");
+const bcrypt = require("bcryptjs");
+const { generarJWT } = require("../../helpers/jwt");
+
 
 // Cambiar el rol de un usuario (solo admin)
 const cambiarRolUsuario = async (req, res) => {
@@ -265,6 +268,37 @@ const obtenerUsuariosPaginados = async (req, res) => {
 
 
 
+// Cambiar contraseña
+const cambiarPassword = async (req, res) => {
+  try {
+    const { passwordActual, passwordNueva } = req.body;
+    const usuario = await Usuario.findById(req.usuario.id);
+
+    if (!usuario) {
+      return res.status(404).json({ msg: "Usuario no encontrado" });
+    }
+
+    // Verificar contraseña actual
+    const passwordCorrecta = await bcrypt.compare(passwordActual, usuario.contrasena);
+    if (!passwordCorrecta) {
+      return res.status(400).json({ msg: "La contraseña actual es incorrecta" });
+    }
+
+    // Guardar nueva contraseña (el modelo se encarga de hashear)
+    usuario.contrasena = passwordNueva;
+    await usuario.save();
+
+
+
+
+    res.json({ msg: "Contraseña actualizada correctamente" });
+  } catch (error) {
+    console.error("Error al cambiar contraseña:", error);
+    res.status(500).json({ msg: "Error al cambiar la contraseña" });
+  }
+};
+
+
 module.exports = {
   cambiarRolUsuario,
   obtenerUsuarios,
@@ -276,4 +310,5 @@ module.exports = {
   actualizarUsuarioDesdeAdmin,
   obtenerUsuarioPorId,
   obtenerUsuariosPaginados,
+  cambiarPassword
 };

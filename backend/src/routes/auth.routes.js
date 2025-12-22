@@ -10,7 +10,8 @@ const {
   completarPerfilUsuario,
   actualizarUsuarioDesdeAdmin,
   obtenerUsuarioPorId,
-  obtenerUsuariosPaginados
+  obtenerUsuariosPaginados,
+  cambiarPassword
 } = require("../controllers/auth/usuariosController");
 
 const { login, register } = require("../controllers/auth/authController");
@@ -45,6 +46,7 @@ router.post("/register", register);
 
 // 🔐 Rutas protegidas
 router.put("/perfil-completo", verificarToken, completarPerfilUsuario); // ✅ ESTA PRIMERO
+router.put("/cambiar-password", verificarToken, cambiarPassword);
 router.get("/perfil", verificarToken, obtenerPerfil);
 router.get("/", verificarToken, obtenerUsuarios);
 
