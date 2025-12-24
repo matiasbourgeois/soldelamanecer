@@ -15,9 +15,20 @@ const VehiculoSchema = new mongoose.Schema({
     enum: ["propio", "externo"],
     required: true
   },
+
+  // --- MANTENIMIENTO DINÁMICO ---
+  kilometrajeActual: {
+    type: Number,
+    default: 0
+  },
+  configuracionMantenimiento: [{
+    nombre: { type: String, required: true }, // Ej: "Aceite", "Frenos"
+    frecuenciaKm: { type: Number, required: true }, // Ej: 10000
+    ultimoKm: { type: Number, default: 0 } // Cuándo se hizo por última vez
+  }],
+
   activo: { type: Boolean, default: true }
 });
 
 const Vehiculo = mongoose.model("Vehiculo", VehiculoSchema);
 module.exports = Vehiculo;
-```

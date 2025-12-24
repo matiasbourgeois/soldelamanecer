@@ -45,6 +45,9 @@ import DetalleHojaReparto from "./modules/logistica/hoja-reparto/pages/DetalleHo
 
 // Pages - Logistica (Vehiculos & Rutas)
 import VehiculosAdmin from "./modules/logistica/vehiculos/pages/VehiculosAdmin";
+import MantenimientoAdmin from "./modules/admin/pages/mantenimiento/MantenimientoAdmin";
+import MantenimientoMetricas from "./modules/admin/pages/mantenimiento/MantenimientoMetricas";
+import MenuMantenimiento from "./modules/admin/pages/mantenimiento/MenuMantenimiento"; // NUEVO
 import RutasAdmin from "./modules/logistica/rutas/pages/RutasAdmin";
 
 // Pages - Clientes
@@ -139,6 +142,31 @@ function App() {
               element={
                 <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
                   <Reportes />
+                </ProtectedByRole>
+              }
+            />
+
+            <Route
+              path="/admin/mantenimiento"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <MenuMantenimiento />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/mantenimiento/control"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <MantenimientoAdmin />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/mantenimiento/metricas"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <MantenimientoMetricas />
                 </ProtectedByRole>
               }
             />

@@ -14,7 +14,9 @@ import {
     Badge,
     UnstyledButton,
     Stack,
-    Button
+    Button,
+    ActionIcon,
+    Indicator
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -31,19 +33,59 @@ import {
     FileText as IconFileDescription,
     Mail as IconMail,
     ChevronRight as IconChevronRight,
-    Calculator as IconCalculator
+    Calculator as IconCalculator,
+    Wrench as IconTool,
+    Bell as IconBell,
+    AlertTriangle as IconAlertTriangle
 } from 'lucide-react';
-import { apiUsuarios } from '../../core/api/apiSistema';
+import { apiSistema, apiUsuarios } from '../../core/api/apiSistema';
+import axios from 'axios';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function AppLayout({ children, auth, handleLogout }) {
     const theme = useMantineTheme();
     const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
     const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
+    const [notificationsCount, setNotificationsCount] = useState(0);
+
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Check Maintenance Status for Notifications
+    useEffect(() => {
+        if (!['admin', 'administrativo'].includes(auth?.rol)) return;
+
+        const checkMaintenance = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get(apiSistema('/api/vehiculos/paginado?pagina=0&limite=100'), {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                const vehiculos = response.data.resultados || response.data;
+                let criticalCount = 0;
+
+                vehiculos.forEach(v => {
+                    if (v.configuracionMantenimiento) {
+                        v.configuracionMantenimiento.forEach(c => {
+                            const kmRecorrido = v.kilometrajeActual - c.ultimoKm;
+                            const restante = c.frecuenciaKm - kmRecorrido;
+                            if (restante <= 0) criticalCount++; // RED Status
+                        });
+                    }
+                });
+                setNotificationsCount(criticalCount);
+            } catch (error) {
+                console.error("Error checking notifications:", error);
+            }
+        };
+
+        checkMaintenance();
+        const interval = setInterval(checkMaintenance, 60000); // Check every minute
+        return () => clearInterval(interval);
+    }, [auth]);
 
     const isActive = (path) => location.pathname === path;
     const isParentActive = (paths) => paths.some(path => location.pathname.startsWith(path));
@@ -148,6 +190,14 @@ export function AppLayout({ children, auth, handleLogout }) {
                             />
                         </NavLink>
 
+                        {/* Mantenimiento (NUEVO) */}
+                        <NavLink
+                            label="Mantenimiento Vehículos"
+                            leftSection={<IconCalculator size={20} stroke={1.5} />}
+                            rightSection={isActive('/admin/mantenimiento') && <IconChevronRight size={14} />}
+                            {...getLinkProps('/admin/mantenimiento')}
+                        />
+
                         {/* Grupo Envíos */}
                         <NavLink
                             label="Gestión de Envíos"
@@ -207,11 +257,11 @@ export function AppLayout({ children, auth, handleLogout }) {
         >
             <AppShell.Header style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <Group h="100%" px="md" justify="space-between">
+                    {/* BRANDING LEFT */}
                     <Group>
                         <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="md" size="sm" />
                         <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="md" size="sm" />
 
-                        {/* Premium Brand Logo */}
                         <Group gap="xs">
                             <Text
                                 fw={900}
@@ -225,6 +275,84 @@ export function AppLayout({ children, auth, handleLogout }) {
                                 SOL DEL AMANECER
                             </Text>
                         </Group>
+                    </Group>
+
+                    {/* GLOBAL NOTIFICATION BELL (RIGHT SIDE) */}
+                    <Group>
+                        <style>
+                            {`
+                            @keyframes pulse-ring {
+                                0% { transform: scale(0.8); opacity: 0.5; }
+                                100% { transform: scale(2.5); opacity: 0; }
+                            }
+                            @keyframes float {
+                                0% { transform: translateY(0px); }
+                                50% { transform: translateY(-2px); }
+                                100% { transform: translateY(0px); }
+                            }
+                            `}
+                        </style>
+                        {['admin', 'administrativo'].includes(auth?.rol) && (
+                            <Group gap={10} align="center">
+                                <div style={{ position: 'relative' }}>
+                                    {notificationsCount > 0 && (
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                top: '50%',
+                                                left: '50%',
+                                                transform: 'translate(-50%, -50%)',
+                                                width: 12,
+                                                height: 12,
+                                                borderRadius: '50%',
+                                                backgroundColor: 'rgba(255, 50, 50, 0.5)',
+                                                animation: 'pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite'
+                                            }}
+                                        />
+                                    )}
+                                    <ActionIcon
+                                        variant={notificationsCount > 0 ? "filled" : "default"}
+                                        color={notificationsCount > 0 ? "red" : "gray"}
+                                        size={34}
+                                        radius="xl"
+                                        onClick={() => navigate('/admin/mantenimiento/metricas')}
+                                        style={{
+                                            transition: 'all 0.3s ease',
+                                            border: notificationsCount > 0 ? '2px solid white' : '1px solid var(--mantine-color-gray-3)',
+                                            boxShadow: notificationsCount > 0 ? '0 4px 12px rgba(255, 0, 0, 0.3)' : 'none',
+                                            zIndex: 2
+                                        }}
+                                    >
+                                        {notificationsCount > 0 ? (
+                                            <IconBell size={18} fill="white" strokeWidth={1.5} />
+                                        ) : (
+                                            <IconBell size={16} strokeWidth={1.5} />
+                                        )}
+                                    </ActionIcon>
+                                    {notificationsCount > 0 && (
+                                        <Badge
+                                            size="xs"
+                                            circle
+                                            color="orange"
+                                            variant="filled"
+                                            style={{
+                                                position: 'absolute',
+                                                top: -4,
+                                                right: -4,
+                                                border: '2px solid white',
+                                                zIndex: 3,
+                                                minWidth: 16,
+                                                height: 16,
+                                                padding: 0,
+                                                fontSize: 9
+                                            }}
+                                        >
+                                            {notificationsCount}
+                                        </Badge>
+                                    )}
+                                </div>
+                            </Group>
+                        )}
                     </Group>
                 </Group>
             </AppShell.Header>

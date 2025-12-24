@@ -1,4 +1,5 @@
 const Vehiculo = require("../../models/Vehiculo");
+const MantenimientoLog = require("../../models/MantenimientoLog");
 
 // Crear vehículo
 const crearVehiculo = async (req, res) => {
@@ -116,6 +117,134 @@ const eliminarVehiculo = async (req, res) => {
   }
 };
 
+// ==========================================
+// LÓGICA DE MANTENIMIENTO
+// ==========================================
+
+// 1. Actualizar Kilometraje (Chofer o Admin)
+// PATCH /api/vehiculos/:id/km
+const actualizarKilometraje = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { kilometraje } = req.body;
+
+    const vehiculo = await Vehiculo.findById(id);
+    if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
+
+    // Validar logicalmente (opcional: alertar si es menor, pero permitir correcciones)
+    vehiculo.kilometrajeActual = kilometraje;
+    await vehiculo.save();
+
+    res.json({ mensaje: "Kilometraje actualizado", vehiculo });
+  } catch (error) {
+    console.error("Error al actualizar KM:", error);
+    res.status(500).json({ error: "Error al actualizar KM" });
+  }
+};
+
+// 2. Registrar un Service Realizado
+// POST /api/vehiculos/:id/mantenimiento/registro
+const registrarMantenimiento = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombreTipo, costo, observaciones, fecha, kmAlMomento } = req.body;
+    // nombreTipo debe coincidir con uno de 'configuracionMantenimiento'
+
+    const vehiculo = await Vehiculo.findById(id);
+    if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
+
+    // Buscar el tipo en la config del vehículo
+    const configIndex = vehiculo.configuracionMantenimiento.findIndex(c => c.nombre === nombreTipo);
+
+    if (configIndex === -1) {
+      return res.status(400).json({ error: `El tipo de mantenimiento '${nombreTipo}' no está configurado en este vehículo.` });
+    }
+
+    // Actualizar ultimoKm al kilometraje del service (manual o actual)
+    const kmRegistro = kmAlMomento ? Number(kmAlMomento) : vehiculo.kilometrajeActual;
+    const fechaRegistro = fecha ? new Date(fecha) : new Date();
+
+    // Actualizamos el ultimoKm del mantenimiento
+    vehiculo.configuracionMantenimiento[configIndex].ultimoKm = kmRegistro;
+
+    // Guardar Log Histórico
+    const log = new MantenimientoLog({
+      vehiculo: vehiculo._id,
+      tipo: nombreTipo,
+      kmAlMomento: kmRegistro, // Usamos el valor registrado
+      fecha: fechaRegistro, // Usamos fecha manual o actual
+      costo: costo || 0,
+      observaciones: observaciones || "",
+      registradoPor: req.usuario ? req.usuario.id : null // Si hay middleware de auth
+    });
+
+    await log.save();
+
+    // Si el kilometraje del service es MAYOR al actual del vehículo (raro pero posible si se olvidaron de actualizar), 
+    // podríamos actualizar el vehículo también, pero por seguridad, solo actualizamos el config del mantenimiento.
+
+    await vehiculo.save();
+
+    res.json({ mensaje: "Mantenimiento registrado con éxito", vehiculo, log });
+  } catch (error) {
+    console.error("Error al registrar mantenimiento:", error);
+    res.status(500).json({ error: "Error interno al registrar service" });
+  }
+};
+
+// 3. Agregar Nuevo Tipo de Mantenimiento (Configuración)
+// POST /api/vehiculos/:id/mantenimiento/config
+const agregarTipoMantenimiento = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, frecuenciaKm } = req.body;
+
+    const vehiculo = await Vehiculo.findById(id);
+    if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
+
+    // Verificar si ya existe
+    if (vehiculo.configuracionMantenimiento.some(c => c.nombre === nombre)) {
+      return res.status(400).json({ error: "Este tipo de mantenimiento ya existe." });
+    }
+
+    vehiculo.configuracionMantenimiento.push({
+      nombre,
+      frecuenciaKm,
+      ultimoKm: vehiculo.kilometrajeActual // Asumimos que empieza "limpio" o requerir input extra
+    });
+
+    await vehiculo.save();
+    res.json(vehiculo);
+  } catch (error) {
+    console.error("Error config mantenimiento:", error);
+    res.status(500).json({ error: "Error al configurar mantenimiento" });
+  }
+};
+
+// 4. Editar Frecuencia de Mantenimiento
+// PUT /api/vehiculos/:id/mantenimiento/config
+const editarTipoMantenimiento = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, nuevaFrecuenciaKm } = req.body;
+
+    const vehiculo = await Vehiculo.findById(id);
+    if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
+
+    const item = vehiculo.configuracionMantenimiento.find(c => c.nombre === nombre);
+    if (!item) return res.status(404).json({ error: "Tipo de mantenimiento no encontrado" });
+
+    item.frecuenciaKm = nuevaFrecuenciaKm;
+    await vehiculo.save();
+
+    res.json(vehiculo);
+  } catch (error) {
+    console.error("Error edit config:", error);
+    res.status(500).json({ error: "Error al editar configuración" });
+  }
+};
+
+
 module.exports = {
   crearVehiculo,
   obtenerVehiculos,
@@ -123,4 +252,8 @@ module.exports = {
   cambiarEstadoActivo,
   obtenerVehiculosPaginado,
   eliminarVehiculo,
+  actualizarKilometraje,
+  registrarMantenimiento,
+  agregarTipoMantenimiento,
+  editarTipoMantenimiento
 };

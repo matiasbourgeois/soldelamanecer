@@ -6,8 +6,13 @@ const {
   obtenerVehiculos,
   actualizarVehiculo,
   cambiarEstadoActivo,
-  eliminarVehiculo
+  eliminarVehiculo,
+  actualizarKilometraje,
+  registrarMantenimiento,
+  agregarTipoMantenimiento,
+  editarTipoMantenimiento
 } = require("../controllers/logistica/vehiculoController");
+const verificarToken = require("../middlewares/verificarToken");
 
 router.get("/paginado", obtenerVehiculosPaginado);
 
@@ -24,6 +29,19 @@ router.patch("/:id", actualizarVehiculo);
 router.delete("/:id", eliminarVehiculo);
 
 // Activar/desactivar vehículo
+// Activar/desactivar vehículo
 router.patch("/:id/estado", cambiarEstadoActivo);
+
+// --- RUTAS DE MANTENIMIENTO ---
+
+// Actualizar Kilometraje (Chofer/Admin)
+router.patch("/:id/km", actualizarKilometraje); // Podríamos agregar verificarToken aquí
+
+// Registrar Service (Admin)
+router.post("/:id/mantenimiento/registro", [verificarToken], registrarMantenimiento);
+
+// Configuración (Agregar/Editar) - Admin
+router.post("/:id/mantenimiento/config", [verificarToken], agregarTipoMantenimiento);
+router.put("/:id/mantenimiento/config", [verificarToken], editarTipoMantenimiento);
 
 module.exports = router;
