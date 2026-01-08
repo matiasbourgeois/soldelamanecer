@@ -1,19 +1,27 @@
 const express = require("express");
 const router = express.Router();
 
+const auth = require("../middlewares/verificarToken");
+
 const {
   crearChofer,
   obtenerChoferes,
   obtenerChofer,
   editarChofer,
   obtenerChoferesMinimos,
-  eliminarChofer
+  eliminarChofer,
+  obtenerMiConfiguracion,
+  obtenerSelectoresReporte
 } = require("../controllers/logistica/choferController");
 
 // Ruta base: /api/choferes
 
 // Crear chofer
 router.post("/", crearChofer);
+
+// Ruta para que el chofer obtenga sus defaults
+router.get("/configuracion", auth, obtenerMiConfiguracion);
+router.get("/selectores-reporte", auth, obtenerSelectoresReporte);
 
 // Obtener todos los choferes
 router.get("/", obtenerChoferes);

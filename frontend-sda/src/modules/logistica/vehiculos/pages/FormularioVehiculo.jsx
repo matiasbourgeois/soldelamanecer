@@ -24,7 +24,8 @@ const FormularioVehiculo = ({ onClose, vehiculo, recargar }) => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    if (name === "patente") value = value.toUpperCase();
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 

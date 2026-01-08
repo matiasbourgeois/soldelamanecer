@@ -110,20 +110,39 @@ const login = async (req, res) => {
       return res.status(400).json({ error: "Credenciales inválidas" });
     }
 
+    // 🕒 Lógica de Expiración del Token
+    // Si es chofer (Mobile App), el token es "eterno" (10 años).
+    // Si es otro rol (Web App), el token dura 24 horas.
+    const expiresIn = usuario.rol === 'chofer' ? '3650d' : '24h';
+
     const token = jwt.sign(
       { id: usuario._id, rol: usuario.rol },
       JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn }
     );
+
+    // Si es chofer, buscamos su perfil para obtener datos extra
+    let datosChofer = {};
+    if (usuario.rol === 'chofer') {
+      const Chofer = require("../../models/Chofer");
+      const choferPerfil = await Chofer.findOne({ usuario: usuario._id });
+      if (choferPerfil) {
+        datosChofer = {
+          tipoContrato: choferPerfil.tipoVinculo, // Mapeamos tipoVinculo a tipoContrato para el frontend
+          vehiculoAsignado: choferPerfil.vehiculoAsignado
+        };
+      }
+    }
 
     res.json({
       token,
       usuario: {
-        id: usuario._id, // 👈 necesario para completar perfil
+        id: usuario._id,
         nombre: usuario.nombre,
         email: usuario.email,
         rol: usuario.rol,
         perfilCompleto: usuario.perfilCompleto || false,
+        ...datosChofer // Fusionamos datos del chofer
       },
     });
   } catch (error) {

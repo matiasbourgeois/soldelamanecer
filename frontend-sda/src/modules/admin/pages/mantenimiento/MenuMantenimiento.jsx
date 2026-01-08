@@ -3,14 +3,14 @@ import { useNavigate } from "react-router-dom";
 import {
     Container, Title, SimpleGrid, Card, Text, Group, ThemeIcon, UnstyledButton, rem, Box
 } from "@mantine/core";
-import { Wrench, BarChart3, ArrowRight, Truck } from "lucide-react";
+import { Wrench, BarChart3, ArrowRight, Truck, ClipboardList as IconClipboardHeart } from "lucide-react";
 
 const MenuMantenimiento = () => {
     const navigate = useNavigate();
 
     const acciones = [
         {
-            titulo: "Control de Vencimientos",
+            titulo: "Control de Mantenimientos",
             descripcion: "Semáforos de estado, registro de servicios históricos y configuración de alertas.",
             icono: <Wrench size={32} />,
             ruta: "/admin/mantenimiento/control",
@@ -25,6 +25,14 @@ const MenuMantenimiento = () => {
             color: "violet",
             bgPattern: "linear-gradient(135deg, rgba(121, 80, 242, 0.05) 0%, rgba(121, 80, 242, 0.1) 100%)"
         },
+        {
+            titulo: "Historial por Vehículo",
+            descripcion: "Expediente digital completo. Cronología de reparaciones y análisis de costos.",
+            icono: <IconClipboardHeart size={32} />,
+            ruta: "/admin/mantenimiento/historial",
+            color: "indigo",
+            bgPattern: "linear-gradient(135deg, rgba(76, 110, 245, 0.05) 0%, rgba(76, 110, 245, 0.1) 100%)"
+        }
     ];
 
     return (
@@ -50,7 +58,7 @@ const MenuMantenimiento = () => {
             </Group>
 
             {/* Premium Actions Grid */}
-            <SimpleGrid cols={{ base: 1, md: 2 }} spacing={30}>
+            <SimpleGrid cols={{ base: 1, md: 3 }} spacing={30}>
                 {acciones.map((accion, index) => (
                     <Card
                         key={index}
@@ -98,7 +106,7 @@ const MenuMantenimiento = () => {
                                     color={accion.color}
                                     style={{ transition: 'all 0.3s ease' }}
                                 >
-                                    {accion.icono}
+                                    {React.cloneElement(accion.icono, { size: 32 })}
                                 </ThemeIcon>
 
                                 <ThemeIcon

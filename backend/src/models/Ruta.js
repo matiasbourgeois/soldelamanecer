@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const RutaSchema = new mongoose.Schema({
-  codigo: { type: String, required: true, unique: true },      // Ej: L-ALCA-M1
+  codigo: { type: String, required: true, unique: true, uppercase: true, trim: true },      // Ej: L-ALCA-M1
   horaSalida: { type: String, required: true },                // Ej: 06:30
   frecuencia: { type: String, required: true },                // Ej: Lu a Vi
   descripcion: { type: String },                               // Breve texto explicativo

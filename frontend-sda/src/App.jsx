@@ -49,6 +49,7 @@ import MantenimientoAdmin from "./modules/admin/pages/mantenimiento/Mantenimient
 import MantenimientoMetricas from "./modules/admin/pages/mantenimiento/MantenimientoMetricas";
 import MenuMantenimiento from "./modules/admin/pages/mantenimiento/MenuMantenimiento"; // NUEVO
 import RutasAdmin from "./modules/logistica/rutas/pages/RutasAdmin";
+import HistorialVehiculo from "./modules/admin/pages/mantenimiento/HistorialVehiculo";
 
 // Pages - Clientes
 import MisEnvios from "./modules/clientes/pages/MisEnvios";
@@ -167,6 +168,14 @@ function App() {
               element={
                 <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
                   <MantenimientoMetricas />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/mantenimiento/historial"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <HistorialVehiculo />
                 </ProtectedByRole>
               }
             />

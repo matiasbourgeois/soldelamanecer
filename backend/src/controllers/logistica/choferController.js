@@ -203,6 +203,72 @@ const obtenerChoferesMinimos = async (req, res) => {
 
 
 
+// Obtener configuración del chofer logueado (Vehículo y Ruta asignada)
+const obtenerMiConfiguracion = async (req, res) => {
+  try {
+    // req.usuario.id viene del middleware auth
+    const usuarioId = req.usuario.id;
+
+    const chofer = await Chofer.findOne({ usuario: usuarioId }).populate("vehiculoAsignado");
+
+    if (!chofer) {
+      return res.status(404).json({ msg: "Perfil de chofer no encontrado." });
+    }
+
+    // Buscar si tiene alguna ruta asignada
+    // Importante: Model Ruta debe ser requerido arriba si no lo está
+    const Ruta = require("../../models/Ruta");
+    // Buscar la ruta asignada al chofer y popular su vehículo
+    const rutaAsignada = await Ruta.findOne({ choferAsignado: chofer._id }).populate("vehiculoAsignado");
+
+    // LÓGICA DE NEGOCIO CORREGIDA:
+    // El vehículo viene de la RUTA, no del chofer directamenete.
+    // Si la ruta tiene vehículo, ese es el que vale.
+    // Solo si no hay ruta, miramos si el chofer tiene uno "por defecto" (legacy).
+    const vehiculoFinal = (rutaAsignada && rutaAsignada.vehiculoAsignado)
+      ? rutaAsignada.vehiculoAsignado
+      : chofer.vehiculoAsignado;
+
+    res.json({
+      vehiculo: vehiculoFinal,
+      ruta: rutaAsignada
+    });
+
+  } catch (error) {
+    console.error("Error al obtener mi configuración:", error);
+    res.status(500).json({ msg: "Error al obtener configuración." });
+  }
+};
+
+// Obtener listas para selectores (Vehículos y Rutas)
+const obtenerSelectoresReporte = async (req, res) => {
+  try {
+    // 1. Vehículos Activos y PROPIOS
+    const vehiculos = await Vehiculo.find({
+      activo: true,
+      estado: { $ne: "fuera de servicio" },
+      tipoPropiedad: "propio" // Solo flota propia
+    })
+      .select("patente marca modelo kilometrajeActual tipoPropiedad")
+      .lean();
+
+    // 2. Rutas Activas (Traemos todas por si el flag activo no está seteado)
+    const Ruta = require("../../models/Ruta");
+    const rutas = await Ruta.find({})
+      .select("codigo descripcion horaSalida")
+      .lean();
+
+    res.json({
+      vehiculos,
+      rutas
+    });
+
+  } catch (error) {
+    console.error("Error al obtener selectores:", error);
+    res.status(500).json({ msg: "Error al obtener listas." });
+  }
+};
+
 module.exports = {
   crearChofer,
   obtenerChoferes,
@@ -210,4 +276,6 @@ module.exports = {
   editarChofer,
   eliminarChofer,
   obtenerChoferesMinimos,
+  obtenerMiConfiguracion,
+  obtenerSelectoresReporte
 };

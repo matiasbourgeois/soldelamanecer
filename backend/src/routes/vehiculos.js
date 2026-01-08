@@ -10,7 +10,9 @@ const {
   actualizarKilometraje,
   registrarMantenimiento,
   agregarTipoMantenimiento,
-  editarTipoMantenimiento
+  editarTipoMantenimiento,
+  obtenerLogMantenimiento,
+  registrarReporteChofer
 } = require("../controllers/logistica/vehiculoController");
 const verificarToken = require("../middlewares/verificarToken");
 
@@ -43,5 +45,11 @@ router.post("/:id/mantenimiento/registro", [verificarToken], registrarMantenimie
 // Configuración (Agregar/Editar) - Admin
 router.post("/:id/mantenimiento/config", [verificarToken], agregarTipoMantenimiento);
 router.put("/:id/mantenimiento/config", [verificarToken], editarTipoMantenimiento);
+
+// Obtener Historial Completo
+router.get("/:id/mantenimiento/historial", obtenerLogMantenimiento);
+
+// Registrar Reporte Chofer (App Móvil)
+router.post("/:id/reporte-chofer", [verificarToken], registrarReporteChofer);
 
 module.exports = router;

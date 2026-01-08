@@ -245,6 +245,83 @@ const editarTipoMantenimiento = async (req, res) => {
 };
 
 
+// 5. Obtener Historial de Mantenimiento
+// GET /api/vehiculos/:id/mantenimiento/historial
+const obtenerLogMantenimiento = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validar si existe el vehículo (opcional pero recomendado)
+    // const vehiculo = await Vehiculo.findById(id); 
+    // if (!vehiculo) ... 
+
+    const logs = await MantenimientoLog.find({ vehiculo: id })
+      .sort({ fecha: -1 })
+      .populate('registradoPor', 'nombre email'); // Si queremos saber quién lo hizo
+
+    res.json(logs);
+  } catch (error) {
+    console.error("Error al obtener historial:", error);
+    res.status(500).json({ error: "Error al obtener historial" });
+  }
+};
+
+
+// 6. Registrar Reporte Diario de Chofer (KM + Combustible + Ruta)
+// POST /api/vehiculos/:id/reporte-chofer
+const registrarReporteChofer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { kilometraje, litros, rutaId, fecha } = req.body;
+
+    const vehiculo = await Vehiculo.findById(id);
+    if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
+
+    // 1. Validar Límite de Reportes Diarios (Máx 2 por día: Salida y Llegada)
+    const fechaReporte = fecha ? new Date(fecha) : new Date();
+    const startOfDay = new Date(fechaReporte); startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(fechaReporte); endOfDay.setHours(23, 59, 59, 999);
+
+    const reportesHoy = await MantenimientoLog.countDocuments({
+      vehiculo: id,
+      tipo: "Reporte Diario",
+      fecha: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    if (reportesHoy >= 10) { // Límite aumentado a 10 para pruebas
+      return res.status(400).json({
+        error: "Límite excedido: Ya se cargaron 10 reportes para este vehículo en la fecha seleccionada."
+      });
+    }
+
+    // 2. Actualizar KM del vehículo si es mayor al actual
+    // (Permitimos correcciones menores, pero idealmente debe subir)
+    if (kilometraje > vehiculo.kilometrajeActual) {
+      vehiculo.kilometrajeActual = kilometraje;
+    }
+
+    // 2. Crear Log
+    const log = new MantenimientoLog({
+      vehiculo: vehiculo._id,
+      tipo: "Reporte Diario", // O "Carga Combustible"
+      kmAlMomento: kilometraje,
+      litrosCargados: litros || 0,
+      ruta: rutaId || null,
+      fecha: fecha ? new Date(fecha) : new Date(),
+      registradoPor: req.usuario ? req.usuario.id : null,
+      observaciones: `Reporte diario desde App Móvil.` // Opcional
+    });
+
+    await log.save();
+    await vehiculo.save();
+
+    res.json({ mensaje: "Reporte registrado correctamente", vehiculo });
+  } catch (error) {
+    console.error("Error al registrar reporte chofer:", error);
+    res.status(500).json({ error: "Error al registrar reporte" });
+  }
+};
+
 module.exports = {
   crearVehiculo,
   obtenerVehiculos,
@@ -255,5 +332,7 @@ module.exports = {
   actualizarKilometraje,
   registrarMantenimiento,
   agregarTipoMantenimiento,
-  editarTipoMantenimiento
+  editarTipoMantenimiento,
+  obtenerLogMantenimiento,
+  registrarReporteChofer
 };

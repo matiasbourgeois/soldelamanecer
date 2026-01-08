@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const VehiculoSchema = new mongoose.Schema({
-  patente: { type: String, required: true, unique: true },
+  patente: { type: String, required: true, unique: true, uppercase: true, trim: true },
   marca: { type: String, required: true },
   modelo: { type: String, required: true },
   capacidadKg: { type: Number, required: true },

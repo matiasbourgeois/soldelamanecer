@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
+    "@mantine/charts": "^8.3.10",
     "@mantine/core": "^8.3.10",
     "@mantine/dates": "^8.3.10",
     "@mantine/hooks": "^8.3.10",
@@ -34,6 +35,7 @@
     "react-leaflet-markercluster": "^5.0.0-rc.0",
     "react-router-dom": "^7.2.0",
     "react-select": "^5.10.1",
+    "recharts": "^3.6.0",
     "sweetalert2": "^11.21.0"
   },
   "devDependencies": {

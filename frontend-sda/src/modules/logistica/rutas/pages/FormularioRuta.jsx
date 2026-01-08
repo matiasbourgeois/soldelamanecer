@@ -75,7 +75,8 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
 
   const handleChange = (e) => {
     // For standard inputs
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    if (name === "codigo") value = value.toUpperCase();
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 

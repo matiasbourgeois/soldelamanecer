@@ -14,6 +14,15 @@ const MantenimientoLogSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    ruta: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Ruta",
+        default: null
+    },
+    litrosCargados: {
+        type: Number,
+        default: 0
+    },
     kmAlMomento: {
         type: Number,
         required: true
