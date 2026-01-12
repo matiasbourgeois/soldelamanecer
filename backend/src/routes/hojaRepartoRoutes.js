@@ -8,7 +8,7 @@ const {
   exportarHojaPDF,
   obtenerHojaPorId,
   obtenerHojaRepartoDeHoy,
-  obtenerHojasPorChofer, 
+  obtenerHojasPorChofer,
   cerrarHojaManualmente,
 } = require("../controllers/logistica/hojaRepartoController");
 

@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setToken(storedToken);
             }
         } catch (error) {
-            console.log('Error loading auth data', error);
+            // Error fetching config
         } finally {
             setIsLoading(false);
         }

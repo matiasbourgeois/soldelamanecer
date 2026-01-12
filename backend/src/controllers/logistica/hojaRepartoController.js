@@ -98,8 +98,7 @@ const crearHojaPreliminar = async (req, res) => {
 
         await hoja.save();
 
-        // Mostrar los datos en consola por seguridad
-        console.dir(enviosConRemito[0], { depth: null });
+
 
         // Respuesta
         res.status(201).json({
@@ -120,9 +119,7 @@ const confirmarHoja = async (req, res) => {
     try {
         const { hojaId, usuarioId, envios, choferId, vehiculoId } = req.body;
 
-        console.log("🟡 Confirmando hoja con datos recibidos:", {
-            hojaId, usuarioId, envios, choferId, vehiculoId
-        });
+
 
         const hoja = await HojaReparto.findById(hojaId);
         if (!hoja) {
@@ -422,30 +419,7 @@ const exportarHojaPDF = async (req, res) => {
 
 
 
-const testPDF = async (req, res) => {
-    try {
-        const templatePath = path.join(__dirname, "../templates/test-template.html");
-        let html = fs.readFileSync(templatePath, "utf8");
 
-        const nroHoja = "HR-SDA-TEST-00001";
-        html = html.replace("{{nro}}", nroHoja);
-
-        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
-        const page = await browser.newPage();
-
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-
-        const pdfPath = path.join(__dirname, "../pdfs/test-hoja.pdf");
-        await page.pdf({ path: pdfPath, format: 'A4', printBackground: true });
-
-        await browser.close();
-
-        res.status(200).json({ message: "PDF generado", path: `/pdfs/test-hoja.pdf` });
-    } catch (error) {
-        console.error("❌ Error:", error);
-        res.status(500).json({ error: "No se pudo generar el PDF" });
-    }
-};
 
 const obtenerHojaRepartoDeHoy = async (req, res) => {
     try {
@@ -710,7 +684,7 @@ module.exports = {
     obtenerHojaPorId,
     exportarHojaPDF,
     obtenerHojaRepartoDeHoy,
-    testPDF,
+
     obtenerHojasPorChofer,
     cerrarHojasVencidas,
     cerrarHojaManualmente
