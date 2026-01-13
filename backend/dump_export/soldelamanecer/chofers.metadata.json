@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"usuario":{"$numberInt":"1"}},"name":"usuario_1","background":true,"unique":true}],"uuid":"d576d65763d04ff6b6242be05a743ddd","collectionName":"chofers","type":"collection"}

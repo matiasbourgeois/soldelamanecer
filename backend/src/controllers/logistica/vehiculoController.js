@@ -202,15 +202,17 @@ const agregarTipoMantenimiento = async (req, res) => {
     const vehiculo = await Vehiculo.findById(id);
     if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
 
-    // Verificar si ya existe
-    if (vehiculo.configuracionMantenimiento.some(c => c.nombre === nombre)) {
-      return res.status(400).json({ error: "Este tipo de mantenimiento ya existe." });
+    const finalUltimoKm = req.body.ultimoKm !== undefined ? req.body.ultimoKm : vehiculo.kilometrajeActual;
+
+    // Validación: No puede ser mayor al actual
+    if (finalUltimoKm > vehiculo.kilometrajeActual) {
+      return res.status(400).json({ error: `El kilometraje base (${finalUltimoKm}) no puede ser mayor al kilometraje actual (${vehiculo.kilometrajeActual})` });
     }
 
     vehiculo.configuracionMantenimiento.push({
       nombre,
       frecuenciaKm,
-      ultimoKm: vehiculo.kilometrajeActual // Asumimos que empieza "limpio" o requerir input extra
+      ultimoKm: finalUltimoKm
     });
 
     await vehiculo.save();
@@ -234,7 +236,16 @@ const editarTipoMantenimiento = async (req, res) => {
     const item = vehiculo.configuracionMantenimiento.find(c => c.nombre === nombre);
     if (!item) return res.status(404).json({ error: "Tipo de mantenimiento no encontrado" });
 
-    item.frecuenciaKm = nuevaFrecuenciaKm;
+    if (nuevaFrecuenciaKm !== undefined) item.frecuenciaKm = nuevaFrecuenciaKm;
+
+    if (req.body.ultimoKm !== undefined) {
+      // Validación: No puede ser mayor al actual
+      if (req.body.ultimoKm > vehiculo.kilometrajeActual) {
+        return res.status(400).json({ error: `El kilometraje base (${req.body.ultimoKm}) no puede ser mayor al kilometraje actual (${vehiculo.kilometrajeActual})` });
+      }
+      item.ultimoKm = req.body.ultimoKm;
+    }
+
     await vehiculo.save();
 
     res.json(vehiculo);
@@ -244,22 +255,46 @@ const editarTipoMantenimiento = async (req, res) => {
   }
 };
 
+// 5. Eliminar Tipo de Mantenimiento
+// DELETE /api/vehiculos/:id/mantenimiento/config/:nombre
+const eliminarTipoMantenimiento = async (req, res) => {
+  try {
+    const { id, nombre } = req.params;
+
+    const vehiculo = await Vehiculo.findById(id);
+    if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
+
+    vehiculo.configuracionMantenimiento = vehiculo.configuracionMantenimiento.filter(
+      (c) => c.nombre !== nombre
+    );
+
+    await vehiculo.save();
+    res.json(vehiculo);
+  } catch (error) {
+    console.error("Error al eliminar mantenimiento:", error);
+    res.status(500).json({ error: "Error al eliminar configuración" });
+  }
+};
+
+
 
 // 5. Obtener Historial de Mantenimiento
 // GET /api/vehiculos/:id/mantenimiento/historial
 const obtenerLogMantenimiento = async (req, res) => {
   try {
     const { id } = req.params;
+    const pagina = parseInt(req.query.pagina) || 0;
+    const limite = parseInt(req.query.limite) || 20;
 
-    // Validar si existe el vehículo (opcional pero recomendado)
-    // const vehiculo = await Vehiculo.findById(id); 
-    // if (!vehiculo) ... 
-
+    const total = await MantenimientoLog.countDocuments({ vehiculo: id });
     const logs = await MantenimientoLog.find({ vehiculo: id })
       .sort({ fecha: -1 })
-      .populate('registradoPor', 'nombre email'); // Si queremos saber quién lo hizo
+      .skip(pagina * limite)
+      .limit(limite)
+      .populate('registradoPor', 'nombre email')
+      .populate('ruta', 'codigo descripcion');
 
-    res.json(logs);
+    res.json({ total, logs });
   } catch (error) {
     console.error("Error al obtener historial:", error);
     res.status(500).json({ error: "Error al obtener historial" });
@@ -322,6 +357,67 @@ const registrarReporteChofer = async (req, res) => {
   }
 };
 
+// 7. Obtener Estadísticas de Rendimiento (Diario y Mensual)
+// GET /api/vehiculos/:id/estadisticas
+const obtenerEstadisticasVehiculo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const hoy = new Date();
+    const startOfDay = new Date(hoy); startOfDay.setHours(0, 0, 0, 0);
+    const hace30Dias = new Date(hoy); hace30Dias.setDate(hoy.getDate() - 30);
+
+    // 1. Datos diarios
+    const logsHoy = await MantenimientoLog.find({
+      vehiculo: id,
+      tipo: "Reporte Diario",
+      fecha: { $gte: startOfDay }
+    }).sort({ fecha: 1 });
+
+    let rendimientoDiario = 0;
+    let kmHoy = 0;
+    let litrosHoy = 0;
+
+    if (logsHoy.length > 1) {
+      kmHoy = logsHoy[logsHoy.length - 1].kmAlMomento - logsHoy[0].kmAlMomento;
+      litrosHoy = logsHoy.reduce((acc, curr) => acc + (curr.litrosCargados || 0), 0);
+      if (litrosHoy > 0) rendimientoDiario = kmHoy / litrosHoy;
+    }
+
+    // 2. Datos mensuales
+    const logsMes = await MantenimientoLog.find({
+      vehiculo: id,
+      tipo: "Reporte Diario",
+      fecha: { $gte: hace30Dias }
+    }).sort({ fecha: 1 });
+
+    let rendimientoMensual = 0;
+    let kmMes = 0;
+    let litrosMes = 0;
+
+    if (logsMes.length > 1) {
+      kmMes = logsMes[logsMes.length - 1].kmAlMomento - logsMes[0].kmAlMomento;
+      litrosMes = logsMes.reduce((acc, curr) => acc + (curr.litrosCargados || 0), 0);
+      if (litrosMes > 0) rendimientoMensual = kmMes / litrosMes;
+    }
+
+    res.json({
+      diario: {
+        rendimiento: rendimientoDiario.toFixed(2),
+        recorrido: kmHoy,
+        litros: litrosHoy
+      },
+      mensual: {
+        rendimiento: rendimientoMensual.toFixed(2),
+        recorrido: kmMes,
+        litros: litrosMes
+      }
+    });
+  } catch (error) {
+    console.error("Error al obtener estadísticas:", error);
+    res.status(500).json({ error: "Error al obtener estadísticas" });
+  }
+};
+
 module.exports = {
   crearVehiculo,
   obtenerVehiculos,
@@ -334,5 +430,7 @@ module.exports = {
   agregarTipoMantenimiento,
   editarTipoMantenimiento,
   obtenerLogMantenimiento,
-  registrarReporteChofer
+  registrarReporteChofer,
+  obtenerEstadisticasVehiculo,
+  eliminarTipoMantenimiento
 };

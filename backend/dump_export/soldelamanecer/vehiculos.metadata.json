@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"patente":{"$numberInt":"1"}},"name":"patente_1","background":true,"unique":true}],"uuid":"53cf347f41d840d1b1c45c4a2564c297","collectionName":"vehiculos","type":"collection"}

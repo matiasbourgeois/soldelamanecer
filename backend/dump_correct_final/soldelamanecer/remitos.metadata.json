@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"numeroRemito":{"$numberInt":"1"}},"name":"numeroRemito_1","background":true,"unique":true}],"uuid":"27ef44a69a9e4ed0abb951c3bfa20d6f","collectionName":"remitos","type":"collection"}

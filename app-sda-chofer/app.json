@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "app-sda-chofer",
+    "name": "SDA App Mobile",
     "slug": "app-sda-chofer",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff",
+      "backgroundColor": "#083344",
       "updates": {
         "enabled": false
       }
@@ -22,7 +22,7 @@
       "package": "com.soldelamanecer.choferes",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#083344"
       }
     },
     "web": {
@@ -32,6 +32,9 @@
       "eas": {
         "projectId": "b97d25ff-5b86-437b-8d2b-10e58a98b446"
       }
-    }
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ]
   }
 }

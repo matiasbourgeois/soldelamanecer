@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"nombre":{"$numberInt":"1"}},"name":"nombre_1","background":true,"unique":true}],"uuid":"456636742d0e4031b1ccb17ed3ef0c27","collectionName":"provincias","type":"collection"}

@@ -5,7 +5,18 @@ const path = require("path");
 const app = express();
 
 // Middlewares Globales
-app.use(cors());
+// CORS Dinámico y Debug
+app.use((req, res, next) => {
+    console.log(`[CORS DEBUG] Origin: ${req.headers.origin} | Method: ${req.method} | Path: ${req.path}`);
+    next();
+});
+
+app.use(cors({
+    origin: true, // Refleja el origen de la petición automáticamente
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

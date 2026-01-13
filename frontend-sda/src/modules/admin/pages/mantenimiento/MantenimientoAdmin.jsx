@@ -10,7 +10,7 @@ import { useDisclosure } from '@mantine/hooks';
 import {
     IconRefresh, IconSettings, IconTool, IconAlertTriangle, IconCheck,
     IconHistory, IconEdit, IconDeviceFloppy, IconPlus, IconTrash,
-    IconGauge, IconCalendar, IconCurrencyDollar, IconNote, IconSearch
+    IconGauge, IconCalendar, IconCurrencyDollar, IconNote, IconSearch, IconX
 } from '@tabler/icons-react';
 import { apiSistema } from '../../../../core/api/apiSistema';
 import axios from 'axios';
@@ -108,8 +108,10 @@ const MantenimientoAdmin = () => {
     const [kmService, setKmService] = useState(0);
     const [nuevoTipoNombre, setNuevoTipoNombre] = useState('');
     const [nuevoTipoFrecuencia, setNuevoTipoFrecuencia] = useState(10000);
+    const [nuevoTipoUltimoKm, setNuevoTipoUltimoKm] = useState(0); // <-- Nuevo estado para baseline
     const [editandoConfig, setEditandoConfig] = useState(null);
     const [nuevaFrecuenciaEdit, setNuevaFrecuenciaEdit] = useState(0);
+    const [nuevaUltimoKmEdit, setNuevaUltimoKmEdit] = useState(0); // <-- Nuevo estado para editar baseline
 
     // Initial Fetch
     useEffect(() => { fetchVehiculos(paginaActual); }, [paginaActual]);
@@ -166,48 +168,73 @@ const MantenimientoAdmin = () => {
     };
 
     const handleAddConfig = async () => {
+        if (nuevoTipoUltimoKm > selectedVehiculo.kilometrajeActual) {
+            notifications.show({ title: 'Validación', message: 'El punto de partida no puede ser mayor al kilometraje actual', color: 'red' });
+            return;
+        }
         try {
             const token = localStorage.getItem('token');
-            await axios.post(apiSistema(`/api/vehiculos/${selectedVehiculo._id}/mantenimiento/config`), {
-                nombre: nuevoTipoNombre, frecuenciaKm: nuevoTipoFrecuencia
-            }, { headers: { Authorization: `Bearer ${token}` } });
-            notifications.show({ title: 'Configuración Agregada', color: 'green' });
-            setNuevoTipoNombre(''); setNuevoTipoFrecuencia(10000);
-            // Refresh vehicle data locally for modal
-            const res = await axios.get(apiSistema('/api/vehiculos'), { headers: { Authorization: `Bearer ${token}` } });
-            const updated = res.data.find(v => v._id === selectedVehiculo._id);
-            if (updated) setSelectedVehiculo(updated);
+            const res = await axios.post(apiSistema(`/api/vehiculos/${selectedVehiculo._id}/mantenimiento/config`), {
+                nombre: nuevoTipoNombre,
+                frecuenciaKm: nuevoTipoFrecuencia,
+                ultimoKm: nuevoTipoUltimoKm
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            notifications.show({ title: 'Éxito', message: 'Configuración agregada', color: 'green' });
+            setNuevoTipoNombre('');
+            setNuevoTipoFrecuencia(10000);
+
+            if (res.data) {
+                setSelectedVehiculo(res.data);
+            }
+
             fetchVehiculos();
-        } catch (error) {
-            notifications.show({ title: 'Error', color: 'red' });
+        } catch (e) {
+            notifications.show({ title: 'Error', message: 'No se pudo agregar', color: 'red' });
         }
     };
 
     const handleDeleteConfig = async (nombreConfig) => {
+        if (!window.confirm(`¿Seguro que querés eliminar "${nombreConfig}"?`)) return;
         try {
-            // Mock delete endpoint logic if it doesn't exist, or reimplement
-            // Assuming endpoint exists or logic is similar to add
-            // NOTE: Backend support for DELETE specific config might be missing. 
-            // We will assume standard practice or disable if risky. 
-            // For now, let's keep it add-only if delete isn't robust, OR clearer logic.
-            // Given constraint, I'll stick to Add/Edit to be safe unless requested.
-            // User requested "fijate que esta mal", forms usually need Edit/Delete.
-            // I will skip Delete for now to avoid breaking if backend lacks it.
-        } catch (e) { }
-    }
+            const token = localStorage.getItem('token');
+            const res = await axios.delete(apiSistema(`/api/vehiculos/${selectedVehiculo._id}/mantenimiento/config/${nombreConfig}`), {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            notifications.show({ title: 'Éxito', message: 'Mantenimiento eliminado', color: 'blue' });
+
+            if (res.data) {
+                setSelectedVehiculo(res.data);
+            }
+            fetchVehiculos();
+        } catch (e) {
+            notifications.show({ title: 'Error', message: 'No se pudo eliminar', color: 'red' });
+        }
+    };
 
     const handleEditConfig = async () => {
         if (!editandoConfig) return;
+        if (nuevaUltimoKmEdit > selectedVehiculo.kilometrajeActual) {
+            notifications.show({ title: 'Validación', message: 'El punto de partida no puede ser mayor al kilometraje actual', color: 'red' });
+            return;
+        }
         try {
             const token = localStorage.getItem('token');
-            await axios.put(apiSistema(`/api/vehiculos/${selectedVehiculo._id}/mantenimiento/config`), {
-                nombre: editandoConfig.nombre, nuevaFrecuenciaKm: nuevaFrecuenciaEdit
+            const res = await axios.put(apiSistema(`/api/vehiculos/${selectedVehiculo._id}/mantenimiento/config`), {
+                nombre: editandoConfig.nombre,
+                nuevaFrecuenciaKm: nuevaFrecuenciaEdit,
+                ultimoKm: nuevaUltimoKmEdit
             }, { headers: { Authorization: `Bearer ${token}` } });
+
             notifications.show({ title: 'Actualizado', color: 'green' });
             setEditandoConfig(null);
-            const res = await axios.get(apiSistema('/api/vehiculos'), { headers: { Authorization: `Bearer ${token}` } });
-            const updated = res.data.find(v => v._id === selectedVehiculo._id);
-            if (updated) setSelectedVehiculo(updated);
+
+            // Actualizar el estado local para que el modal refleje el cambio al instante
+            if (res.data) {
+                setSelectedVehiculo(res.data);
+            }
+
             fetchVehiculos();
         } catch (error) {
             notifications.show({ title: 'Error', color: 'red' });
@@ -222,7 +249,9 @@ const MantenimientoAdmin = () => {
         openService();
     };
     const openConfigModalHandler = (v) => {
-        setSelectedVehiculo(v); setNuevoTipoNombre(''); setNuevoTipoFrecuencia(10000);
+        setSelectedVehiculo(v);
+        setNuevoTipoUltimoKm(v.kilometrajeActual); // <-- Pre-completar con KM actual
+        setNuevoTipoNombre(''); setNuevoTipoFrecuencia(10000);
         setEditandoConfig(null); openConfig();
     };
 
@@ -440,12 +469,13 @@ const MantenimientoAdmin = () => {
                             <Text size="sm" c="dimmed">Gestioná las alertas para <b>{selectedVehiculo.patente}</b></Text>
                         </Group>
 
-                        <Paper withBorder radius="md">
-                            <Table>
+                        <Paper withBorder radius="md" style={{ overflowX: 'auto' }}>
+                            <Table verticalSpacing="sm">
                                 <Table.Thead bg="gray.0">
                                     <Table.Tr>
                                         <Table.Th>Tipo</Table.Th>
                                         <Table.Th>Frecuencia</Table.Th>
+                                        <Table.Th>Punto de Partida (KM)</Table.Th>
                                         <Table.Th style={{ textAlign: 'right' }}>Acción</Table.Th>
                                     </Table.Tr>
                                 </Table.Thead>
@@ -463,27 +493,60 @@ const MantenimientoAdmin = () => {
                                                             value={nuevaFrecuenciaEdit}
                                                             onChange={setNuevaFrecuenciaEdit}
                                                             step={1000}
+                                                            suffix=" km"
                                                         />
                                                     ) : (
-                                                        <Badge variant="light" color="gray">{c.frecuenciaKm} km</Badge>
+                                                        <Badge variant="light" color="indigo">{c.frecuenciaKm.toLocaleString()} km</Badge>
+                                                    )}
+                                                </Table.Td>
+                                                <Table.Td>
+                                                    {editandoConfig?.nombre === c.nombre ? (
+                                                        <NumberInput
+                                                            size="xs"
+                                                            value={nuevaUltimoKmEdit}
+                                                            onChange={setNuevaUltimoKmEdit}
+                                                            step={1000}
+                                                            suffix=" km"
+                                                            max={selectedVehiculo.kilometrajeActual}
+                                                        />
+                                                    ) : (
+                                                        <Text size="sm" fw={700} c="dimmed">{c.ultimoKm?.toLocaleString()} km</Text>
                                                     )}
                                                 </Table.Td>
                                                 <Table.Td style={{ textAlign: 'right' }}>
-                                                    {editandoConfig?.nombre === c.nombre ? (
-                                                        <Group gap={5} justify="flex-end">
-                                                            <ActionIcon size="sm" color="green" onClick={handleEditConfig}><IconDeviceFloppy size={14} /></ActionIcon>
-                                                            <ActionIcon size="sm" color="gray" onClick={() => setEditandoConfig(null)}><IconAlertTriangle size={14} /></ActionIcon>
-                                                        </Group>
-                                                    ) : (
+                                                    <Group gap={5} justify="flex-end">
+                                                        {editandoConfig?.nombre === c.nombre ? (
+                                                            <>
+                                                                <ActionIcon size="md" variant="filled" color="green" onClick={handleEditConfig}>
+                                                                    <IconDeviceFloppy size={16} />
+                                                                </ActionIcon>
+                                                                <ActionIcon size="md" variant="light" color="gray" onClick={() => setEditandoConfig(null)}>
+                                                                    <IconX size={16} />
+                                                                </ActionIcon>
+                                                            </>
+                                                        ) : (
+                                                            <ActionIcon
+                                                                size="md"
+                                                                variant="subtle"
+                                                                color="blue"
+                                                                onClick={() => {
+                                                                    setEditandoConfig(c);
+                                                                    setNuevaFrecuenciaEdit(c.frecuenciaKm);
+                                                                    setNuevaUltimoKmEdit(c.ultimoKm || 0); // <-- Cargar baseline actual
+                                                                }}
+                                                            >
+                                                                <IconEdit size={18} />
+                                                            </ActionIcon>
+                                                        )}
                                                         <ActionIcon
-                                                            size="sm"
+                                                            size="md"
                                                             variant="subtle"
-                                                            color="blue"
-                                                            onClick={() => { setEditandoConfig(c); setNuevaFrecuenciaEdit(c.frecuenciaKm); }}
+                                                            color="red"
+                                                            onClick={() => handleDeleteConfig(c.nombre)}
                                                         >
-                                                            <IconEdit size={16} />
+                                                            <IconTrash size={18} />
                                                         </ActionIcon>
-                                                    )}
+                                                    </Group>
                                                 </Table.Td>
                                             </Table.Tr>
                                         ))
@@ -494,24 +557,59 @@ const MantenimientoAdmin = () => {
                             </Table>
                         </Paper>
 
-                        <Divider label="Agregar Nuevo" labelPosition="center" />
-
-                        <Group grow>
-                            <TextInput
-                                placeholder="Nombre (ej: Aceite)"
-                                value={nuevoTipoNombre}
-                                onChange={(e) => setNuevoTipoNombre(e.currentTarget.value)}
-                            />
-                            <NumberInput
-                                placeholder="Frecuencia (km)"
-                                value={nuevoTipoFrecuencia}
-                                onChange={setNuevoTipoFrecuencia}
-                                step={1000}
-                            />
-                            <Button leftSection={<IconPlus size={16} />} onClick={handleAddConfig} disabled={!nuevoTipoNombre} style={{ flexGrow: 0 }}>
-                                Agregar
-                            </Button>
-                        </Group>
+                        <Paper withBorder p="md" radius="md" bg="gray.0">
+                            <Text fw={700} size="xs" mb="md" c="indigo" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                + Agregar Nuevo Mantenimiento
+                            </Text>
+                            <Grid align="flex-end" gutter="xs">
+                                <Grid.Col span={{ base: 12, md: 4 }}>
+                                    <TextInput
+                                        label="Mantenimiento"
+                                        placeholder="Ej: Cubiertas"
+                                        value={nuevoTipoNombre}
+                                        onChange={(e) => setNuevoTipoNombre(e.currentTarget.value)}
+                                        styles={{ label: { fontSize: 12, fontWeight: 700 } }}
+                                    />
+                                </Grid.Col>
+                                <Grid.Col span={{ base: 6, md: 2 }}>
+                                    <NumberInput
+                                        label="Frecuencia"
+                                        placeholder="KM"
+                                        value={nuevoTipoFrecuencia}
+                                        onChange={setNuevoTipoFrecuencia}
+                                        step={1000}
+                                        min={1}
+                                        suffix=" km"
+                                        styles={{ label: { fontSize: 12, fontWeight: 700 } }}
+                                    />
+                                </Grid.Col>
+                                <Grid.Col span={{ base: 6, md: 3 }}>
+                                    <NumberInput
+                                        label="Punto Partida"
+                                        description={`Máx: ${selectedVehiculo.kilometrajeActual.toLocaleString()} km`}
+                                        value={nuevoTipoUltimoKm}
+                                        onChange={setNuevoTipoUltimoKm}
+                                        step={1000}
+                                        max={selectedVehiculo.kilometrajeActual}
+                                        styles={{
+                                            label: { fontSize: 12, fontWeight: 700 },
+                                            description: { fontSize: 9, marginTop: -2 }
+                                        }}
+                                    />
+                                </Grid.Col>
+                                <Grid.Col span={{ base: 12, md: 3 }}>
+                                    <Button
+                                        fullWidth
+                                        color="indigo"
+                                        leftSection={<IconPlus size={16} />}
+                                        onClick={handleAddConfig}
+                                        disabled={!nuevoTipoNombre}
+                                    >
+                                        Agregar
+                                    </Button>
+                                </Grid.Col>
+                            </Grid>
+                        </Paper>
                     </Stack>
                 )}
             </Modal>

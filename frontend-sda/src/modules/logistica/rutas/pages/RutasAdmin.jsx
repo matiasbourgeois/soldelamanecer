@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import TablaRutas from "./TablaRutas";
 import FormularioRuta from "./FormularioRuta";
 import { apiSistema } from "../../../../core/api/apiSistema";
@@ -8,6 +9,7 @@ import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
 import { confirmarAccion } from "../../../../core/utils/confirmarAccion.jsx";
 
 const RutasAdmin = () => {
+  const navigate = useNavigate();
   const [rutas, setRutas] = useState([]);
   const [localidades, setLocalidades] = useState([]);
   const [mostrarModal, setMostrarModal] = useState(false);
@@ -108,9 +110,7 @@ const RutasAdmin = () => {
             <Button
               leftSection={<Map size={18} />}
               variant="default"
-              component="a" // Use 'a' or Link if needed, but original used Link.
-              href="/admin/localidades" // better to use Link component if internal.
-              onClick={(e) => { e.preventDefault(); window.location.href = '/admin/localidades'; }} // Simple nav
+              onClick={() => navigate('/admin/localidades')}
             >
               Gestionar Localidades
             </Button>
