@@ -1,23 +1,45 @@
-# MISSION CONTROL: REGLAS DE COMPORTAMIENTO (USER: MATIAS)
+# MISSION CONTROL: REGLAS DE COMPORTAMIENTO (NIVEL DIOS)
+
+Este documento rige la conducta del desarrollador/IA en el proyecto Sol del Amanecer.
+
+---
 
 ## 1. INTEGRIDAD DEL CÓDIGO (REGLA DE ORO 🚫)
 - **NO BORRAR:** Está terminantemente prohibido eliminar código existente que no esté relacionado con la tarea actual.
-- **NO RESUMIR:** Nunca devuelvas código truncado con comentarios como `// ... resto del código ...`. Si tocas un archivo, el output debe ser el archivo COMPLETO y funcional.
-- **PRESERVACIÓN:** Cuida las importaciones y dependencias. No rompas lo que ya funciona.
+- **NO RESUMIR:** El output debe ser el archivo COMPLETO y funcional. Nunca uses `// ... resto del código ...`.
+- **PRESERVACIÓN:** Mantén las importaciones y dependencias intactas.
 
-## 2. CALIDAD DE INGENIERÍA Y DEBUGGING 🧠
-- **CERO PARCHES ("QUICK FIXES"):** Prohibido hacer arreglos rápidos o sucios solo para que el código "corra".
-- **CAUSA RAÍZ:** Si hay un error, no lo tapes. Investiga y encuentra la **causa principal (root cause)**. Si no estás seguro, PREGUNTA antes de aplicar una solución mediocre.
-- **ESTÁNDARES:** Aplica principios **SOLID** y **Clean Code**. La paginación y lógica pesada, siempre en el Backend.
+---
 
-## 3. SEGURIDAD DE DATOS (CRÍTICO 🔒)
-- **BASE DE DATOS SAGRADA:** Prohibido inventar, modificar o borrar tablas/columnas en la base de datos sin autorización explícita.
-- **NO MOCKING NO SOLICITADO:** No hardcodees datos falsos en el código de producción a menos que sea un entorno de test explícito.
+## 2. CALIDAD DE INGENIERÍA 🧠
+- **CERO PARCHES:** Se prohíben los arreglos sucios. Encuentra la **causa raíz**.
+- **ESTÁNDARES:** Paginación y lógica pesada en el Backend. Frontend centrado en UI/UX premium.
+- **CLEAN CODE:** Respeta la arquitectura de carpetas y patrones existentes.
 
-## 4. ALCANCE Y CONSULTA ✋
-- **MODO QUIRÚRGICO:** Limítate estrictamente a lo pedido.
-- **ERRORES EXTERNOS:** Si ves un bug ajeno a tu tarea, repórtalo, NO lo arregles en silencio.
-- **CAMBIOS MAYORES:** Pide permiso antes de reescribir lógica compleja.
+---
 
-## 5. VERIFICACIÓN (TESTING) ✅
-- **TESTEAR SIEMPRE:** Al terminar, genera una prueba (script o print de control) para demostrar que tu solución funciona y no rompió nada más.
+## 3. GESTIÓN DE ENTORNOS (.env / Config) 🌐
+- **DIFERENCIACIÓN:** No mezcles URLs de desarrollo (`localhost`) con producción (`api-choferes...`) en el código.
+- **PROTOCOLO FRONTEND:** Antes de un deploy a Hostinger, `VITE_API_SISTEMA` debe ser el dominio HTTPS del VPS en el `.env`.
+- **APP MÓVIL:** La URL de la API se configura en `app-sda-chofer/src/api/client.ts`. Verificar siempre antes de un build APK.
+- **PERSISTENCIA:** Nunca subas archivos `.env` o carpetas `uploads/` a Git.
+
+---
+
+## 4. SEGURIDAD Y SINCRONIZACIÓN DE DATOS (CRÍTICO 🔒)
+- **DB NAME:** La base de datos es `soldelamanecer` en todos los entornos (Local y VPS). NO renombrar.
+- **SINCRONIZACIÓN:** Los datos viajan de Desarrollo -> Producción vía `mongodump`/`mongorestore`. Ver comandos en `rules_vps.md`.
+- **INTEGRIDAD:** No inventes columnas ni cambies tipos de datos sin autorización.
+- **COLECCIONES:** Usar `localidadesSistema` para el módulo de logística.
+
+---
+
+## 5. ESTRUCTURA DEL MONOREPO 📂
+- `backend/`: API Monolítica (Node.js/Express). Puerto 5000.
+- `frontend-sda/`: Dashboard Administrativo (React/Mantine). Puerto 5173.
+- `app-sda-chofer/`: Aplicación Móvil (React Native/Expo).
+
+---
+
+## 6. VERIFICACIÓN (TESTING) ✅
+- **TESTEAR SIEMPRE:** Al terminar, genera pruebas (scripts o logs) que demuestren el funcionamiento y la ausencia de regresiones.

@@ -1,1 +1,0 @@
-{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"Localidad":{"$numberInt":"1"}},"name":"Localidad_1","background":true,"unique":true}],"uuid":"0057e78c28ba4590ac274bf726092872","collectionName":"localidades","type":"collection"}

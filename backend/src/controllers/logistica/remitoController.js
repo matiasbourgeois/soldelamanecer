@@ -78,7 +78,6 @@ const obtenerRemitoPorEnvio = async (req, res) => {
 };
 
 const puppeteer = require("puppeteer");
-const Encomienda = require("../../models/Encomienda");
 
 const generarRemitoPDF = async (req, res) => {
   try {
@@ -106,7 +105,6 @@ const generarRemitoPDF = async (req, res) => {
       .populate("clienteRemitente")
       .populate("destinatario")
       .populate("localidadDestino")
-      .populate("encomienda")
       .populate("envio");
 
     if (!remito) {
@@ -215,7 +213,6 @@ const obtenerRemitosConFiltros = async (req, res) => {
       .populate("clienteRemitente")
       .populate("destinatario")
       .populate("localidadDestino")
-      .populate("encomienda")
       .populate("envio");
 
     res.json({

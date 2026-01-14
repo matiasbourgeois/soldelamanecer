@@ -1,1 +1,0 @@
-{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"codigo":{"$numberInt":"1"}},"name":"codigo_1","background":true,"unique":true},{"v":{"$numberInt":"2"},"key":{"horaSalida":{"$numberInt":"1"}},"name":"horaSalida_idx"}],"uuid":"986e8a8ba9464e3db9543b7971de8e1b","collectionName":"rutas","type":"collection"}
