@@ -4,13 +4,14 @@ import {
     Title, Paper, Text, Group, Button, Table, Badge, ActionIcon,
     Tooltip, Modal, NumberInput, Select, Textarea, LoadingOverlay,
     Grid, Alert, Pagination, Stack, TextInput, HoverCard, Progress,
-    ThemeIcon, Divider, Avatar, Box, Center, RingProgress
+    ThemeIcon, Divider, Avatar, Box, Center, RingProgress, Autocomplete
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
     IconRefresh, IconSettings, IconTool, IconAlertTriangle, IconCheck,
     IconHistory, IconEdit, IconDeviceFloppy, IconPlus, IconTrash,
-    IconGauge, IconCalendar, IconCurrencyDollar, IconNote, IconSearch, IconX
+    IconGauge, IconCalendar, IconCurrencyDollar, IconNote, IconSearch, IconX,
+    IconDatabase, IconBooks
 } from '@tabler/icons-react';
 import { apiSistema } from '../../../../core/api/apiSistema';
 import axios from 'axios';
@@ -111,10 +112,31 @@ const MantenimientoAdmin = () => {
     const [nuevoTipoUltimoKm, setNuevoTipoUltimoKm] = useState(0); // <-- Nuevo estado para baseline
     const [editandoConfig, setEditandoConfig] = useState(null);
     const [nuevaFrecuenciaEdit, setNuevaFrecuenciaEdit] = useState(0);
-    const [nuevaUltimoKmEdit, setNuevaUltimoKmEdit] = useState(0); // <-- Nuevo estado para editar baseline
+    const [nuevaUltimoKmEdit, setNuevaUltimoKmEdit] = useState(0);
+
+    // Knowledge Base State
+    const [tiposMantenimiento, setTiposMantenimiento] = useState([]);
+    const [openedTipos, { open: openTipos, close: closeTipos }] = useDisclosure(false);
+    const [nuevoTipoBase, setNuevoTipoBase] = useState({ nombre: '', frecuenciaKmDefault: 10000 });
+    const [editandoTipoBase, setEditandoTipoBase] = useState(null);
 
     // Initial Fetch
-    useEffect(() => { fetchVehiculos(paginaActual); }, [paginaActual]);
+    useEffect(() => {
+        fetchVehiculos(paginaActual);
+        fetchTiposMantenimiento();
+    }, [paginaActual]);
+
+    const fetchTiposMantenimiento = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(apiSistema('/api/mantenimientos-tipo'), {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setTiposMantenimiento(res.data);
+        } catch (e) {
+            console.error("Error fetching types", e);
+        }
+    };
 
     const fetchVehiculos = async (pagina = paginaActual) => {
         setCargando(true);
@@ -241,6 +263,50 @@ const MantenimientoAdmin = () => {
         }
     };
 
+    // Tipos Mantenimiento Actions
+    const handleAddTipoBase = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(apiSistema('/api/mantenimientos-tipo'), nuevoTipoBase, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            notifications.show({ title: 'Éxito', message: 'Tipo agregado a la base de conocimiento', color: 'green' });
+            setNuevoTipoBase({ nombre: '', frecuenciaKmDefault: 10000 });
+            fetchTiposMantenimiento();
+        } catch (e) {
+            notifications.show({ title: 'Error', message: e.response?.data?.error || 'No se pudo agregar', color: 'red' });
+        }
+    };
+
+    const handleDeleteTipoBase = async (id) => {
+        if (!window.confirm("¿Seguro que querés eliminar este tipo de la base de conocimiento?")) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(apiSistema(`/api/mantenimientos-tipo/${id}`), {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            notifications.show({ title: 'Eliminado', color: 'blue' });
+            fetchTiposMantenimiento();
+        } catch (e) {
+            notifications.show({ title: 'Error', color: 'red' });
+        }
+    };
+
+    const handleUpdateTipoBase = async () => {
+        if (!editandoTipoBase) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.put(apiSistema(`/api/mantenimientos-tipo/${editandoTipoBase._id}`), editandoTipoBase, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            notifications.show({ title: 'Actualizado', color: 'green' });
+            setEditandoTipoBase(null);
+            fetchTiposMantenimiento();
+        } catch (e) {
+            notifications.show({ title: 'Error', color: 'red' });
+        }
+    };
+
     // Open Handlers
     const openKmModalHandler = (v) => { setSelectedVehiculo(v); setNuevoKm(v.kilometrajeActual); openKm(); };
     const openServiceModalHandler = (v) => {
@@ -276,6 +342,9 @@ const MantenimientoAdmin = () => {
                         value={searchText}
                         onChange={(e) => setSearchText(e.currentTarget.value)}
                     />
+                    <Button variant="outline" color="indigo" leftSection={<IconBooks size={18} />} onClick={openTipos}>
+                        Base de Conocimiento
+                    </Button>
                     <Button variant="light" color="cyan" leftSection={<IconRefresh size={16} />} onClick={() => fetchVehiculos(paginaActual)}>
                         Actualizar
                     </Button>
@@ -462,7 +531,7 @@ const MantenimientoAdmin = () => {
             </Modal>
 
             {/* 3. CONFIG MODAL */}
-            <Modal opened={modalConfigOpened} onClose={closeConfig} title={<Text fw={700}>Configuración de Mantenimiento</Text>} size="lg" centered>
+            <Modal opened={modalConfigOpened} onClose={closeConfig} title={<Text fw={700}>Configuración de Mantenimiento</Text>} size="xl" centered>
                 {selectedVehiculo && (
                     <Stack>
                         <Group justify="space-between" align="center">
@@ -474,9 +543,9 @@ const MantenimientoAdmin = () => {
                                 <Table.Thead bg="gray.0">
                                     <Table.Tr>
                                         <Table.Th>Tipo</Table.Th>
-                                        <Table.Th>Frecuencia</Table.Th>
-                                        <Table.Th>Punto de Partida (KM)</Table.Th>
-                                        <Table.Th style={{ textAlign: 'right' }}>Acción</Table.Th>
+                                        <Table.Th style={{ width: 150 }}>Frecuencia</Table.Th>
+                                        <Table.Th style={{ width: 180 }}>Punto de Partida (KM)</Table.Th>
+                                        <Table.Th style={{ width: 100, textAlign: 'right' }}>Acción</Table.Th>
                                     </Table.Tr>
                                 </Table.Thead>
                                 <Table.Tbody>
@@ -514,7 +583,7 @@ const MantenimientoAdmin = () => {
                                                     )}
                                                 </Table.Td>
                                                 <Table.Td style={{ textAlign: 'right' }}>
-                                                    <Group gap={5} justify="flex-end">
+                                                    <Group gap={5} justify="flex-end" wrap="nowrap">
                                                         {editandoConfig?.nombre === c.nombre ? (
                                                             <>
                                                                 <ActionIcon size="md" variant="filled" color="green" onClick={handleEditConfig}>
@@ -532,7 +601,7 @@ const MantenimientoAdmin = () => {
                                                                 onClick={() => {
                                                                     setEditandoConfig(c);
                                                                     setNuevaFrecuenciaEdit(c.frecuenciaKm);
-                                                                    setNuevaUltimoKmEdit(c.ultimoKm || 0); // <-- Cargar baseline actual
+                                                                    setNuevaUltimoKmEdit(c.ultimoKm || 0);
                                                                 }}
                                                             >
                                                                 <IconEdit size={18} />
@@ -563,11 +632,16 @@ const MantenimientoAdmin = () => {
                             </Text>
                             <Grid align="flex-end" gutter="xs">
                                 <Grid.Col span={{ base: 12, md: 4 }}>
-                                    <TextInput
+                                    <Autocomplete
                                         label="Mantenimiento"
-                                        placeholder="Ej: Cubiertas"
+                                        placeholder="Ej: Aceite y Filtro"
+                                        data={tiposMantenimiento.map(t => t.nombre)}
                                         value={nuevoTipoNombre}
-                                        onChange={(e) => setNuevoTipoNombre(e.currentTarget.value)}
+                                        onChange={(val) => {
+                                            setNuevoTipoNombre(val);
+                                            const match = tiposMantenimiento.find(t => t.nombre === val);
+                                            if (match) setNuevoTipoFrecuencia(match.frecuenciaKmDefault);
+                                        }}
                                         styles={{ label: { fontSize: 12, fontWeight: 700 } }}
                                     />
                                 </Grid.Col>
@@ -612,6 +686,98 @@ const MantenimientoAdmin = () => {
                         </Paper>
                     </Stack>
                 )}
+            </Modal>
+
+            {/* MODAL: BASE DE CONOCIMIENTO (TIPOS) */}
+            <Modal opened={openedTipos} onClose={closeTipos} title="Base de Conocimiento de Mantenimientos" size="lg">
+                <Stack>
+                    <Paper withBorder p="md" radius="md" bg="gray.0">
+                        <Text fw={700} size="xs" mb="md" c="indigo">+ Nuevo Tipo de Mantenimiento</Text>
+                        <Grid align="flex-end" gutter="xs">
+                            <Grid.Col span={6}>
+                                <TextInput
+                                    label="Nombre"
+                                    placeholder="Ej: Correa de Distribución"
+                                    value={nuevoTipoBase.nombre}
+                                    onChange={(e) => setNuevoTipoBase({ ...nuevoTipoBase, nombre: e.currentTarget.value })}
+                                />
+                            </Grid.Col>
+                            <Grid.Col span={4}>
+                                <NumberInput
+                                    label="Frecuencia Default (KM)"
+                                    value={nuevoTipoBase.frecuenciaKmDefault}
+                                    onChange={(val) => setNuevoTipoBase({ ...nuevoTipoBase, frecuenciaKmDefault: val })}
+                                    step={1000}
+                                />
+                            </Grid.Col>
+                            <Grid.Col span={2}>
+                                <Button fullWidth color="indigo" onClick={handleAddTipoBase} disabled={!nuevoTipoBase.nombre}>
+                                    Crear
+                                </Button>
+                            </Grid.Col>
+                        </Grid>
+                    </Paper>
+
+                    <Table verticalSpacing="xs">
+                        <Table.Thead>
+                            <Table.Tr>
+                                <Table.Th>Nombre</Table.Th>
+                                <Table.Th>Frecuencia Sugerida</Table.Th>
+                                <Table.Th style={{ textAlign: 'right' }}>Acciones</Table.Th>
+                            </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                            {tiposMantenimiento.map(t => (
+                                <Table.Tr key={t._id}>
+                                    <Table.Td>
+                                        {editandoTipoBase?._id === t._id ? (
+                                            <TextInput
+                                                size="xs"
+                                                value={editandoTipoBase.nombre}
+                                                onChange={(e) => setEditandoTipoBase({ ...editandoTipoBase, nombre: e.currentTarget.value })}
+                                            />
+                                        ) : (
+                                            <Text fw={600}>{t.nombre}</Text>
+                                        )}
+                                    </Table.Td>
+                                    <Table.Td>
+                                        {editandoTipoBase?._id === t._id ? (
+                                            <NumberInput
+                                                size="xs"
+                                                value={editandoTipoBase.frecuenciaKmDefault}
+                                                onChange={(val) => setEditandoTipoBase({ ...editandoTipoBase, frecuenciaKmDefault: val })}
+                                                step={1000}
+                                            />
+                                        ) : (
+                                            <Badge variant="light" color="indigo">{t.frecuenciaKmDefault?.toLocaleString()} KM</Badge>
+                                        )}
+                                    </Table.Td>
+                                    <Table.Td style={{ textAlign: 'right' }}>
+                                        <Group gap={4} justify="flex-end">
+                                            {editandoTipoBase?._id === t._id ? (
+                                                <>
+                                                    <ActionIcon variant="filled" color="green" onClick={handleUpdateTipoBase}>
+                                                        <IconDeviceFloppy size={14} />
+                                                    </ActionIcon>
+                                                    <ActionIcon variant="light" color="gray" onClick={() => setEditandoTipoBase(null)}>
+                                                        <IconX size={14} />
+                                                    </ActionIcon>
+                                                </>
+                                            ) : (
+                                                <ActionIcon variant="subtle" color="blue" onClick={() => setEditandoTipoBase(t)}>
+                                                    <IconEdit size={16} />
+                                                </ActionIcon>
+                                            )}
+                                            <ActionIcon variant="subtle" color="red" onClick={() => handleDeleteTipoBase(t._id)}>
+                                                <IconTrash size={16} />
+                                            </ActionIcon>
+                                        </Group>
+                                    </Table.Td>
+                                </Table.Tr>
+                            ))}
+                        </Table.Tbody>
+                    </Table>
+                </Stack>
             </Modal>
         </div>
     );

@@ -13,6 +13,7 @@ router.use("/envios", require("./envios"));
 router.use("/remitos", require("./remitos"));
 router.use("/destinatarios", require("./destinatarios"));
 router.use("/hojas-reparto", require("./hojaRepartoRoutes"));
+router.use("/mantenimientos-tipo", require("./mantenimientosTipo"));
 router.use("/seguimiento", require("./seguimiento"));
 
 // Rutas de Reportes
