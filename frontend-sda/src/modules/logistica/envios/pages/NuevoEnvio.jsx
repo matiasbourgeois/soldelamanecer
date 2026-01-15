@@ -139,7 +139,7 @@ const NuevoEnvio = () => {
       destinatario: destinatarioId,
       localidadDestino: localidadDestino,
       sucursalOrigen: "Sucursal Córdoba",
-      usuarioCreador: "67ee926c8eb4b19d4dd341a3", // Temporal
+      usuarioCreador: auth?._id, // Dinámico desde Context
       encomienda: {
         peso: parseFloat(peso),
         dimensiones: {

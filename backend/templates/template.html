@@ -100,7 +100,7 @@
       width: 70mm;
       text-align: center;
       font-size: 11px;
-      bottom:  12mm;
+      bottom: 12mm;
       right: 20mm;
     }
 
@@ -139,7 +139,16 @@
         </tr>
       </thead>
       <tbody>
-        {{tablaRemitos}}
+        {{#each remitos}}
+        <tr>
+          <td>{{numeroRemito}}</td>
+          <td>{{nombreRemitente}}</td>
+          <td>{{nombreDestinatario}}</td>
+          <td>{{localidad}}</td>
+          <td>{{direccion}}</td>
+          <td>{{cantidad}}</td>
+        </tr>
+        {{/each}}
       </tbody>
     </table>
   </div>

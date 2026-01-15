@@ -1,9 +1,6 @@
-const fs = require("fs");
-const path = require("path");
-const Remito = require("../../models/Remito");
-const Envio = require("../../models/Envio");
-const Usuario = require("../../models/Usuario");
 const mongoose = require("mongoose");
+const logger = require("../../utils/logger");
+const { generatePDF } = require("../../utils/pdfService");
 
 
 
@@ -50,7 +47,7 @@ const crearRemito = async (req, res) => {
 
     res.status(201).json(nuevoRemito);
   } catch (error) {
-    console.error("Error al crear remito:", error);
+    logger.error("Error al crear remito:", error);
     res.status(500).json({ error: "Error al crear remito" });
   }
 };
@@ -72,109 +69,74 @@ const obtenerRemitoPorEnvio = async (req, res) => {
 
     res.json(remito);
   } catch (error) {
-    console.error("❌ Error al obtener remito:", error.message);
+    logger.error("❌ Error al obtener remito:", error);
     res.status(500).json({ error: "Error al obtener remito" });
   }
 };
-
-const puppeteer = require("puppeteer");
 
 const generarRemitoPDF = async (req, res) => {
   try {
     let envioId = req.params.envioId;
 
-    // Normalización segura del envioId
-    if (envioId && typeof envioId === "object") {
-      if (envioId._id) {
-        envioId = envioId._id.toString();
-      } else if (envioId.toString) {
-        envioId = envioId.toString();
-      }
+    // Normalización del envioId
+    if (envioId && typeof envioId === "object" && envioId._id) {
+      envioId = envioId._id.toString();
     }
 
     if (!mongoose.Types.ObjectId.isValid(envioId)) {
-      console.error("❌ ID de envío inválido:", envioId);
-      if (res && typeof res.status === "function") {
-        return res.status(400).json({ error: "ID de envío inválido" });
-      } else {
-        return;
-      }
+      logger.error("❌ ID de envío inválido:", { envioId });
+      if (res?.status) return res.status(400).json({ error: "ID de envío inválido" });
+      return;
     }
 
     const remito = await Remito.findOne({ envio: envioId })
-      .populate("clienteRemitente")
-      .populate("destinatario")
-      .populate("localidadDestino")
-      .populate("envio");
+      .populate("clienteRemitente destinatario localidadDestino envio");
 
     if (!remito) {
-      if (res && typeof res.status === "function") {
-        return res.status(404).json({ error: "Remito no encontrado" });
-      } else {
-        console.error("❌ Remito no encontrado");
-        return;
-      }
+      logger.warn("⚠️ Remito no encontrado para el envío:", { envioId });
+      if (res?.status) return res.status(404).json({ error: "Remito no encontrado" });
+      return;
     }
 
-    const encomienda = remito.encomienda;
-    const dimensiones = `${encomienda.dimensiones.largo}x${encomienda.dimensiones.ancho}x${encomienda.dimensiones.alto} cm`;
-
-    const templatePath = path.join(process.cwd(), "templates", "template-remito.html");
-    let html = fs.readFileSync(templatePath, "utf8");
-
+    // Preparar datos para Handlebars
     const fondoPath = path.join(process.cwd(), "templates", "remito-fondo.png");
     const fondoBase64 = fs.readFileSync(fondoPath, "base64");
-    const fondoDataUrl = `data:image/png;base64,${fondoBase64}`;
 
-    html = html
-      .replace("{{imagen_fondo}}", fondoDataUrl)
-      .replace("{{numeroRemito}}", remito.numeroRemito || "-")
-      .replace("{{fecha}}", new Date(remito.fechaEmision).toLocaleDateString("es-AR"))
-      .replace("{{nombreRemitente}}", remito.clienteRemitente?.nombre || "-")
-      .replace("{{emailRemitente}}", remito.clienteRemitente?.email || "-")
-      .replace("{{nombreDestinatario}}", remito.destinatario?.nombre || "-")
-      .replace("{{dniDestinatario}}", remito.destinatario?.dni || "-")
-      .replace("{{direccionDestinatario}}", remito.destinatario?.direccion || "-")
-      .replace("{{telefonoDestinatario}}", remito.destinatario?.telefono || "-")
-      .replace("{{emailDestinatario}}", remito.destinatario?.email || "-")
-      .replace("{{localidadDestinatario}}", `${remito.localidadDestino?.nombre || "-"} (${remito.destinatario?.provincia || "-"})`)
-      .replace("{{tipo}}", encomienda?.tipoPaquete || "-")
-      .replace("{{peso}}", `${encomienda?.peso || 0} kg`)
-      .replace("{{dimensiones}}", dimensiones)
-      .replace("{{cantidad}}", encomienda?.cantidad || "-")
-      .replace("{{numeroSeguimiento}}", remito.envio?.numeroSeguimiento || "-");
-
-    const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox"] });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    const data = {
+      imagen_fondo: `data:image/png;base64,${fondoBase64}`,
+      numeroRemito: remito.numeroRemito || "-",
+      numeroSeguimiento: remito.envio?.numeroSeguimiento || "-",
+      fecha: new Date(remito.fechaEmision).toLocaleDateString("es-AR"),
+      nombreRemitente: remito.clienteRemitente?.nombre || "-",
+      emailRemitente: remito.clienteRemitente?.email || "-",
+      nombreDestinatario: remito.destinatario?.nombre || "-",
+      dniDestinatario: remito.destinatario?.dni || "-",
+      direccionDestinatario: remito.destinatario?.direccion || "-",
+      telefonoDestinatario: remito.destinatario?.telefono || "-",
+      emailDestinatario: remito.destinatario?.email || "-",
+      localidadDestinatario: `${remito.localidadDestino?.nombre || "-"} (${remito.destinatario?.provincia || "-"})`,
+      tipo: remito.encomienda?.tipoPaquete || "-",
+      peso: `${remito.encomienda?.peso || 0} kg`,
+      dimensiones: `${remito.encomienda?.dimensiones?.largo || 0}x${remito.encomienda?.dimensiones?.ancho || 0}x${remito.encomienda?.dimensiones?.alto || 0} cm`,
+      cantidad: remito.encomienda?.cantidad || "-"
+    };
 
     const fileName = `remito-${remito.numeroRemito}.pdf`;
-    const filePath = path.join(process.cwd(), "pdfs", fileName);
+    const outputPath = path.join(process.cwd(), "pdfs", fileName);
 
-    await page.pdf({
-      path: filePath,
-      format: "A4",
-      printBackground: true,
-    });
+    await generatePDF("template-remito.html", data, outputPath);
 
-    await browser.close();
-
-    // Si es una ruta HTTP, descargamos el archivo
-    if (res && typeof res.status === "function") {
+    if (res?.status) {
       res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
       res.setHeader("Content-Type", "application/pdf");
-      return res.sendFile(filePath);
+      return res.sendFile(outputPath);
     }
 
-    // Si es llamado internamente, solo logueamos
-    console.log(`✅ Remito PDF generado correctamente: ${filePath}`);
-    return filePath;
+    return outputPath;
 
   } catch (error) {
-    console.error("❌ Error al generar remito PDF:", error);
-    if (res && typeof res.status === "function") {
-      return res.status(500).json({ error: "Error al generar remito PDF" });
-    }
+    logger.error("❌ Error al generar remito PDF:", error);
+    if (res?.status) return res.status(500).json({ error: "Error al generar remito PDF" });
   }
 };
 
@@ -220,7 +182,7 @@ const obtenerRemitosConFiltros = async (req, res) => {
       resultados: remitos,
     });
   } catch (error) {
-    console.error("❌ Error al obtener remitos:", error.message);
+    logger.error("❌ Error al obtener remitos:", error);
     res.status(500).json({ error: "Error al obtener remitos" });
   }
 };

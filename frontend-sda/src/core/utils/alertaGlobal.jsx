@@ -46,8 +46,5 @@ export let mostrarAlerta = (mensaje = "", tipo) => {
 
 // Compatibility for existing code
 export const setMostrarAlertaCustom = (fn) => {
-  // No-op or override if needed, but we are enforcing Mantine now.
-  // We can leave this empty or redirect.
-  // Since we are replacing the system, we don't need the old hook injection.
-  console.log("Mantine Notifications system active.");
+  mostrarAlerta = fn;
 };

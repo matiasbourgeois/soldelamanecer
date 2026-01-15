@@ -41,7 +41,7 @@ const HomeScreen = ({ navigation }: any) => {
         title: string;
         subtitle: string;
         icon: string;
-        colors: string[];
+        colors: [string, string, ...string[]];
         route: string;
         requiresDependency: boolean;
     }[] = [

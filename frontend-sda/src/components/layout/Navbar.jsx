@@ -1,84 +1,204 @@
-import { User } from "lucide-react";
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import "@styles/Navbar.css";
-import { useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Container,
+  Group,
+  Button,
+  Box,
+  Text,
+  Burger,
+  Drawer,
+  Stack,
+  Transition,
+  rem,
+  useMantineTheme,
+  Divider
+} from '@mantine/core';
+import { useDisclosure, useWindowScroll } from '@mantine/hooks';
+import { Truck, LogIn, UserPlus, Home, Info, Calculator, Package, Phone } from 'lucide-react';
 import AuthContext from "@core/context/AuthProvider";
-
 
 const Navbar = () => {
   const { auth } = useContext(AuthContext);
+  const theme = useMantineTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [opened, { toggle, close }] = useDisclosure(false);
+  const [scroll] = useWindowScroll();
+
+  // Si está logueado, no mostramos esta navbar pública porque ya existe AppLayout
   if (auth?._id && auth?.token) return null;
 
-  const [scrolled, setScrolled] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const scrolled = scroll.y > 20;
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const navLinks = [
+    { label: "Home", path: "/", icon: <Home size={18} /> },
+    { label: "Servicios", path: "/servicios", icon: <Info size={18} /> },
+    { label: "Cotizador Online", path: "/cotizador-online", icon: <Calculator size={18} /> },
+    { label: "Seguimiento", path: "/seguimiento", icon: <Package size={18} /> },
+    { label: "Contacto", path: "/contacto", icon: <Phone size={18} /> },
+  ];
+
+  const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className={`navbar navbar-expand-lg fixed-top ${scrolled ? "scrolled" : ""}`}>
-      <div className="container">
-        <Link to="/" className="navbar-brand text-warning logo">
-          Sol del Amanecer SRL
-        </Link>
+    <Box
+      component="nav"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        backgroundColor: scrolled ? 'rgba(255, 255, 255, 0.85)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        borderBottom: scrolled ? `1px solid ${theme.colors.gray[2]}` : 'none',
+        transition: 'all 0.3s ease',
+        height: rem(70),
+        display: 'flex',
+        alignItems: 'center'
+      }}
+    >
+      <Container size="xl" style={{ width: '100%' }}>
+        <Group justify="space-between">
+          {/* Logo */}
+          <Group
+            gap="xs"
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate('/')}
+          >
+            <Box
+              style={{
+                backgroundColor: theme.colors.cyan[6],
+                padding: rem(6),
+                borderRadius: rem(10),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Truck size={24} color="white" />
+            </Box>
+            <Text
+              fw={900}
+              size="lg"
+              ls={-0.5}
+              c="dark.4"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                textTransform: 'uppercase'
+              }}
+            >
+              Sol del Amanecer
+            </Text>
+          </Group>
 
-        <button
-          className="navbar-toggler"
-          type="button"
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-
-        <div className={`collapse navbar-collapse ${isDropdownOpen ? "show" : ""}`}>
-          <ul className="navbar-nav ms-auto">
-            <li className="nav-item">
-              <Link to="/" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
-                Home
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link to="/servicios" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
-                Servicios
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                to="/cotizador-online"
-                className="nav-link"
-                onClick={() => setIsDropdownOpen(false)}
+          {/* Desktop Menu */}
+          <Group gap="md" visibleFrom="md">
+            {navLinks.map((link) => (
+              <Button
+                key={link.path}
+                variant="subtle"
+                color={isActive(link.path) ? "cyan" : "gray"}
+                onClick={() => navigate(link.path)}
+                styles={{
+                  root: {
+                    fontWeight: isActive(link.path) ? 700 : 500,
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: theme.colors.cyan[0],
+                      color: theme.colors.cyan[7]
+                    }
+                  }
+                }}
               >
-                Cotizador Online
-              </Link>
-            </li>
+                {link.label}
+              </Button>
+            ))}
 
-            <li className="nav-item">
-              <Link to="/seguimiento" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
-                Seguimiento de Envíos
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link to="/contacto" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
-                Contacto
-              </Link>
-            </li>
-            <div className="nav-separator" />
-            <li className="nav-item auth-buttons">
-              <Link to="/login" className="nav-link">Iniciar Sesión</Link>
-            </li>
-            <li className="nav-item">
-              <Link to="/registro" className="nav-link">Registrarse</Link>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+            <Box style={{ width: 1, height: 24, backgroundColor: theme.colors.gray[3], margin: '0 10px' }} />
+
+            <Button
+              variant="filled"
+              color="cyan"
+              radius="md"
+              leftSection={<LogIn size={16} />}
+              onClick={() => navigate('/login')}
+            >
+              Login
+            </Button>
+            <Button
+              variant="outline"
+              color="cyan"
+              radius="md"
+              leftSection={<UserPlus size={16} />}
+              onClick={() => navigate('/registro')}
+            >
+              Registro
+            </Button>
+          </Group>
+
+          {/* Mobile Burger */}
+          <Burger opened={opened} onClick={toggle} hiddenFrom="md" size="sm" />
+        </Group>
+      </Container>
+
+      {/* Mobile Menu Drawer */}
+      <Drawer
+        opened={opened}
+        onClose={close}
+        size="100%"
+        padding="md"
+        title={
+          <Group gap="xs">
+            <Truck size={20} color={theme.colors.cyan[6]} />
+            <Text fw={800}>MENÚ PRINCIPAL</Text>
+          </Group>
+        }
+        hiddenFrom="md"
+      >
+        <Stack gap="md" mt="xl">
+          {navLinks.map((link) => (
+            <Button
+              key={link.path}
+              variant={isActive(link.path) ? "light" : "subtle"}
+              color="cyan"
+              size="lg"
+              fullWidth
+              justify="flex-start"
+              leftSection={link.icon}
+              onClick={() => {
+                navigate(link.path);
+                close();
+              }}
+            >
+              {link.label}
+            </Button>
+          ))}
+
+          <Divider my="md" label="Cuenta" labelPosition="center" />
+
+          <Button
+            variant="filled"
+            color="cyan"
+            size="lg"
+            fullWidth
+            onClick={() => { navigate('/login'); close(); }}
+          >
+            Iniciar Sesión
+          </Button>
+          <Button
+            variant="outline"
+            color="cyan"
+            size="lg"
+            fullWidth
+            onClick={() => { navigate('/registro'); close(); }}
+          >
+            Crear Cuenta
+          </Button>
+        </Stack>
+      </Drawer>
+    </Box>
   );
 };
 

@@ -1,4 +1,5 @@
-const HojaReparto = require('../../models/HojaReparto');
+const HojaReparto = require("../../models/HojaReparto");
+const logger = require("../../utils/logger");
 const Envio = require('../../models/Envio');
 const Remito = require('../../models/Remito');
 const Ruta = require("../../models/Ruta");
@@ -107,7 +108,7 @@ const crearHojaPreliminar = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Error en hoja preliminar:', error);
+        logger.error('❌ Error en hoja preliminar:', error);
         res.status(500).json({ error: 'Error al crear hoja preliminar' });
     }
 };
@@ -123,7 +124,7 @@ const confirmarHoja = async (req, res) => {
 
         const hoja = await HojaReparto.findById(hojaId);
         if (!hoja) {
-            console.log("❌ Hoja no encontrada con ID:", hojaId);
+            logger.warn("❌ Hoja no encontrada con ID:", { hojaId });
             return res.status(404).json({ error: 'Hoja no encontrada' });
         }
 
@@ -134,7 +135,7 @@ const confirmarHoja = async (req, res) => {
         for (const envioId of envios) {
             const envio = await Envio.findById(envioId);
             if (!envio) {
-                console.log("⚠️ Envío no encontrado con ID:", envioId);
+                logger.warn("⚠️ Envío no encontrado con ID:", { envioId });
                 continue;
             }
 
@@ -146,7 +147,7 @@ const confirmarHoja = async (req, res) => {
                 });
 
                 if (yaAsignado) {
-                    console.log(`❌ El envío ${envioId} ya está asignado a otra hoja en reparto (${yaAsignado._id})`);
+                    logger.warn(`❌ El envío ${envioId} ya está asignado a otra hoja en reparto`, { yaAsignadoId: yaAsignado._id });
                     return res.status(400).json({
                         error: `El envío ${envioId} ya está asignado a otra hoja confirmada.`,
                     });
@@ -182,11 +183,11 @@ const confirmarHoja = async (req, res) => {
             });
 
             await envio.save();
-            console.log("✅ Envío actualizado:", envio._id);
+            logger.info("✅ Envío actualizado a 'en reparto':", { id: envio._id });
 
             // Notificación
             enviarNotificacionEstado(envio, "en_reparto").catch((err) => {
-                console.error("❌ Error al enviar notificación de estado:", err);
+                logger.error("❌ Error al enviar notificación de estado:", err);
             });
         }
 
@@ -200,7 +201,7 @@ const confirmarHoja = async (req, res) => {
         const hojaFinal = await HojaReparto.findById(hoja._id)
             .populate('ruta chofer vehiculo envios');
 
-        console.log("✅ Hoja confirmada correctamente:", hojaFinal.numeroHoja);
+        logger.info("✅ Hoja confirmada correctamente:", { numeroHoja: hojaFinal.numeroHoja });
 
         res.status(200).json(hojaFinal);
     } catch (error) {
@@ -324,7 +325,7 @@ const obtenerHojaPorId = async (req, res) => {
 };
 
 
-const puppeteer = require("puppeteer");
+const { generatePDF } = require("../../utils/pdfService");
 const fs = require("fs");
 const path = require("path");
 
@@ -345,74 +346,49 @@ const exportarHojaPDF = async (req, res) => {
             });
 
         if (!hoja) {
+            logger.warn("⚠️ Hoja de reparto no encontrada para exportar:", { hojaId });
             return res.status(404).json({ error: "Hoja de reparto no encontrada" });
         }
 
         const remitos = await Remito.find({ envio: { $in: hoja.envios.map(e => e._id) } });
 
-        // Leer HTML
-        const templatePath = path.join(process.cwd(), "templates", "template.html");
-        let html = fs.readFileSync(templatePath, "utf8");
-
         // Imagen de fondo en base64
         const fondoPath = path.join(process.cwd(), "templates", "Copia de HOJADEREPARTO.png");
         const fondoBase64 = fs.readFileSync(fondoPath, "base64");
-        const fondoDataUrl = `data:image/png;base64,${fondoBase64}`;
 
-        // Armar tabla con encabezados
-        const tablaRemitos = `
-        <thead></thead>
-        <tbody>
-          ${hoja.envios.map((envio, idx) => {
-            const remito = remitos.find(r => r.envio.toString() === envio._id.toString());
-            return `
-              <tr>
-                <td>${remito?.numeroRemito || "-"}</td>
-                <td>${envio.clienteRemitente?.nombre || "-"}</td>
-                <td>${envio.destinatario?.nombre || "-"}</td>
-                <td>${envio.localidadDestino?.nombre || "-"}</td>
-                <td>${envio.destinatario?.direccion || "-"}</td>
-                <td>${envio.encomienda?.cantidad || "-"}</td>
-              </tr>
-            `;
-        }).join("")}
-        </tbody>
-      `;
-
-        // Reemplazar datos en plantilla
-        html = html
-            .replace("{{imagen_fondo}}", fondoDataUrl)
-            .replace("{{nro}}", hoja.numeroHoja || "-")
-            .replace("{{fecha}}", new Date(hoja.fecha).toLocaleDateString("es-AR"))
-            .replace("{{chofer}}", hoja.chofer?.nombre || "-")
-            .replace("{{vehiculo}}", hoja.vehiculo?.patente || "-")
-            .replace("{{ruta}}", hoja.ruta?.codigo || "-")
-            .replace("{{tablaRemitos}}", tablaRemitos)
-            .replace("{{dniChofer}}", hoja.chofer?.dni || "-")
-            .replace("{{marcaVehiculo}}", hoja.vehiculo?.marca || "-")
-            .replace("{{modeloVehiculo}}", hoja.vehiculo?.modelo || "-");
-
-
-        // Generar PDF con Puppeteer
-        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: "networkidle0" });
+        // Preparar datos para Handlebars
+        const data = {
+            imagen_fondo: `data:image/png;base64,${fondoBase64}`,
+            nro: hoja.numeroHoja || "-",
+            fecha: new Date(hoja.fecha).toLocaleDateString("es-AR"),
+            chofer: hoja.chofer?.nombre || "-",
+            dniChofer: hoja.chofer?.dni || "-",
+            vehiculo: hoja.vehiculo?.patente || "-",
+            marcaVehiculo: hoja.vehiculo?.marca || "-",
+            modeloVehiculo: hoja.vehiculo?.modelo || "-",
+            ruta: hoja.ruta?.codigo || "-",
+            remitos: hoja.envios.map(envio => {
+                const remito = remitos.find(r => r.envio.toString() === envio._id.toString());
+                return {
+                    numeroRemito: remito?.numeroRemito || "-",
+                    nombreRemitente: envio.clienteRemitente?.nombre || "-",
+                    nombreDestinatario: envio.destinatario?.nombre || "-",
+                    localidad: envio.localidadDestino?.nombre || "-",
+                    direccion: envio.destinatario?.direccion || "-",
+                    cantidad: envio.encomienda?.cantidad || "-"
+                };
+            })
+        };
 
         const fileName = `Hoja de Reparto - ${hoja.numeroHoja || "sin-numero"}.pdf`;
-        const pdfPath = path.join(process.cwd(), "pdfs", "hojasReparto", fileName);
+        const outputPath = path.join(process.cwd(), "pdfs", "hojasReparto", fileName);
 
-        // Ensure subfolder exists
-        if (!fs.existsSync(path.dirname(pdfPath))) {
-            fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
-        }
+        await generatePDF("template.html", data, outputPath);
 
-        await page.pdf({ path: pdfPath, format: "A4", printBackground: true });
-        await browser.close();
-
-        return res.download(pdfPath, fileName);
+        return res.download(outputPath, fileName);
 
     } catch (error) {
-        console.error("❌ Error al generar PDF:", error);
+        logger.error("❌ Error al generar PDF de hoja de reparto:", error);
         res.status(500).json({ error: "Error al generar el PDF" });
     }
 };

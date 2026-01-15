@@ -1,184 +1,195 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Container,
-  Title,
-  Text,
   Grid,
-  Button,
-  ThemeIcon,
-  Group,
+  Text,
+  Title,
+  Paper,
   Stack,
+  Group,
+  ThemeIcon,
   ActionIcon,
   Box,
-  Paper
-} from "@mantine/core";
+  rem,
+  Divider,
+  Button
+} from '@mantine/core';
 import {
-  IconPhone,
-  IconMail,
-  IconMapPin,
-  IconBrandWhatsapp,
-  IconBrandInstagram,
-  IconBrandFacebook,
-  IconBrandLinkedin
-} from "@tabler/icons-react";
-import AOS from "aos";
-import "aos/dist/aos.css";
+  Phone,
+  Mail,
+  MapPin,
+  Instagram,
+  Facebook,
+  Linkedin,
+  MessageCircle
+} from 'lucide-react';
 
 const Contacto = () => {
-  useEffect(() => {
-    AOS.init({ duration: 1000 });
-  }, []);
-
   return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      boxSizing: 'border-box',
-      overflow: 'hidden'
-    }}>
-      <Container size="xl" w="100%">
-        <Grid gutter={60} align="center">
+    <Box
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#f8fafc',
+        paddingTop: '100px',
+        paddingBottom: '80px'
+      }}
+    >
+      <Container size="xl">
+        <Grid gutter={80}>
+          {/* Left: Contact Info */}
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Stack gap="xl">
+              <Box>
+                <Text fw={700} tt="uppercase" ls={1.5} size="sm" c="cyan.6" mb="xs">
+                  Atención Personalizada
+                </Text>
+                <Title order={1} fw={900} size={rem(48)} style={{ letterSpacing: '-1.5px', lineHeight: 1.1 }}>
+                  Hablemos de su <br />
+                  <Text component="span" variant="gradient" gradient={{ from: 'cyan', to: 'blue' }} inherit>próximo envío</Text>
+                </Title>
+              </Box>
 
-          {/* Lado Izquierdo: Información de Contacto */}
-          <Grid.Col span={{ base: 12, md: 6 }} data-aos="fade-right">
-            <Box style={{ width: '100%', maxWidth: '550px' }}>
-              <Title
-                order={1}
-                fw={900}
-                c="dark"
-                mb="xs"
-                style={{ fontFamily: 'sans-serif', lineHeight: 1.1 }}
-                size={42}
-              >
-                ESTAMOS <span style={{ color: '#fab005' }}>CONECTADOS</span>
-              </Title>
-              <Text c="dimmed" size="lg" mb="xl" lh={1.4}>
-                Estamos aquí para ayudarte. Ponete en contacto con nosotros a través de los siguientes medios.
+              <Text size="lg" c="dimmed" style={{ maxWidth: 500 }}>
+                Nuestro equipo comercial y operativo está disponible para resolver sus dudas y coordinar sus necesidades logísticas.
               </Text>
 
-              <Stack spacing="xl" mb="xl">
-                <Group align="center">
-                  <ThemeIcon color="yellow" size={40} radius="xl" variant="light">
-                    <IconPhone size={22} />
-                  </ThemeIcon>
-                  <div>
-                    <Text fw={700} c="dark">Teléfono</Text>
-                    <Text c="dimmed" size="sm">+54 351 2569550</Text>
-                  </div>
-                </Group>
+              <Stack gap="lg" mt="md">
+                <Paper withBorder p="md" radius="md">
+                  <Group wrap="nowrap">
+                    <ThemeIcon size={44} radius="md" color="cyan" variant="light">
+                      <Phone size={20} />
+                    </ThemeIcon>
+                    <div>
+                      <Text size="xs" fw={700} c="dimmed" tt="uppercase">Teléfono Central</Text>
+                      <Text fw={700}>+54 351 2569550</Text>
+                    </div>
+                  </Group>
+                </Paper>
 
-                <Group align="center">
-                  <ThemeIcon color="yellow" size={40} radius="xl" variant="light">
-                    <IconMail size={22} />
-                  </ThemeIcon>
-                  <div>
-                    <Text fw={700} c="dark">Email</Text>
-                    <Text c="dimmed" size="sm">logistica@soldelamanecersrl.ar</Text>
-                  </div>
-                </Group>
+                <Paper withBorder p="md" radius="md">
+                  <Group wrap="nowrap">
+                    <ThemeIcon size={44} radius="md" color="cyan" variant="light">
+                      <Mail size={20} />
+                    </ThemeIcon>
+                    <div>
+                      <Text size="xs" fw={700} c="dimmed" tt="uppercase">Correo Electrónico</Text>
+                      <Text fw={700}>logistica@soldelamanecersrl.ar</Text>
+                    </div>
+                  </Group>
+                </Paper>
 
-                <Group align="center">
-                  <ThemeIcon color="yellow" size={40} radius="xl" variant="light">
-                    <IconMapPin size={22} />
-                  </ThemeIcon>
-                  <div>
-                    <Text fw={700} c="dark">Dirección</Text>
-                    <Text c="dimmed" size="sm">Estados Unidos 2657, Córdoba, Argentina</Text>
-                  </div>
-                </Group>
+                <Paper withBorder p="md" radius="md">
+                  <Group wrap="nowrap">
+                    <ThemeIcon size={44} radius="md" color="cyan" variant="light">
+                      <MapPin size={20} />
+                    </ThemeIcon>
+                    <div>
+                      <Text size="xs" fw={700} c="dimmed" tt="uppercase">Oficina Central</Text>
+                      <Text fw={700}>Estados Unidos 2657, Córdoba, Argentina</Text>
+                    </div>
+                  </Group>
+                </Paper>
               </Stack>
 
-              <Group mt="xl">
-                <Button
-                  component="a"
-                  href="https://wa.me/543512569550"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  size="md"
-                  color="green"
-                  radius="md"
-                  leftSection={<IconBrandWhatsapp size={20} />}
-                >
-                  WhatsApp Directo
-                </Button>
-              </Group>
-            </Box>
+              <Button
+                size="xl"
+                radius="md"
+                color="green"
+                leftSection={<MessageCircle size={24} />}
+                component="a"
+                href="https://wa.me/543512569550"
+                target="_blank"
+              >
+                Contactar por WhatsApp
+              </Button>
+            </Stack>
           </Grid.Col>
 
-          {/* Lado Derecho: Redes y Mapa Visual (Opcional, o solo redes destacado) 
-              Vamos a poner un Paper con las redes sociales bien grandes y elegante
-          */}
-          <Grid.Col span={{ base: 12, md: 6 }} data-aos="fade-left">
+          {/* Right: Social & Maps placeholder */}
+          <Grid.Col span={{ base: 12, md: 6 }}>
             <Paper
               shadow="xl"
-              radius="lg"
+              radius="32px"
               p={50}
               style={{
-                backgroundColor: '#1A1B1E', // Dark card for contrast
-                color: 'white',
+                backgroundColor: '#111827',
+                backgroundImage: 'radial-gradient(circle at bottom left, #1e293b, transparent)',
+                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
                 justifyContent: 'center',
+                alignItems: 'center',
                 textAlign: 'center',
-                minHeight: '350px'
+                color: 'white'
               }}
             >
-              <Title order={3} mb="lg" c="white" fw={700}>
-                Síguenos en Redes
-              </Title>
-              <Text c="dimmed" mb="xl" size="sm">
-                Descubre nuestras novedades y el día a día de nuestras operaciones.
-              </Text>
+              <Title order={2} mb="xl" fw={800}>Síganos en Redes</Title>
+              <Text c="gray.4" mb={40} size="lg">Conozca nuestra flota y el día a día de nuestra operación logística a través de nuestros canales oficiales.</Text>
 
               <Group gap={30} justify="center">
                 <ActionIcon
+                  size={70}
+                  radius="xl"
+                  variant="light"
+                  color="cyan"
                   component="a"
                   href="https://www.instagram.com/soldelamanecersrl"
                   target="_blank"
-                  size={60}
-                  radius="xl"
-                  variant="filled"
-                  color="yellow"
-                  style={{ transition: 'transform 0.2s' }}
+                  style={{ transition: 'all 0.2s ease' }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                  <IconBrandInstagram size={34} stroke={1.5} />
+                  <Instagram size={32} />
                 </ActionIcon>
 
                 <ActionIcon
+                  size={70}
+                  radius="xl"
+                  variant="light"
+                  color="blue"
                   component="a"
                   href="https://www.facebook.com/soldelamanecersrl"
                   target="_blank"
-                  size={60}
-                  radius="xl"
-                  variant="filled"
-                  color="blue"
+                  style={{ transition: 'all 0.2s ease' }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                  <IconBrandFacebook size={34} stroke={1.5} />
+                  <Facebook size={32} />
                 </ActionIcon>
 
                 <ActionIcon
+                  size={70}
+                  radius="xl"
+                  variant="light"
+                  color="indigo"
                   component="a"
                   href="https://www.linkedin.com/company/soldelamanecersrl"
                   target="_blank"
-                  size={60}
-                  radius="xl"
-                  variant="filled"
-                  color="indigo"
+                  style={{ transition: 'all 0.2s ease' }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                  <IconBrandLinkedin size={34} stroke={1.5} />
+                  <Linkedin size={32} />
                 </ActionIcon>
               </Group>
+
+              <Box mt={60} w="100%">
+                <Divider mb="xl" label="Ubicación" labelPosition="center" color="gray.8" />
+                <Paper radius="lg" overflow="hidden" style={{ height: 200, backgroundColor: '#1e293b' }}>
+                  {/* Placeholder for Map or Visual image */}
+                  <Group justify="center" h="100%" align="center">
+                    <Stack gap={5} align="center">
+                      <MapPin size={40} color="var(--mantine-color-cyan-6)" />
+                      <Text size="xs" fw={700} c="gray.5">CÓRDOBA, ARGENTINA</Text>
+                    </Stack>
+                  </Group>
+                </Paper>
+              </Box>
             </Paper>
           </Grid.Col>
-
         </Grid>
       </Container>
-    </div>
+    </Box>
   );
 };
 

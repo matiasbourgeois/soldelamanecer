@@ -1,144 +1,172 @@
-import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
+import React from "react";
 import {
   Container,
-  Title,
-  Text,
   Grid,
-  Button,
-  ThemeIcon,
-  List,
-  Image,
+  Text,
+  Title,
+  Card,
+  Stack,
   Group,
-  Box
-} from "@mantine/core";
-import { IconTruckDelivery, IconShieldCheck, IconFriends } from "@tabler/icons-react";
-import AOS from "aos";
-import "aos/dist/aos.css";
+  ThemeIcon,
+  Box,
+  rem,
+  Badge,
+  Divider
+} from '@mantine/core';
+import {
+  Truck,
+  ShieldCheck,
+  Clock,
+  Package,
+  Users,
+  MapPin,
+  BarChart3
+} from 'lucide-react';
 
-// Revertir a la imagen original del sistema
-const IMG_SOURCE = "/images/cajasLogistica.png";
+const servicios = [
+  {
+    title: "Transporte Nacional",
+    description: "Cobertura integral en todo el territorio argentino con flota propia de última generación.",
+    icon: <Truck size={30} />,
+    color: "blue",
+    features: ["Seguimiento Satelital", "Seguro de Carga", "Puerta a Puerta"]
+  },
+  {
+    title: "Logística E-commerce",
+    description: "Soluciones ágiles para ventas online, integrando almacenamiento y distribución capilar.",
+    icon: <Package size={30} />,
+    color: "cyan",
+    features: ["Control de Stock", "Picking & Packing", "Entregas 24hs"]
+  },
+  {
+    title: "Distribución Urbana",
+    description: "Optimización de rutas en grandes centros urbanos para garantizar tiempos de entrega mínimos.",
+    icon: <MapPin size={30} />,
+    color: "teal",
+    features: ["Zonificación Inteligente", "Micro-distribución", "Prueba de Entrega"]
+  },
+  {
+    title: "Gestión de Depósito",
+    description: "Almacenaje seguro con sistemas de gestión de inventarios avanzados (WMS).",
+    icon: <BarChart3 size={30} />,
+    color: "indigo",
+    features: ["Cross-docking", "Inventario Perpetuo", "Seguridad 24hs"]
+  }
+];
 
 const Servicios = () => {
-  useEffect(() => {
-    AOS.init({ duration: 1000 });
-  }, []);
-
   return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      boxSizing: 'border-box',
-      overflow: 'hidden'
-    }}>
-      <Container size="xl" w="100%">
-        <Grid gutter={50} align="stretch" justify="center">
+    <Box
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#f8fafc',
+        paddingTop: '100px',
+        paddingBottom: '80px'
+      }}
+    >
+      <Container size="xl">
+        <Stack align="center" gap="xs" mb={80}>
+          <Badge size="lg" variant="light" color="cyan" radius="sm" style={{ letterSpacing: '1px' }}>
+            EXCELENCIA LOGÍSTICA
+          </Badge>
+          <Title order={1} fw={900} size={rem(48)} style={{ letterSpacing: '-1.5px', textAlign: 'center' }}>
+            Soluciones a la medida de <br />
+            <Text component="span" variant="gradient" gradient={{ from: 'cyan', to: 'blue' }} inherit>su negocio</Text>
+          </Title>
+          <Text c="dimmed" size="lg" ta="center" style={{ maxWidth: 650 }}>
+            Combinamos tecnología de vanguardia con décadas de experiencia para ofrecer un servicio
+            logístico que supera las expectativas más exigentes.
+          </Text>
+        </Stack>
 
-          {/* Lado Imagen */}
-          <Grid.Col span={{ base: 12, md: 6 }} order={{ base: 2, md: 2 }} data-aos="fade-left" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Image
-              src={IMG_SOURCE}
-              alt="Logística"
-              h="100%"
-              w="auto"
-              fit="contain"
-              style={{ maxHeight: '450px' }}
-            />
-          </Grid.Col>
-
-          {/* Lado Texto */}
-          <Grid.Col span={{ base: 12, md: 6 }} order={{ base: 1, md: 1 }} data-aos="fade-right" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            {/* Wrapper para limitar el ancho al Título ("LOGÍSTICA INTEGRADA") aprox 530px */}
-            <Box style={{ width: '100%', maxWidth: '530px' }}>
-              <Title
-                order={1}
-                fw={900}
-                c="dark"
-                mb="xs"
-                style={{ fontFamily: 'sans-serif', lineHeight: 1.1 }}
-                size={40}
+        <Grid gutter="xl">
+          {servicios.map((svc, index) => (
+            <Grid.Col key={index} span={{ base: 12, sm: 6, lg: 3 }}>
+              <Card
+                shadow="sm"
+                padding="xl"
+                radius="lg"
+                withBorder
+                style={{
+                  height: '100%',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                  cursor: 'default'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0px)';
+                  e.currentTarget.style.boxShadow = 'var(--mantine-shadow-sm)';
+                }}
               >
-                LOGÍSTICA <span style={{ color: '#fab005' }}>INTEGRADA</span>
-              </Title>
-              <Text c="dimmed" size="lg" mb="lg" lh={1.3}>
-                Conexiones estratégicas. Tu carga segura y a tiempo, fluyendo a través de nuestra red inteligente.
-              </Text>
-
-              <List
-                spacing="sm"
-                size="md"
-                center
-                mb="lg"
-                icon={
-                  <ThemeIcon color="yellow" size={24} radius="xl">
-                    <IconTruckDelivery size={14} />
-                  </ThemeIcon>
-                }
-              >
-                <List.Item
-                  icon={
-                    <ThemeIcon color="yellow" size={26} radius="xl" variant="light">
-                      <IconTruckDelivery size={16} />
-                    </ThemeIcon>
-                  }
-                >
-                  <Text fw={700}>Envíos Express Garantizados</Text>
-                </List.Item>
-
-                <List.Item
-                  icon={
-                    <ThemeIcon color="yellow" size={26} radius="xl" variant="light">
-                      <IconShieldCheck size={16} />
-                    </ThemeIcon>
-                  }
-                >
-                  <Text fw={700}>Seguridad Punto a Punto</Text>
-                </List.Item>
-
-                <List.Item
-                  icon={
-                    <ThemeIcon color="yellow" size={26} radius="xl" variant="light">
-                      <IconFriends size={16} />
-                    </ThemeIcon>
-                  }
-                >
-                  <Text fw={700}>Gestión Corporativa</Text>
-                </List.Item>
-              </List>
-
-              {/* Botones: Mismo ancho (grow) y dentro del Box limitado */}
-              <Group mt="xl" grow>
-                <Button
-                  component={Link}
-                  to="/Contacto"
-                  size="md"
-                  color="dark"
+                <ThemeIcon
+                  size={60}
                   radius="md"
-                  variant="default"
+                  variant="light"
+                  color={svc.color}
+                  mb="xl"
                 >
-                  Contactanos
-                </Button>
+                  {svc.icon}
+                </ThemeIcon>
 
-                <Button
-                  component={Link}
-                  to="/cotizador-online"
-                  size="md"
-                  color="yellow"
-                  radius="md"
-                  variant="filled"
-                >
-                  Cotizar Ahora Online
-                </Button>
-              </Group>
-            </Box>
-          </Grid.Col>
+                <Title order={3} mb="sm" fw={800}>{svc.title}</Title>
+                <Text size="sm" c="dimmed" mb="xl" style={{ lineHeight: 1.6 }}>
+                  {svc.description}
+                </Text>
+
+                <Divider mb="lg" variant="dashed" />
+
+                <Stack gap="xs">
+                  {svc.features.map((f, i) => (
+                    <Group key={i} gap="xs">
+                      <Box
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          backgroundColor: `var(--mantine-color-${svc.color}-6)`
+                        }}
+                      />
+                      <Text size="xs" fw={600} c="dark.3">{f}</Text>
+                    </Group>
+                  ))}
+                </Stack>
+              </Card>
+            </Grid.Col>
+          ))}
         </Grid>
+
+        {/* CTA Section */}
+        <Box
+          mt={100}
+          p={60}
+          style={{
+            backgroundColor: '#111827',
+            borderRadius: '32px',
+            backgroundImage: 'radial-gradient(circle at top right, #1e293b, transparent)',
+            color: 'white'
+          }}
+        >
+          <Grid align="center">
+            <Grid.Col span={{ base: 12, md: 8 }}>
+              <Stack gap="xs">
+                <Title order={2} size={rem(32)} fw={800}>Seguridad y confianza en cada km</Title>
+                <Text c="gray.4" size="lg">Operamos bajo los más altos estándares de calidad y seguridad para proteger su activos.</Text>
+              </Stack>
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Group justify="flex-end">
+                <ThemeIcon size={80} radius="xl" color="cyan" variant="filled">
+                  <ShieldCheck size={40} />
+                </ThemeIcon>
+              </Group>
+            </Grid.Col>
+          </Grid>
+        </Box>
       </Container>
-    </div>
+    </Box>
   );
 };
 

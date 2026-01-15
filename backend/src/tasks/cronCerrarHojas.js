@@ -1,12 +1,13 @@
 // tasks/cronCerrarHojas.js
 const cron = require("node-cron");
 const { cerrarHojasVencidas } = require("../controllers/logistica/hojaRepartoController");
+const logger = require("../utils/logger");
 
 const iniciarCierreAutomatico = () => {
-  // Ejecuta todos los días a las 16:03 hora ARGENTINA (GMT-3)
+  // Ejecuta todos los días a las 00:30 (Ajustado según lógica previa)
   cron.schedule("30 0 * * *", async () => {
 
-    console.log("🕐 Ejecutando tarea programada: cierre automático de hojas vencidas");
+    logger.info("🕐 Ejecutando tarea programada: cierre automático de hojas vencidas");
 
     const ahora = new Date();
 
@@ -19,9 +20,14 @@ const iniciarCierreAutomatico = () => {
       -offsetHoraArgentina // compensar para que sea el "ayer" en Argentina
     ));
 
-    console.log("📆 Fecha calculada como AYER (Argentina -> UTC):", ayerUTC.toISOString());
+    logger.info("📆 Fecha calculada como AYER (Argentina -> UTC): %s", ayerUTC.toISOString());
 
-    await cerrarHojasVencidas(ayerUTC); // esta función trabaja con fechas UTC
+    try {
+      await cerrarHojasVencidas(ayerUTC);
+      logger.info("✅ Cierre automático de hojas completado exitosamente.");
+    } catch (error) {
+      logger.error("❌ Error en tarea programada de cierre automático:", error);
+    }
   });
 };
 

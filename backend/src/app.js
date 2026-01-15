@@ -1,13 +1,14 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const logger = require("./utils/logger");
 
 const app = express();
 
 // Middlewares Globales
 // CORS Dinámico y Debug
 app.use((req, res, next) => {
-    console.log(`[CORS DEBUG] Origin: ${req.headers.origin} | Method: ${req.method} | Path: ${req.path}`);
+    logger.debug(`[CORS DEBUG] Origin: ${req.headers.origin} | Method: ${req.method} | Path: ${req.path}`);
     next();
 });
 

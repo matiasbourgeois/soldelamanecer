@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { enviarEmailVerificacion } = require("../../utils/emailService");
+const logger = require("../../utils/logger");
 
 const JWT_SECRET = process.env.JWT_SECRET || "secreto_super_seguro";
 
@@ -35,7 +36,7 @@ const register = async (req, res) => {
     try {
       await enviarEmailVerificacion(email, nombre, enlaceVerificacion);
     } catch (emailError) {
-      console.error("⚠️ Advertencia: No se pudo enviar el email de verificación:", emailError.message);
+      logger.warn("⚠️ Advertencia: No se pudo enviar el email de verificación:", { error: emailError.message });
       // No retornamos error 500 para dejar que el usuario se registre igual
     }
 
@@ -43,7 +44,7 @@ const register = async (req, res) => {
       mensaje: "Usuario registrado con éxito. " + (process.env.EMAIL_USER ? "Verifica tu correo electrónico." : "(Simulado)"),
     });
   } catch (error) {
-    console.error("🚨 Error en registro:", error);
+    logger.error("🚨 Error en registro:", error);
     res.status(500).json({ error: "Error en el servidor al registrar usuario" });
   }
 };
@@ -86,7 +87,7 @@ const verificarCuenta = async (req, res) => {
       </html>
     `);
   } catch (error) {
-    console.error("🚨 Error en verificación:", error);
+    logger.error("🚨 Error en verificación:", error);
     res.status(500).json({ error: "Error en el servidor" });
   }
 };
@@ -146,7 +147,7 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("🚨 Error en login:", error);
+    logger.error("🚨 Error en login:", error);
     res.status(500).json({ error: "Error en el servidor" });
   }
 };

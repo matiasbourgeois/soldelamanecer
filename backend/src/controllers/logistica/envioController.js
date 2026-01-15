@@ -1,6 +1,7 @@
 const Envio = require("../../models/Envio");
 const Remito = require("../../models/Remito");
 const Usuario = require("../../models/Usuario");
+const logger = require("../../utils/logger");
 const { crearRemito } = require("./remitoController");
 const { generarRemitoPDF } = require("./remitoController");
 const { enviarNotificacionEstado } = require("../../utils/emailService");
@@ -47,7 +48,7 @@ const crearEnvio = async (req, res) => {
 
     // ✅ Enviar notificación de estado "pendiente" en segundo plano
     enviarNotificacionEstado(envioConDatos, "pendiente").catch((err) => {
-      console.error("❌ Error al enviar notificación de nuevo envío:", err);
+      logger.error("❌ Error al enviar notificación de nuevo envío:", err);
     });
     // 🔥 CREAR REMITO EN SEGUNDO PLANO + ACTUALIZAR remitoNumero
     crearRemito(
@@ -67,18 +68,18 @@ const crearEnvio = async (req, res) => {
             remito: remitoDelEnvio._id,
             remitoNumero: remitoDelEnvio.numeroRemito,
           });
-          console.log("✅ remitoNumero actualizado para el envío:", envioGuardado._id);
+          logger.info("✅ remitoNumero actualizado para el envío:", { id: envioGuardado._id });
         }
       })
       .catch((err) => {
-        console.error("❌ Error al crear o actualizar remito:", err);
+        logger.error("❌ Error al crear o actualizar remito:", err);
       });
 
     // ✅ Generar PDF del remito (también en segundo plano)
     generarRemitoPDF({ params: { envioId: envioGuardado._id } }, {
       download: () => { },
     }).catch((err) => {
-      console.error("❌ Error al generar PDF de remito:", err);
+      logger.error("❌ Error al generar PDF de remito:", err);
     });
 
     // ✅ Respondemos rápido al frontend sin esperar nada más
@@ -139,8 +140,8 @@ const obtenerEnvios = async (req, res) => {
       resultados: envios,
     });
   } catch (error) {
-    console.error("❌ Error al obtener los envíos:", error);
-    res.status(500).json({ error: "Error al obtener los envíos" });
+    logger.error("❌ Error al obtener los envíos:", error);
+    res.status(500).json({ error: "Error al obtener los envios" });
   }
 };
 
