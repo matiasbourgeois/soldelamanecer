@@ -26,48 +26,60 @@ const BuscarSeguimiento = () => {
         if (!codigo.trim()) return;
         navigate(`/seguimiento/resultado/${codigo}`);
     };
-
     return (
-        <div style={{ height: '100%', minHeight: '600px', display: 'flex', backgroundColor: '#f8f9fa', flex: 1 }}>
-
-            {/* LEFT SIDE: FORM */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: '600px', padding: '40px', backgroundColor: 'white', zIndex: 1 }}>
-                <Container size={400} my={30} px={0} style={{ width: '100%' }}>
-
-                    <ThemeIcon
-                        size={50}
-                        radius={50}
-                        variant="light"
-                        color="cyan"
-                        style={{ marginBottom: rem(20) }}
-                    >
-                        <IconPackage size={28} stroke={1.5} />
-                    </ThemeIcon>
-
-                    <Title order={2} style={{ fontFamily: 'Inter, sans-serif', fontWeight: 900, fontSize: rem(26), lineHeight: 1.2, color: '#212529' }}>
-                        Rastrear Envío
-                    </Title>
-                    <Text c="dimmed" size="sm" mt="xs" mb={30}>
-                        Ingresá tu código de seguimiento para ver el estado en tiempo real.
-                    </Text>
+        <div style={{
+            height: '100%',
+            display: 'flex',
+            backgroundColor: 'white',
+            flex: 1,
+            overflow: 'hidden'
+        }}>
+            {/* LADO IZQUIERDO: BUSCADOR */}
+            <div style={{
+                flex: '0 0 45%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                padding: rem(60),
+                backgroundColor: 'white',
+                zIndex: 2,
+                position: 'relative',
+                boxShadow: '20px 0 50px rgba(0,0,0,0.02)'
+            }}>
+                <Container size={400} px={0} m={0} style={{ width: '100%' }}>
+                    <Stack gap="xs" mb={35}>
+                        <Badge variant="light" color="cyan" size="lg" radius="sm" style={{ alignSelf: 'flex-start' }}>
+                            CONSULTA DE ENVÍOS
+                        </Badge>
+                        <Title order={1} style={{ fontSize: rem(42), fontWeight: 900, letterSpacing: '-1.5px' }}>
+                            Seguimiento de <Text span inherit variant="gradient" gradient={{ from: 'cyan', to: 'indigo' }}>pedidos</Text>
+                        </Title>
+                        <Text c="dimmed" size="md">
+                            Ingrese su número de guía para conocer el estado actual y la ubicación de su carga.
+                        </Text>
+                    </Stack>
 
                     <form onSubmit={handleBuscar}>
-                        <Stack gap="sm">
+                        <Stack gap="lg">
                             <TextInput
                                 size="lg"
                                 radius="md"
-                                placeholder="Ej: SDA-2025-XXXXXX"
+                                label="Código de Seguimiento"
+                                placeholder="SDA-2025-XXXXXX"
                                 value={codigo}
                                 onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-                                leftSection={<IconSearch size={20} stroke={1.5} color="var(--mantine-color-gray-5)" />}
+                                leftSection={<IconSearch size={22} stroke={1.5} color="var(--mantine-color-cyan-6)" />}
                                 styles={{
                                     input: {
-                                        backgroundColor: '#f8f9fa',
-                                        border: '1px solid #e9ecef',
-                                        fontSize: rem(16),
+                                        height: rem(60),
+                                        fontSize: rem(18),
                                         fontWeight: 600,
+                                        letterSpacing: rem(1),
+                                        backgroundColor: '#f8fafc',
+                                        border: '1px solid #e9ecef',
                                         '&:focus': { borderColor: 'var(--mantine-color-cyan-6)' }
-                                    }
+                                    },
+                                    label: { marginBottom: rem(8), fontWeight: 700 }
                                 }}
                             />
 
@@ -77,70 +89,87 @@ const BuscarSeguimiento = () => {
                                 radius="md"
                                 color="cyan"
                                 fullWidth
-                                rightSection={<IconArrowRight size={18} />}
+                                rightSection={<IconArrowRight size={20} />}
                                 style={{
-                                    fontSize: rem(16),
-                                    marginTop: rem(5),
-                                    transition: 'transform 0.2s ease',
+                                    height: rem(60),
+                                    fontSize: rem(17),
+                                    fontWeight: 800,
+                                    boxShadow: '0 10px 30px rgba(34, 184, 209, 0.3)',
                                 }}
-                                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                             >
-                                Consultar Estado
+                                CONSULTAR ESTADO
                             </Button>
                         </Stack>
                     </form>
 
-                    <Group justify="space-between" mt={40}>
-                        <UnstyledButton onClick={() => navigate('/contacto')} style={{ fontSize: rem(13), color: 'var(--mantine-color-dimmed)', fontWeight: 500 }}>
-                            ¿Problemas para rastrear?
+                    <Group justify="space-between" mt={45}>
+                        <UnstyledButton onClick={() => navigate('/contacto')} style={{ fontSize: rem(14), color: 'var(--mantine-color-dimmed)', fontWeight: 600 }}>
+                            ¿Problemas con el código?
                         </UnstyledButton>
-                        <UnstyledButton onClick={() => navigate('/contacto')} style={{ fontSize: rem(13), color: 'var(--mantine-color-cyan-7)', fontWeight: 600 }}>
-                            Contactar Soporte
+                        <UnstyledButton onClick={() => navigate('/contacto')} style={{ fontSize: rem(14), color: 'var(--mantine-color-cyan-8)', fontWeight: 700 }}>
+                            Soporte al Cliente
                         </UnstyledButton>
                     </Group>
-
                 </Container>
             </div>
 
-            {/* RIGHT SIDE: HERO IMAGE */}
+            {/* LADO DERECHO: VISUAL IMPACTANTE (MAPS/TRACKING THEME) */}
             <div style={{
                 flex: 1,
-                background: 'linear-gradient(135deg, #1098ad 0%, #0b7285 100%)',
+                background: 'linear-gradient(135deg, #055160 0%, #0b7285 50%, #1098ad 100%)',
+                position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                position: 'relative',
                 overflow: 'hidden'
             }}>
-                {/* Abstract Pattern Overlay */}
-                <div style={{
+                {/* Decoraciones de Mapa/Rutas */}
+                <Box style={{
                     position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.15) 0%, transparent 40%)',
-                    zIndex: 0
+                    width: '120%',
+                    height: '120%',
+                    opacity: 0.1,
+                    backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)',
+                    backgroundSize: '40px 40px',
+                    transform: 'rotate(15deg)'
                 }} />
 
-                <Box style={{ position: 'relative', zIndex: 1, textAlign: 'center', color: 'white', padding: '40px' }}>
-                    <Title order={1} style={{ fontSize: rem(36), fontWeight: 900, letterSpacing: '-1px', whiteSpace: 'nowrap' }}>
-                        Seguimiento
-                    </Title>
-                    <Text size="xl" mt="xl" style={{ opacity: 0.9, maxWidth: 500, marginInline: 'auto' }}>
-                        Monitorizá cada paso de tu envío con la tecnología de Sol del Amanecer.
-                    </Text>
-                </Box>
-            </div>
+                <Stack align="center" gap="xl" style={{ p: rem(40), textAlign: 'center', color: 'white', zIndex: 1 }}>
+                    <Box style={{
+                        padding: rem(35),
+                        backgroundColor: 'rgba(255,255,255,0.05)',
+                        borderRadius: rem(50),
+                        backdropFilter: 'blur(25px)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        boxShadow: '0 50px 100px rgba(0,0,0,0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        animation: 'float 6s infinite ease-in-out'
+                    }}>
+                        <IconPackage size={80} stroke={1} color="white" />
+                    </Box>
+                    <Box style={{ maxWidth: rem(500) }}>
+                        <Title order={2} style={{ fontSize: rem(40), fontWeight: 900, lineHeight: 1.1 }}>
+                            Información de Seguimiento
+                        </Title>
+                        <Text mt="lg" size="xl" c="cyan.0" style={{ opacity: 0.9, fontWeight: 500 }}>
+                            Acceda a la trazabilidad detallada de su mercadería a través de nuestra red logística.
+                        </Text>
+                    </Box>
+                </Stack>
 
-            {/* Mobile Breakpoint Hiding */}
-            <style>{`
-                @media (max-width: 900px) {
-                    div[style*="linear-gradient"] { display: none !important; }
-                    div[style*="maxWidth: '600px'"] { maxWidth: '100%' !important; flex: 1; }
-                }
-            `}</style>
+                <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+          }
+          @media (max-width: 900px) {
+            div[style*="flex: '0 0 45%'"] { flex: 1 !important; padding: 30px !important; }
+            div[style*="background: 'linear-gradient"] { display: none !important; }
+          }
+        `}</style>
+            </div>
         </div>
     );
 };

@@ -8,9 +8,10 @@ import {
   AspectRatio,
   Stack,
   Button,
-  Group
+  Group,
+  rem
 } from '@mantine/core';
-import { ChevronRight, Truck } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
 const Inicio = () => {
@@ -20,10 +21,14 @@ const Inicio = () => {
     <Box
       component="main"
       style={{
-        minHeight: 'calc(100vh - 60px)',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        flex: 1,
+        background: 'white',
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        paddingTop: rem(70),
+        paddingBottom: rem(80) // Equilibra el espacio del Navbar para un centrado óptico perfecto
       }}
     >
       <Container size="xl" py={50}>
@@ -32,12 +37,6 @@ const Inicio = () => {
           <Grid.Col span={{ base: 12, md: 6 }}>
             <Stack gap="xl">
               <Box>
-                <Group gap="xs" mb="md">
-                  <Truck size={20} color="var(--mantine-color-cyan-6)" />
-                  <Text fw={700} tt="uppercase" ls={1.5} size="sm" c="cyan.6">
-                    Logística de Confianza
-                  </Text>
-                </Group>
                 <Title
                   order={1}
                   style={{
@@ -95,10 +94,7 @@ const Inicio = () => {
             <Box
               style={{
                 position: 'relative',
-                borderRadius: '32px',
                 overflow: 'hidden',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
-                border: '8px solid white'
               }}
             >
               <AspectRatio ratio={16 / 9}>
@@ -107,33 +103,6 @@ const Inicio = () => {
                   Tu navegador no soporta la reproducción de videos.
                 </video>
               </AspectRatio>
-
-              {/* Floating Badge Example */}
-              <Box
-                style={{
-                  position: 'absolute',
-                  bottom: 20,
-                  left: 20,
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  backdropFilter: 'blur(10px)',
-                  padding: '12px 20px',
-                  borderRadius: '16px',
-                  boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12
-                }}
-              >
-                <Box
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    backgroundColor: '#10b981'
-                  }}
-                />
-                <Text fw={700} size="sm" c="dark.4">Flota Activa 24/7</Text>
-              </Box>
             </Box>
           </Grid.Col>
         </Grid>

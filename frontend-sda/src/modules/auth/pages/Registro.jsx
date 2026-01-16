@@ -108,155 +108,169 @@ function Registro() {
   const hasSym = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(pwd);
 
   return (
-    <div style={{ height: '100%', minHeight: '600px', display: 'flex', backgroundColor: '#f8f9fa', flex: 1 }}>
-      {/* LEFT SIDE: FORM */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: '600px', padding: '40px', backgroundColor: 'white', zIndex: 1 }}>
-        <Container size={420} my={40} px={0}>
-          <Title ta="center" order={2} style={{ fontFamily: 'Inter, sans-serif', fontWeight: 900, fontSize: rem(32) }}>
-            Crear cuenta
-          </Title>
-          <Text c="dimmed" size="sm" ta="center" mt={5}>
-            ¿Ya tienes una cuenta?{' '}
-            <Anchor size="sm" component="button" onClick={() => navigate('/login')}>
-              Iniciar sesión
-            </Anchor>
-          </Text>
+    <div style={{
+      height: '100%',
+      display: 'flex',
+      backgroundColor: 'white',
+      flex: 1,
+      overflow: 'hidden'
+    }}>
+      {/* LADO IZQUIERDO: FORMULARIO */}
+      <div style={{
+        flex: '0 0 45%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: rem(60),
+        backgroundColor: 'white',
+        zIndex: 2,
+        position: 'relative',
+        boxShadow: '20px 0 50px rgba(0,0,0,0.02)'
+      }}>
+        <Container size={400} px={0} m={0} style={{ width: '100%' }}>
+          <Stack gap="xs" mb={30}>
+            <Title order={1} style={{ fontSize: rem(42), fontWeight: 900, letterSpacing: '-1.5px' }}>
+              Registro de <Text span inherit variant="gradient" gradient={{ from: 'cyan', to: 'indigo' }}>usuarios</Text>
+            </Title>
+            <Text c="dimmed" size="md">
+              Cree su cuenta corporativa para acceder a nuestras soluciones de gestión de carga.
+            </Text>
+          </Stack>
 
           {mensaje && (
-            <Alert icon={<IconCheck size={16} />} title="¡Éxito!" color="green" radius="md" mt="xl">
+            <Alert icon={<IconCheck size={16} />} title="¡Éxito!" color="green" radius="md" mb="xl" variant="light">
               {mensaje}
             </Alert>
           )}
 
           {error && (
-            <Alert icon={<IconAlertCircle size={16} />} title="Error" color="red" radius="md" mt="xl">
+            <Alert icon={<IconAlertCircle size={16} />} title="Error" color="red" radius="md" mb="xl" variant="light">
               {error}
             </Alert>
           )}
 
-          <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-            <form onSubmit={handleSubmit}>
-              <Stack>
-                <TextInput
-                  label="Nombre completo"
-                  placeholder="Juan Pérez"
-                  required
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleChange}
-                  autoComplete="off"
-                  readOnly={true}
-                  onFocus={(e) => e.target.readOnly = false}
+          <form onSubmit={handleSubmit}>
+            <Stack gap="md">
+              <TextInput
+                label="Nombre Completo"
+                placeholder="Su nombre completo"
+                required
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                size="md"
+                radius="md"
+                styles={{ input: { height: rem(48) } }}
+              />
+
+              <TextInput
+                label="Correo Electrónico"
+                placeholder="tu@mail.com"
+                required
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                size="md"
+                radius="md"
+                styles={{ input: { height: rem(48) } }}
+              />
+
+              <PasswordInput
+                label="Contraseña"
+                placeholder="Mínimo 8 caracteres"
+                required
+                name="contrasena"
+                value={formData.contrasena}
+                onChange={handleChange}
+                size="md"
+                radius="md"
+                styles={{ input: { height: rem(48) } }}
+              />
+
+              <Group align="center" gap="xs">
+                <Checkbox
+                  checked={termsAccepted}
+                  onChange={(event) => setTermsAccepted(event.currentTarget.checked)}
                 />
+                <Text size="xs">
+                  Acepto los <Anchor component="button" type="button" onClick={() => setShowTerms(true)} size="xs" fw={700}>términos y condiciones</Anchor>
+                </Text>
+              </Group>
 
-                <TextInput
-                  label="Correo electrónico"
-                  placeholder="tu@mail.com"
-                  required
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  autoComplete="new-email" // Non-standard but effective
-                  readOnly={true}
-                  onFocus={(e) => e.target.readOnly = false}
-                />
+              <Button
+                fullWidth
+                type="submit"
+                loading={loading}
+                size="lg"
+                color="cyan"
+                radius="md"
+                style={{
+                  height: rem(55),
+                  fontSize: rem(16),
+                  fontWeight: 800,
+                  boxShadow: '0 10px 30px rgba(34, 184, 209, 0.3)',
+                  marginTop: rem(10)
+                }}
+              >
+                REGISTRARSE
+              </Button>
+            </Stack>
+          </form>
 
-                <Box>
-                  <PasswordInput
-                    label="Contraseña"
-                    placeholder="Mínimo 8 caracteres"
-                    required
-                    name="contrasena"
-                    value={formData.contrasena}
-                    onChange={handleChange}
-                    autoComplete="new-password"
-                    readOnly={true}
-                    onFocus={(e) => e.target.readOnly = false}
-                  />
-                  {/* Password Requirements Hint */}
-                  <List size="xs" spacing={4} mt={5} center>
-                    <List.Item icon={getRequirementIcon(hasMinLength)}>Mínimo 8 caracteres</List.Item>
-                    <List.Item icon={getRequirementIcon(hasTwoNums)}>Al menos 2 números</List.Item>
-                    <List.Item icon={getRequirementIcon(hasSym)}>Al menos 1 símbolo (ej. @, #, $)</List.Item>
-                  </List>
-                </Box>
-
-                <Group align="center" gap="xs">
-                  <Checkbox
-                    checked={termsAccepted}
-                    onChange={(event) => setTermsAccepted(event.currentTarget.checked)}
-                  />
-                  <Text size="sm">
-                    Acepto los <Anchor component="button" type="button" onClick={() => setShowTerms(true)} size="sm">términos y condiciones</Anchor>
-                  </Text>
-                </Group>
-
-                <Button fullWidth mt="xl" type="submit" loading={loading} size="md">
-                  Crear cuenta
-                </Button>
-              </Stack>
-            </form>
-          </Paper>
+          <Group justify="center" mt={30}>
+            <Text size="sm" c="dimmed">¿Ya tiene cuenta?</Text>
+            <Anchor size="sm" fw={700} color="cyan" component="button" onClick={() => navigate('/login')}>
+              Iniciar Sesión
+            </Anchor>
+          </Group>
         </Container>
       </div>
 
-      {/* RIGHT SIDE: HERO IMAGE */}
+      {/* LADO DERECHO: VISUAL IMPACTANTE */}
       <div style={{
         flex: 1,
-        background: 'linear-gradient(135deg, #1098ad 0%, #0b7285 100%)',
+        background: 'linear-gradient(135deg, #1864ab 0%, #1098ad 50%, #0b7285 100%)',
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* Abstract Pattern Overlay */}
-        <div style={{
+        {/* Decoraciones animadas */}
+        <Box style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.15) 0%, transparent 40%)',
-          zIndex: 0
+          bottom: '-20%',
+          left: '-10%',
+          width: rem(500),
+          height: rem(500),
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%)',
+          filter: 'blur(50px)',
+          animation: 'pulse-reg 10s infinite ease-in-out'
         }} />
 
-        <Box style={{ position: 'relative', zIndex: 1, textAlign: 'center', color: 'white', padding: '40px' }}>
-          <Title order={1} style={{ fontSize: rem(36), fontWeight: 900, letterSpacing: '-1px', whiteSpace: 'nowrap' }}>
-            Únete a la red
-          </Title>
-          <Badge
-            variant="light"
-            color="white"
-            size="lg"
-            radius="sm"
-            mt="md"
-            style={{
-              letterSpacing: '3px',
-              textTransform: 'uppercase',
-              fontWeight: 800,
-              fontSize: rem(12),
-              paddingInline: '1.5rem',
-              border: '1px solid rgba(255,255,255,0.3)',
-              backdropFilter: 'blur(10px)',
-              backgroundColor: 'rgba(255,255,255,0.1)'
-            }}
-          >
-            WEB APP
-          </Badge>
-          <Text size="xl" mt="xl" style={{ opacity: 0.9, maxWidth: 500, marginInline: 'auto' }}>
-            Comienza a gestionar tu logística de manera eficiente hoy mismo.
-          </Text>
-        </Box>
-      </div>
+        <Stack align="center" gap="xl" style={{ p: rem(40), textAlign: 'center', color: 'white', zIndex: 1 }}>
+          <Box style={{ maxWidth: rem(450) }}>
+            <Title order={2} style={{ fontSize: rem(34), fontWeight: 800, lineHeight: 1.2 }}>
+              Gestión Integral de su Flota
+            </Title>
+            <Text mt="md" size="lg" c="cyan.0" style={{ opacity: 0.85 }}>
+              Herramientas integrales para el control de envíos y administración de recursos logísticos.
+            </Text>
+          </Box>
+        </Stack>
 
-      {/* Mobile Breakpoint Hiding */}
-      <style>{`
-        @media (max-width: 900px) {
-          div[style*="linear-gradient"] { display: none !important; }
-          div[style*="maxWidth: '600px'"] { maxWidth: '100%' !important; flex: 1; }
-        }
-      `}</style>
+        <style>{`
+          @keyframes pulse-reg {
+            0%, 100% { transform: scale(1.1) translate(0,0); opacity: 0.5; }
+            50% { transform: scale(1) translate(20px, -20px); opacity: 0.7; }
+          }
+          @media (max-width: 900px) {
+            div[style*="flex: '0 0 45%'"] { flex: 1 !important; padding: 30px !important; }
+            div[style*="background: 'linear-gradient"] { display: none !important; }
+          }
+        `}</style>
+      </div>
 
       {/* T&C Modal */}
       <Modal
@@ -297,7 +311,6 @@ function Registro() {
           </Group>
         </Stack>
       </Modal>
-
     </div>
   );
 }

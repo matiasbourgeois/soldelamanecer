@@ -7,7 +7,7 @@ import AlertaSistema from "@components/feedback/AlertaSistema";
 import { setMostrarAlertaCustom } from "@core/utils/alertaGlobal.jsx";
 import "@styles/botonesSistema.css";
 
-// Components
+import { Container, Box, rem } from '@mantine/core';
 import Navbar from "@components/layout/Navbar";
 import Footer from "@components/layout/Footer";
 import { AppLayout } from "@components/layout/AppLayout"; // Layout Mantine
@@ -273,9 +273,17 @@ function App() {
         </AppLayout>
       ) : (
         // 🔹 Si NO está logueado, mostrar Navbar pública + Content + Footer (Sticky Footer Fix)
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', backgroundColor: 'white' }}>
           <Navbar />
-          <main style={{ flex: 1, paddingTop: 'calc(60px + 1rem)' }}>
+          <main style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'relative',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            paddingTop: rem(70)
+          }}>
             <Routes>
               <Route path="/" element={<Inicio />} />
               <Route path="/servicios" element={<Servicios />} />

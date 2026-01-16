@@ -1,10 +1,11 @@
-
-
 /* Asegurar que el `#root` ocupe toda la pantalla */
 #root {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  /* Evita el scroll global */
+  background-color: white;
 }
 
 /* Hacer que el contenido principal ocupe todo el espacio disponible */
@@ -12,26 +13,22 @@ main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Centrar el contenido */
-  align-items: center;
   width: 100%;
-  padding: 20px;
+  padding: 0;
+  overflow: hidden;
+  /* El scroll debe ser interno si es absolutamente necesario */
+  background-color: white;
 }
 
-/* Asegurar que en pantallas pequeñas el contenido se ajuste bien */
-@media (max-height: 600px) {
-  main {
-    justify-content: flex-start;
-    padding-top: 40px;
-  }
-}
-
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
+  padding: 0;
   font-family: 'Montserrat', sans-serif;
-  
-  
+  background-color: white;
+  overflow: hidden;
+  /* Evita que el body tenga scroll */
 }
 
 .page-wrapper {
@@ -50,30 +47,6 @@ html, body {
   font-size: 0.95rem !important;
 }
 
-.btn-soft {
-  border: none;
-  border-radius: 50px;
-  padding: 8px 20px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-}
-
-.btn-soft:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.btn-soft:focus,
-.btn-soft:active,
-.btn-soft:focus-visible {
-  background-color: inherit !important;
-  color: inherit !important;
-  box-shadow: 0 0 0 0.2rem rgba(241, 196, 15, 0.3) !important;
-  outline: none !important;
-  border-color: transparent !important;
-}
 
 .btn-soft {
   border: none;

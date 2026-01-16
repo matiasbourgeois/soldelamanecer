@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Container,
   Grid,
@@ -11,161 +11,263 @@ import {
   Box,
   rem,
   Badge,
-  Divider
+  Divider,
+  SimpleGrid,
+  Overlay,
+  Button,
+  Modal,
+  ScrollArea,
+  Paper,
+  TextInput
 } from '@mantine/core';
 import {
   Truck,
   ShieldCheck,
   Clock,
   Package,
-  Users,
   MapPin,
-  BarChart3
+  Building2,
+  Zap,
+  CalendarDays,
+  Map,
+  ListOrdered,
+  Search
 } from 'lucide-react';
 
-const servicios = [
-  {
-    title: "Transporte Nacional",
-    description: "Cobertura integral en todo el territorio argentino con flota propia de última generación.",
-    icon: <Truck size={30} />,
-    color: "blue",
-    features: ["Seguimiento Satelital", "Seguro de Carga", "Puerta a Puerta"]
-  },
+import { LOCALITIES } from "../../../data/localidadesCordoba";
+
+const mainServices = [
   {
     title: "Logística E-commerce",
-    description: "Soluciones ágiles para ventas online, integrando almacenamiento y distribución capilar.",
-    icon: <Package size={30} />,
+    description: "Soluciones de última milla diseñadas para las exigencias del comercio digital contemporáneo.",
+    icon: <Package size={28} />,
     color: "cyan",
-    features: ["Control de Stock", "Picking & Packing", "Entregas 24hs"]
+    features: ["Integración API", "Control de Stock", "Picking & Packing"]
   },
   {
     title: "Distribución Urbana",
-    description: "Optimización de rutas en grandes centros urbanos para garantizar tiempos de entrega mínimos.",
-    icon: <MapPin size={30} />,
-    color: "teal",
-    features: ["Zonificación Inteligente", "Micro-distribución", "Prueba de Entrega"]
+    description: "Operaciones capilares eficientes para centros urbanos, garantizando entregas precisas.",
+    icon: <Truck size={28} />,
+    color: "indigo",
+    features: ["Rutas Optimizadas", "Zonificación Inteligente", "Prueba de Entrega"]
   },
   {
     title: "Gestión de Depósito",
-    description: "Almacenaje seguro con sistemas de gestión de inventarios avanzados (WMS).",
-    icon: <BarChart3 size={30} />,
-    color: "indigo",
-    features: ["Cross-docking", "Inventario Perpetuo", "Seguridad 24hs"]
+    description: "Infraestructura de almacenamiento estratégico con sistemas avanzados de inventario.",
+    icon: <Building2 size={28} />,
+    color: "teal",
+    features: ["Cross-docking", "Seguridad 24/7", "WMS Integrado"]
   }
 ];
 
+const branches = [
+  { name: "Córdoba Capital", location: "Centro de Operaciones Principal", icon: <MapPin size={18} /> },
+  { name: "Villa María", location: "Nexo Estratégico Regional", icon: <MapPin size={18} /> },
+  { name: "Río Cuarto", location: "Cobertura Sur Provincial", icon: <MapPin size={18} /> },
+  { name: "Mina Clavero", location: "Conectividad Traslasierra", icon: <MapPin size={18} /> }
+];
+
+const normalizeText = (text) =>
+  text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
 const Servicios = () => {
+  const [opened, setOpened] = useState(false);
+  const [search, setSearch] = useState("");
+
+  // Filtrar y ordenar localidades
+  const filteredLocalities = React.useMemo(() => {
+    const sorted = [...LOCALITIES].sort((a, b) => a.name.localeCompare(b.name));
+    if (!search) return sorted;
+    const term = normalizeText(search);
+    return sorted.filter(loc => normalizeText(loc.name).includes(term) || loc.cp.includes(term));
+  }, [search]);
+
   return (
     <Box
       style={{
-        minHeight: '100vh',
-        backgroundColor: '#f8fafc',
-        paddingTop: '100px',
-        paddingBottom: '80px'
+        flex: 1,
+        backgroundColor: 'white',
+        paddingTop: rem(100),
+        paddingBottom: rem(60),
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
       <Container size="xl">
-        <Stack align="center" gap="xs" mb={80}>
-          <Badge size="lg" variant="light" color="cyan" radius="sm" style={{ letterSpacing: '1px' }}>
-            EXCELENCIA LOGÍSTICA
+        {/* HERO SECTION */}
+        <Stack align="center" gap="sm" mb={60}>
+          <Badge variant="light" color="cyan" size="lg" radius="sm">
+            RED LOGÍSTICA CÓRDOBA
           </Badge>
-          <Title order={1} fw={900} size={rem(48)} style={{ letterSpacing: '-1.5px', textAlign: 'center' }}>
-            Soluciones a la medida de <br />
-            <Text component="span" variant="gradient" gradient={{ from: 'cyan', to: 'blue' }} inherit>su negocio</Text>
+          <Title order={1} fw={900} style={{ fontSize: rem(48), letterSpacing: '-2px', textAlign: 'center', lineHeight: 1.1 }}>
+            Gestión Integral en toda la <Text component="span" variant="gradient" gradient={{ from: 'cyan', to: 'indigo' }} inherit>Provincia</Text>
           </Title>
-          <Text c="dimmed" size="lg" ta="center" style={{ maxWidth: 650 }}>
-            Combinamos tecnología de vanguardia con décadas de experiencia para ofrecer un servicio
-            logístico que supera las expectativas más exigentes.
+          <Text c="dimmed" size="lg" ta="center" style={{ maxWidth: 700, fontWeight: 500 }}>
+            Conectamos cada localidad del interior de Córdoba con una infraestructura robusta y tecnología de vanguardia.
           </Text>
         </Stack>
 
-        <Grid gutter="xl">
-          {servicios.map((svc, index) => (
-            <Grid.Col key={index} span={{ base: 12, sm: 6, lg: 3 }}>
-              <Card
-                shadow="sm"
-                padding="xl"
-                radius="lg"
-                withBorder
-                style={{
-                  height: '100%',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                  cursor: 'default'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0px)';
-                  e.currentTarget.style.boxShadow = 'var(--mantine-shadow-sm)';
-                }}
-              >
-                <ThemeIcon
-                  size={60}
-                  radius="md"
-                  variant="light"
-                  color={svc.color}
-                  mb="xl"
-                >
+        {/* TIME SERVICES (SAME DAY / NEXT DAY) */}
+        <SimpleGrid cols={{ base: 1, sm: 2 }} gap="xl" mb={80}>
+          <Card padding="xl" radius="md" withBorder style={{ backgroundColor: '#f8fafc', borderLeft: `${rem(6)} solid var(--mantine-color-cyan-6)` }}>
+            <Group align="flex-start" wrap="nowrap">
+              <ThemeIcon size={54} radius="md" color="cyan" variant="light">
+                <Zap size={30} />
+              </ThemeIcon>
+              <Stack gap={5}>
+                <Title order={3} fw={800} size="xl">Same Day Delivery</Title>
+                <Text size="sm" c="dimmed" fw={500}>
+                  Entregas en el mismo día para Córdoba Capital y alrededores. Velocidad crítica para operaciones de alta exigencia.
+                </Text>
+                <Badge variant="dot" color="cyan" mt="xs">Frecuencia Diaria</Badge>
+              </Stack>
+            </Group>
+          </Card>
+
+          <Card padding="xl" radius="md" withBorder style={{ backgroundColor: '#f8fafc', borderLeft: `${rem(6)} solid var(--mantine-color-indigo-6)` }}>
+            <Group align="flex-start" wrap="nowrap">
+              <ThemeIcon size={54} radius="md" color="indigo" variant="light">
+                <CalendarDays size={30} />
+              </ThemeIcon>
+              <Stack gap={5}>
+                <Title order={3} fw={800} size="xl">Next Day Business</Title>
+                <Text size="sm" c="dimmed" fw={500}>
+                  Distribución garantizada en 24 horas a las principales ciudades del interior provincial. Confiabilidad absoluta.
+                </Text>
+                <Badge variant="dot" color="indigo" mt="xs">Frecuencia Garantizada</Badge>
+              </Stack>
+            </Group>
+          </Card>
+        </SimpleGrid>
+
+        <Divider mb={60} label={<Text fw={700} c="dimmed">SOLUCIONES CORPORATIVAS</Text>} labelPosition="center" />
+
+        {/* CORE SERVICES */}
+        <Grid gutter={40} mb={80}>
+          {mainServices.map((svc, index) => (
+            <Grid.Col key={index} span={{ base: 12, md: 4 }}>
+              <Stack gap="md">
+                <ThemeIcon size={50} radius="lg" color={svc.color} variant="filled">
                   {svc.icon}
                 </ThemeIcon>
-
-                <Title order={3} mb="sm" fw={800}>{svc.title}</Title>
-                <Text size="sm" c="dimmed" mb="xl" style={{ lineHeight: 1.6 }}>
+                <Title order={4} fw={800} size="lg">{svc.title}</Title>
+                <Text size="sm" c="dimmed" style={{ lineHeight: 1.6 }}>
                   {svc.description}
                 </Text>
-
-                <Divider mb="lg" variant="dashed" />
-
-                <Stack gap="xs">
-                  {svc.features.map((f, i) => (
-                    <Group key={i} gap="xs">
-                      <Box
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          backgroundColor: `var(--mantine-color-${svc.color}-6)`
-                        }}
-                      />
-                      <Text size="xs" fw={600} c="dark.3">{f}</Text>
-                    </Group>
+                <Group gap="xs">
+                  {svc.features.map((feat, i) => (
+                    <Badge key={i} variant="outline" color="gray" size="xs">{feat}</Badge>
                   ))}
-                </Stack>
-              </Card>
+                </Group>
+              </Stack>
             </Grid.Col>
           ))}
         </Grid>
 
-        {/* CTA Section */}
-        <Box
-          mt={100}
-          p={60}
-          style={{
-            backgroundColor: '#111827',
-            borderRadius: '32px',
-            backgroundImage: 'radial-gradient(circle at top right, #1e293b, transparent)',
-            color: 'white'
-          }}
-        >
-          <Grid align="center">
-            <Grid.Col span={{ base: 12, md: 8 }}>
-              <Stack gap="xs">
-                <Title order={2} size={rem(32)} fw={800}>Seguridad y confianza en cada km</Title>
-                <Text c="gray.4" size="lg">Operamos bajo los más altos estándares de calidad y seguridad para proteger su activos.</Text>
+        {/* BRANCHES / COBERTURA */}
+        <Box p={rem(40)} radius="md" style={{ backgroundColor: '#111827', borderRadius: rem(24), position: 'relative', overflow: 'hidden' }}>
+          <Box style={{ position: 'absolute', right: '-5%', top: '-10%', opacity: 0.1, color: 'white' }}>
+            <Map size={300} strokeWidth={0.5} />
+          </Box>
+          <Stack gap="xl" style={{ position: 'relative', zIndex: 1 }}>
+            <Group justify="space-between" align="center">
+              <Stack gap={5}>
+                <Title order={2} c="white" fw={900} size={rem(32)}>Presencia Estratégica</Title>
+                <Text c="gray.4" size="md">Nuestra red de sucursales asegura control total en los puntos clave de la provincia.</Text>
               </Stack>
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <Group justify="flex-end">
-                <ThemeIcon size={80} radius="xl" color="cyan" variant="filled">
-                  <ShieldCheck size={40} />
-                </ThemeIcon>
+              <Group>
+                <Button
+                  variant="white"
+                  color="dark"
+                  radius="md"
+                  leftSection={<ListOrdered size={18} />}
+                  onClick={() => setOpened(true)}
+                >
+                  Listado de Cobertura
+                </Button>
+                <ShieldCheck size={48} color="var(--mantine-color-cyan-5)" />
               </Group>
-            </Grid.Col>
-          </Grid>
+            </Group>
+
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} gap="lg">
+              {branches.map((branch, i) => (
+                <Card key={i} padding="md" radius="sm" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <Group gap="sm" wrap="nowrap">
+                    <ThemeIcon color="cyan" variant="light" size="sm">
+                      {branch.icon}
+                    </ThemeIcon>
+                    <Stack gap={0}>
+                      <Text c="white" fw={700} size="sm">{branch.name}</Text>
+                      <Text c="gray.5" size="xs">{branch.location}</Text>
+                    </Stack>
+                  </Group>
+                </Card>
+              ))}
+            </SimpleGrid>
+          </Stack>
         </Box>
       </Container>
+
+      {/* MODAL LOCALIDADES */}
+      <Modal
+        opened={opened}
+        onClose={() => setOpened(false)}
+        title={<Text fw={800} size="lg">Cobertura en Provincia de Córdoba</Text>}
+        size="lg"
+        radius="xl"
+        centered
+        overlayProps={{
+          backgroundOpacity: 0.55,
+          blur: 3,
+        }}
+      >
+        <ScrollArea h={500} offsetScrollbars>
+          <Stack gap="xs" p="sm">
+            <TextInput
+              placeholder="Escriba una localidad o CP..."
+              leftSection={<Search size={14} />}
+              value={search}
+              onChange={(e) => setSearch(e.currentTarget.value)}
+              mb="md"
+              radius="md"
+            />
+            <Text size="xs" c="dimmed" mb="xs">
+              Detalle de destinos, códigos postales y frecuencias operativas.
+            </Text>
+            <SimpleGrid cols={{ base: 1, sm: 2 }} gap="xs">
+              {filteredLocalities.map((loc, idx) => (
+                <Paper
+                  key={idx}
+                  p="xs"
+                  withBorder
+                  radius="md"
+                  style={{
+                    backgroundColor: '#fafbfc',
+                    height: rem(70),
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Group justify="space-between" style={{ width: '100%' }} wrap="nowrap">
+                    <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                      <Text fw={700} size="xs" truncate>{loc.name}</Text>
+                      <Text size="10px" c="dimmed">CP: {loc.cp}</Text>
+                    </Stack>
+                    <Badge
+                      size="xs"
+                      variant="outline"
+                      color={loc.frecuencia.includes("LUNES A SABADOS") ? "blue" : "gray"}
+                      style={{ flexShrink: 0 }}
+                    >
+                      {loc.frecuencia}
+                    </Badge>
+                  </Group>
+                </Paper>
+              ))}
+            </SimpleGrid>
+          </Stack>
+        </ScrollArea>
+      </Modal>
     </Box>
   );
 };

@@ -15,7 +15,7 @@ import {
   Divider
 } from '@mantine/core';
 import { useDisclosure, useWindowScroll } from '@mantine/hooks';
-import { Truck, LogIn, UserPlus, Home, Info, Calculator, Package, Phone } from 'lucide-react';
+import { LogIn, UserPlus, Home, Info, Calculator, Package, Phone } from 'lucide-react';
 import AuthContext from "@core/context/AuthProvider";
 
 const Navbar = () => {
@@ -50,9 +50,9 @@ const Navbar = () => {
         left: 0,
         right: 0,
         zIndex: 1000,
-        backgroundColor: scrolled ? 'rgba(255, 255, 255, 0.85)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(12px)' : 'none',
-        borderBottom: scrolled ? `1px solid ${theme.colors.gray[2]}` : 'none',
+        backgroundColor: (location.pathname !== '/' || scrolled) ? 'white' : 'transparent',
+        backdropFilter: (location.pathname !== '/' || scrolled) ? 'blur(12px)' : 'none',
+        borderBottom: (location.pathname !== '/' || scrolled) ? `1px solid ${theme.colors.gray[2]}` : 'none',
         transition: 'all 0.3s ease',
         height: rem(70),
         display: 'flex',
@@ -67,18 +67,6 @@ const Navbar = () => {
             style={{ cursor: 'pointer' }}
             onClick={() => navigate('/')}
           >
-            <Box
-              style={{
-                backgroundColor: theme.colors.cyan[6],
-                padding: rem(6),
-                borderRadius: rem(10),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Truck size={24} color="white" />
-            </Box>
             <Text
               fw={900}
               size="lg"
@@ -151,7 +139,6 @@ const Navbar = () => {
         padding="md"
         title={
           <Group gap="xs">
-            <Truck size={20} color={theme.colors.cyan[6]} />
             <Text fw={800}>MENÚ PRINCIPAL</Text>
           </Group>
         }
