@@ -104,6 +104,7 @@ function App() {
             <Route path="/completar-perfil" element={<CompletarPerfilCliente />} />
             <Route path="/cotizador-online" element={<CotizadorCordobaPage />} />
             <Route path="/servicios" element={<Servicios />} />
+            <Route path="/login" element={<Login />} />
 
             {/* Rutas Protegidas y Admin */}
             <Route

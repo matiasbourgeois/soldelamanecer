@@ -43,7 +43,7 @@ import {
   PRICING_PALLET,
   PROTECCION,
 } from "@core/config/preciosCordoba";
-import { LOCALITIES } from "../../../data/localidadesCordoba";
+import { useLocalidades } from "@core/hooks/useLocalidades";
 
 const BRANCH_CPS = new Set(["5000", "5800", "5900"]);
 const hasBranch = (cp) => cp && BRANCH_CPS.has(String(cp).trim());
@@ -80,9 +80,11 @@ const CotizadorCordobaPage = () => {
   const [valorDeclarado, setValorDeclarado] = useState(3000);
   const [copied, setCopied] = useState(false);
 
-  const localityData = useMemo(() => LOCALITIES.map(l => `${l.cp} - ${l.name}`), []);
-  const originLoc = useMemo(() => LOCALITIES.find(l => `${l.cp} - ${l.name}` === origen), [origen]);
-  const destLoc = useMemo(() => LOCALITIES.find(l => `${l.cp} - ${l.name}` === destino), [destino]);
+  const { localidades, loading } = useLocalidades();
+
+  const localityData = useMemo(() => localidades.map(l => `${l.cp} - ${l.name}`), [localidades]);
+  const originLoc = useMemo(() => localidades.find(l => `${l.cp} - ${l.name}` === origen), [origen, localidades]);
+  const destLoc = useMemo(() => localidades.find(l => `${l.cp} - ${l.name}` === destino), [destino, localidades]);
 
   const canQuote = originLoc && destLoc && origen !== destino;
 
@@ -153,19 +155,21 @@ const CotizadorCordobaPage = () => {
         <Stack gap="md">
           {/* HEADER */}
           <Group justify="space-between" align="center">
-            <Title order={1} fw={900} size={rem(32)} style={{ letterSpacing: '-1.5px' }}>
+            <Title order={1} fw={900} size={rem(32)} style={{ letterSpacing: '-1px' }} c="dark.7">
               Cotizador de Envíos
             </Title>
-            <Button
-              variant="light"
-              color="gray"
-              size="xs"
-              leftSection={<RotateCcw size={14} />}
-              onClick={handleReset}
-              radius="md"
-            >
-              Reiniciar cotización
-            </Button>
+            {(origen || destino) && (
+              <Button
+                variant="subtle"
+                color="gray"
+                size="xs"
+                leftSection={<RotateCcw size={14} />}
+                onClick={handleReset}
+                radius="md"
+              >
+                Reiniciar cotización
+              </Button>
+            )}
           </Group>
 
           {/* ROW 1: ORIGEN Y DESTINO */}
@@ -174,7 +178,8 @@ const CotizadorCordobaPage = () => {
               <Grid.Col span={{ base: 12, md: 6 }}>
                 <Autocomplete
                   label="Origen"
-                  placeholder="Buscar por localidad o CP..."
+                  placeholder={loading ? "Cargando localidades..." : "Buscar por localidad o CP..."}
+                  disabled={loading}
                   data={localityData}
                   value={origen}
                   onChange={setOrigen}
@@ -192,7 +197,8 @@ const CotizadorCordobaPage = () => {
               <Grid.Col span={{ base: 12, md: 6 }}>
                 <Autocomplete
                   label="Destino"
-                  placeholder="Buscar por localidad o CP..."
+                  placeholder={loading ? "Cargando localidades..." : "Buscar por localidad o CP..."}
+                  disabled={loading}
                   data={localityData}
                   value={destino}
                   onChange={setDestino}
@@ -228,9 +234,9 @@ const CotizadorCordobaPage = () => {
           </Paper>
 
           {/* ROW 2: PARÁMETROS */}
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} gap="xs">
-            <Paper p="sm" radius="md" withBorder>
-              <Text fw={700} size="xs" c="dimmed" mb={4} tt="uppercase">Servicio</Text>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} gap="md">
+            <Paper p="md" radius="lg" withBorder shadow="sm">
+              <Text fw={800} size="xs" c="dark.3" mb={8} tt="uppercase" style={{ letterSpacing: '0.5px' }}>Servicio</Text>
               <SegmentedControl
                 fullWidth
                 value={tipoServicio}
@@ -240,14 +246,17 @@ const CotizadorCordobaPage = () => {
                   { label: 'Pallet', value: 'pallet' },
                 ]}
                 radius="md"
-                size="xs"
+                size="sm"
                 color="cyan"
+                styles={{
+                  label: { fontWeight: 600 }
+                }}
               />
             </Paper>
 
-            <Paper p="sm" radius="md" withBorder>
-              <Text fw={700} size="xs" c="dimmed" mb={4} tt="uppercase">Categoría</Text>
-              <Stack gap={2}>
+            <Paper p="md" radius="lg" withBorder shadow="sm">
+              <Text fw={800} size="xs" c="dark.3" mb={8} tt="uppercase" style={{ letterSpacing: '0.5px' }}>Categoría</Text>
+              <Stack gap={4}>
                 <SegmentedControl
                   fullWidth
                   disabled={tipoServicio === 'pallet'}
@@ -255,18 +264,21 @@ const CotizadorCordobaPage = () => {
                   onChange={setCategoria}
                   data={['Chico', 'Mediano', 'Grande']}
                   radius="md"
-                  size="xs"
-                  color="indigo"
+                  size="sm"
+                  color="blue"
+                  styles={{
+                    label: { fontWeight: 600 }
+                  }}
                 />
-                <Text size="10px" c="dimmed" ta="center" lh={1}>
+                <Text size="xs" c="dimmed" ta="center" fw={500}>
                   {tipoServicio === 'paqueteria' ? CATEGORY_LIMITS[categoria] : "Carga industrial"}
                 </Text>
               </Stack>
             </Paper>
 
-            <Paper p="sm" radius="md" withBorder>
-              <Text fw={700} size="xs" c="dimmed" mb={4} tt="uppercase">Tipo de Entrega</Text>
-              <Stack gap={2}>
+            <Paper p="md" radius="lg" withBorder shadow="sm">
+              <Text fw={800} size="xs" c="dark.3" mb={8} tt="uppercase" style={{ letterSpacing: '0.5px' }}>Tipo de Entrega</Text>
+              <Stack gap={4}>
                 <SegmentedControl
                   fullWidth
                   value={modalidad}
@@ -277,38 +289,45 @@ const CotizadorCordobaPage = () => {
                   ]}
                   disabled={!sucursalHabilitada}
                   radius="md"
-                  size="xs"
-                  color="indigo"
+                  size="sm"
+                  color="blue"
+                  styles={{
+                    label: { fontWeight: 600 }
+                  }}
                 />
                 {!sucursalHabilitada && tipoServicio === 'paqueteria' && (
-                  <Text size="9px" c="red.6" ta="center" lh={1}>
+                  <Text size="9px" c="red.6" ta="center" fw={600}>
                     Solo en CBA, Río IV o V. María
                   </Text>
                 )}
               </Stack>
             </Paper>
 
-            <Paper p="sm" radius="md" withBorder>
-              <Text fw={700} size="xs" c="dimmed" mb={4} tt="uppercase">Valor Declarado (ARS)</Text>
+            <Paper p="md" radius="lg" withBorder shadow="sm">
+              <Text fw={800} size="xs" c="dark.3" mb={8} tt="uppercase" style={{ letterSpacing: '0.5px' }}>Valor Declarado (ARS)</Text>
               <NumberInput
                 value={valorDeclarado}
                 onChange={setValorDeclarado}
                 min={3000}
                 step={1000}
                 radius="md"
-                size="xs"
+                size="sm"
                 prefix="$ "
                 thousandSeparator="."
                 decimalSeparator=","
+                fw={600}
               />
             </Paper>
           </SimpleGrid>
 
           {/* INFO BANNER */}
-          <Paper p={rem(6)} radius="sm" style={{ backgroundColor: 'rgba(242,182,50,0.05)', border: '1px solid rgba(242,182,50,0.15)' }}>
-            <Text size="xs" ta="center" fw={600} c="orange.9">
-              Tarifa unitaria reducida para múltiples bultos en un único despacho.
-            </Text>
+          <Paper p="sm" radius="md" bg="cyan.0" style={{ border: '1px solid var(--mantine-color-cyan-1)' }}>
+            <Group gap="xs" justify="center">
+              <Info size={14} color="var(--mantine-color-cyan-7)" />
+              <Text size="xs" fw={700} c="cyan.9">
+                Tarifa unitaria reducida para múltiples bultos en un único despacho.
+              </Text>
+            </Group>
           </Paper>
 
           {/* RESULT SECTION */}

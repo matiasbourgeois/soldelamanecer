@@ -36,8 +36,9 @@ import {
   Building2,
   Search
 } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
 
-import { LOCALITIES } from "../../../data/localidadesCordoba";
+import { useLocalidades } from "@core/hooks/useLocalidades";
 
 const directChannels = [
   {
@@ -57,30 +58,31 @@ const directChannels = [
     link: "mailto:logistica@soldelamanecer.ar"
   },
   {
-    icon: <MessageCircle size={22} />,
+    icon: <FaWhatsapp size={22} />,
     title: "Ventas WhatsApp",
     value: "Centro de Atención",
     description: "Respuesta inmediata para su logística",
-    color: "teal",
-    link: "https://wa.me/543512569550"
+    color: "green",
+    link: "https://wa.me/543512569550",
+    animate: true
   }
 ];
 
 const normalizeText = (text) =>
   text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
 const Contacto = () => {
   const [opened, setOpened] = useState(false);
   const [search, setSearch] = useState("");
   const theme = useMantineTheme();
+  const { localidades, loading } = useLocalidades();
 
   // Filtrar y ordenar localidades
   const filteredLocalities = useMemo(() => {
-    const sorted = [...LOCALITIES].sort((a, b) => a.name.localeCompare(b.name));
+    const sorted = [...localidades].sort((a, b) => a.name.localeCompare(b.name));
     if (!search) return sorted;
     const term = normalizeText(search);
     return sorted.filter(loc => normalizeText(loc.name).includes(term) || loc.cp.includes(term));
-  }, [search]);
+  }, [search, localidades]);
 
   return (
     <Box style={{ flex: 1, backgroundColor: '#fcfcfd', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -132,9 +134,16 @@ const Contacto = () => {
                       }}
                     >
                       <Stack gap="sm">
-                        <ThemeIcon size={40} radius="md" color={channel.color} variant="light">
-                          {channel.icon}
-                        </ThemeIcon>
+                        <Box className={channel.animate ? "animate-pulse-whatsapp" : ""}>
+                          <ThemeIcon
+                            size={40}
+                            radius="md"
+                            color={channel.color}
+                            variant="filled"
+                          >
+                            {channel.icon}
+                          </ThemeIcon>
+                        </Box>
                         <div>
                           <Text size="xs" fw={700} c="dimmed" tt="uppercase">{channel.title}</Text>
                           <Text fw={800} size="md" c={channel.color + ".9"}>{channel.value}</Text>
@@ -304,7 +313,7 @@ const Contacto = () => {
               radius="md"
             />
             <Text size="xs" c="dimmed" mb="xs">
-              Contamos con una amplia red de distribución en la provincia de Córdoba.
+              {loading ? "Actualizando red de distribución..." : "Contamos con una amplia red de distribución en la provincia de Córdoba."}
             </Text>
             <SimpleGrid cols={{ base: 1, sm: 2 }} gap="xs">
               {filteredLocalities.map((loc, idx) => (

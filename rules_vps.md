@@ -16,6 +16,8 @@ Este documento es la fuente de verdad técnica para el entorno de producción. C
 ## 🚀 Aplicaciones y Hosting (PM2)
 El servidor aloja múltiples aplicaciones. **NUNCA** modificar o detener aplicaciones ajenas a "Sol del Amanecer".
 
+NO TOCAR NUNCA LA DB DE cotizadorRutas-db del VPS
+
 | Aplicación | Puerto | Directorio | Descripción |
 | :--- | :--- | :--- | :--- |
 | `sda-backend` | `5000` | `/var/www/soldelamanecer` | Backend Monolítico SDA (Node.js) |
@@ -49,7 +51,6 @@ El servidor aloja múltiples aplicaciones. **NUNCA** modificar o detener aplicac
 ## 🗄️ Base de Datos (MongoDB)
 - **Instancia:** Local (Puerto 27017).
 - **Nombre Base:** `soldelamanecer` (ÚNICA FUENTE DE VERDAD).
-- **Colección Crítica:** `localidadesSistema` (Contiene los 103 registros unificados. NO usar `localidades`).
 
 ### Sincronización de Datos (Local -> VPS):
 Para pasar datos de desarrollo a producción:

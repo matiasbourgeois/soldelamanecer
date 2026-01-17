@@ -14,7 +14,7 @@ const localidadSchema = new mongoose.Schema(
       trim: true,
     },
     horarios: {
-      type: String,
+      type: [String], // CORRECTED: Array of strings
       required: true,
       trim: true,
     },
@@ -29,7 +29,7 @@ const localidadSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    collection: "localidadesSistema",
+    collection: "localidades", // CORRECTED: Standard name
   }
 );
 

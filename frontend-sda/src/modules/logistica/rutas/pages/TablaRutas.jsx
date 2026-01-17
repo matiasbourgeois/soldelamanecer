@@ -57,7 +57,6 @@ const TablaRutas = ({
               <Table.Tr>
                 <Table.Td colSpan={8}>
                   <Center py="xl">
-// LOADER
                     <Loader color="cyan" type="dots" />
                   </Center>
                 </Table.Td>

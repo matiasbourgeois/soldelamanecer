@@ -34,7 +34,7 @@ import {
   Search
 } from 'lucide-react';
 
-import { LOCALITIES } from "../../../data/localidadesCordoba";
+import { useLocalidades } from "@core/hooks/useLocalidades";
 
 const mainServices = [
   {
@@ -73,14 +73,15 @@ const normalizeText = (text) =>
 const Servicios = () => {
   const [opened, setOpened] = useState(false);
   const [search, setSearch] = useState("");
+  const { localidades, loading } = useLocalidades();
 
   // Filtrar y ordenar localidades
   const filteredLocalities = React.useMemo(() => {
-    const sorted = [...LOCALITIES].sort((a, b) => a.name.localeCompare(b.name));
+    const sorted = [...localidades].sort((a, b) => a.name.localeCompare(b.name));
     if (!search) return sorted;
     const term = normalizeText(search);
     return sorted.filter(loc => normalizeText(loc.name).includes(term) || loc.cp.includes(term));
-  }, [search]);
+  }, [search, localidades]);
 
   return (
     <Box
@@ -232,7 +233,7 @@ const Servicios = () => {
               radius="md"
             />
             <Text size="xs" c="dimmed" mb="xs">
-              Detalle de destinos, códigos postales y frecuencias operativas.
+              {loading ? "Sincronizando con la red operativa..." : "Detalle de destinos, códigos postales y frecuencias operativas."}
             </Text>
             <SimpleGrid cols={{ base: 1, sm: 2 }} gap="xs">
               {filteredLocalities.map((loc, idx) => (
