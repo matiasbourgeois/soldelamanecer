@@ -56,10 +56,10 @@ coverage/
 backend-usuarios/dump_sda/
 
 # Archivos subidos por usuarios
-backend-usuarios/uploads/
+backend/uploads/
 
 # Documentos generados por la aplicación (PDFs, etc.)
-backend-sistema/pdfs/
+backend/pdfs/
 
 # Archivos de sesión y caché de la app móvil
 app-sda-chofer/.expo/
