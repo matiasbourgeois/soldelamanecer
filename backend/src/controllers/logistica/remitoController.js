@@ -1,4 +1,9 @@
 const mongoose = require("mongoose");
+const path = require("path");
+const fs = require("fs");
+const Envio = require("../../models/Envio");
+const Remito = require("../../models/Remito");
+const Usuario = require("../../models/Usuario");
 const logger = require("../../utils/logger");
 const { generatePDF } = require("../../utils/pdfService");
 

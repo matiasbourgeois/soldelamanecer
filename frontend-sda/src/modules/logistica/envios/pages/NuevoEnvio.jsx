@@ -109,7 +109,7 @@ const NuevoEnvio = () => {
     const obtenerDatos = async () => {
       // 1. Obtener Clientes (Remitentes)
       try {
-        const clientesRes = await axios.get(apiSistema("/clientes")); // Corregido el endpoint local
+        const clientesRes = await axios.get(apiSistema("/api/clientes")); // Corregido el endpoint local
         setClientes(clientesRes.data);
       } catch (error) {
         console.error("Error al obtener clientes:", error);

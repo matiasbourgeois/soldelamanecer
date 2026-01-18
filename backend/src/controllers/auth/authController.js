@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { enviarEmailVerificacion } = require("../../utils/emailService");
 const logger = require("../../utils/logger");
+const handlebars = require("handlebars");
+const fs = require("fs");
+const path = require("path");
 
 const JWT_SECRET = process.env.JWT_SECRET || "secreto_super_seguro";
 
@@ -65,28 +68,15 @@ const verificarCuenta = async (req, res) => {
     usuario.tokenVerificacion = null;
     await usuario.save();
 
-    res.send(`
-      <html>
-        <head>
-          <title>Cuenta verificada</title>
-          <style>
-            body { font-family: Arial; background-color: #fff; color: #000; text-align: center; padding: 50px; }
-            .container { max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; padding: 40px; }
-            .check { font-size: 50px; color: #28a745; }
-            .btn { margin-top: 20px; padding: 10px 20px; background-color: #ffc107; color: black; border-radius: 4px; text-decoration: none; font-weight: bold; }
-            .btn:hover { background-color: #e0a800; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="check">✅</div>
-            <h2>¡Cuenta verificada con éxito!</h2>
-            <p>Ahora podés iniciar sesión en la plataforma.</p>
-            <a class="btn" href="${process.env.FRONTEND_URL || 'https://www.soldelamanecer.ar'}/login">Ir a Iniciar Sesión</a>
-          </div>
-        </body>
-      </html>
-    `);
+    // 📄 Cargar y compilar plantilla
+    const templatePath = path.join(process.cwd(), "templates", "template-verificacion.html");
+    const htmlContent = fs.readFileSync(templatePath, "utf8");
+    const template = handlebars.compile(htmlContent);
+
+    const loginUrl = `${process.env.FRONTEND_URL || 'https://www.soldelamanecer.ar'}/login`;
+    const finalHtml = template({ loginUrl });
+
+    res.send(finalHtml);
   } catch (error) {
     logger.error("🚨 Error en verificación:", error);
     res.status(500).json({ error: "Error en el servidor" });

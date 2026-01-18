@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cuenta Verificada - Sol del Amanecer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cyan-primary: #0891b2;
+            --cyan-dark: #155e75;
+            --cyan-light: #ecfeff;
+            --text-main: #1e293b;
+            --text-dimmed: #64748b;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: var(--text-main);
+        }
+
+        .background-blob {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(8, 145, 178, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+            z-index: -1;
+            filter: blur(40px);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 24px;
+            padding: 50px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--cyan-light);
+            color: var(--cyan-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 40px;
+            box-shadow: inset 0 2px 4px rgba(8, 145, 178, 0.1);
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 26px;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
+            color: var(--cyan-dark);
+        }
+
+        p {
+            font-size: 16px;
+            color: var(--text-dimmed);
+            margin-bottom: 35px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--cyan-primary);
+            color: white;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(8, 145, 178, 0.2);
+        }
+
+        .btn:hover {
+            background-color: var(--cyan-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(8, 145, 178, 0.3);
+        }
+
+        .brand {
+            margin-top: 40px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-dimmed);
+            opacity: 0.6;
+        }
+
+        .brand span {
+            color: var(--cyan-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blob" style="top: 10%; left: 10%;"></div>
+    <div class="background-blob" style="bottom: 10%; right: 10%;"></div>
+
+    <div class="card">
+        <div class="success-icon">✓</div>
+        <h1>¡Verificación Exitosa!</h1>
+        <p>Tu cuenta ha sido activada correctamente. Ya puedes acceder a todas las funciones de la plataforma.</p>
+        <a href="{{loginUrl}}" class="btn">Ir al Inicio de Sesión</a>
+
+        <div class="brand">
+            Sol del <span>Amanecer</span>
+        </div>
+    </div>
+</body>
+
+</html>
