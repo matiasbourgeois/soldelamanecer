@@ -28,7 +28,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Servir archivos estáticos (PDFs, Uploads)
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads"), {
+    setHeaders: (res, path, stat) => {
+        res.set("Access-Control-Allow-Origin", "*");
+        res.set("Cross-Origin-Resource-Policy", "cross-origin");
+    }
+}));
 app.use("/pdfs", express.static(path.join(__dirname, "../pdfs")));
 
 // Rutas (Placeholder para Phase 2)
