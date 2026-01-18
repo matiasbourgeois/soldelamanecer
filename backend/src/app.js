@@ -13,11 +13,31 @@ app.use((req, res, next) => {
 });
 
 app.use(cors({
-    origin: true, // Refleja el origen de la petición automáticamente
+    origin: function (origin, callback) {
+        // Permitir peticiones sin origen (como apps móviles o curl)
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins = [
+            'https://www.soldelamanecer.ar',
+            'https://soldelamanecer.ar',
+            'http://localhost:5173',
+            'http://localhost:3000'
+        ];
+
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('soldelamanecer.ar')) {
+            callback(null, true);
+        } else {
+            logger.warn(`[CORS REJECTED] Origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
+
+// Responder explícitamente a preflight OPTIONS
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
