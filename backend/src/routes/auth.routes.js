@@ -14,7 +14,7 @@ const {
   cambiarPassword
 } = require("../controllers/auth/usuariosController");
 
-const { login, register } = require("../controllers/auth/authController");
+const { login, register, verificarCuenta } = require("../controllers/auth/authController");
 const verificarToken = require("../middlewares/verificarToken");
 const upload = require("../middlewares/upload");
 const Usuario = require("../models/Usuario"); // modelo de usuarios
@@ -43,6 +43,7 @@ router.post(
 // 🔓 Rutas públicas
 router.post("/login", login);
 router.post("/register", register);
+router.get("/verify/:token", verificarCuenta);
 
 // 🔐 Rutas protegidas
 router.put("/perfil-completo", verificarToken, completarPerfilUsuario); // ✅ ESTA PRIMERO
