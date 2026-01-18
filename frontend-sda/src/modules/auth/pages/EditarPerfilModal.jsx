@@ -13,7 +13,7 @@ import {
 } from "@tabler/icons-react";
 import axios from "axios";
 import AuthContext from "@core/context/AuthProvider";
-import { apiUsuarios } from "@core/api/apiSistema";
+import { apiUsuarios, apiEstaticos } from "@core/api/apiSistema";
 import { mostrarAlerta } from "@core/utils/alertaGlobal";
 
 const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizado }) => {
@@ -45,7 +45,7 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
       });
 
       if (datosUsuario.fotoPerfil) {
-        setFoto(apiUsuarios(datosUsuario.fotoPerfil));
+        setFoto(apiEstaticos(datosUsuario.fotoPerfil));
       } else {
         setFoto(null);
       }

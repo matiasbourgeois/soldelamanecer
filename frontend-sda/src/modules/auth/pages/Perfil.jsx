@@ -41,7 +41,7 @@ import { notifications } from '@mantine/notifications';
 import EditarPerfilModal from "./EditarPerfilModal";
 import CambiarPasswordModal from "./CambiarPasswordModal";
 import AuthContext from "@core/context/AuthProvider";
-import { apiUsuarios } from "@core/api/apiSistema";
+import { apiUsuarios, apiEstaticos } from "@core/api/apiSistema";
 
 const Perfil = () => {
   const { auth, setAuth } = useContext(AuthContext);
@@ -129,7 +129,7 @@ const Perfil = () => {
   if (!perfil) return null;
 
   const fotoUrl = perfil.fotoPerfil
-    ? `${apiUsuarios(perfil.fotoPerfil)}?t=${new Date().getTime()}`
+    ? `${apiEstaticos(perfil.fotoPerfil)}?t=${new Date().getTime()}`
     : null;
 
   // Calculate Profile Completeness

@@ -38,7 +38,7 @@ import {
     Bell as IconBell,
     AlertTriangle as IconAlertTriangle
 } from 'lucide-react';
-import { apiSistema, apiUsuarios } from '../../core/api/apiSistema';
+import { apiSistema, apiUsuarios, apiEstaticos } from '../../core/api/apiSistema';
 import axios from 'axios';
 
 import { useState, useEffect } from 'react';
@@ -374,7 +374,7 @@ export function AppLayout({ children, auth, handleLogout }) {
                         <Stack gap="xs">
                             <Group wrap="nowrap">
                                 <Avatar
-                                    src={auth?.fotoPerfil ? `${apiSistema(auth.fotoPerfil)}` : null}
+                                    src={auth?.fotoPerfil ? `${apiEstaticos(auth.fotoPerfil)}` : null}
                                     size="md"
                                     radius="xl"
                                     color="cyan"
