@@ -3,6 +3,7 @@ const router = require("express").Router();
 // Auth & Users
 router.use("/usuarios", require("./auth.routes"));
 router.use("/clientes", require("./clientes.routes")); // renamed from duplicate usuarios
+router.get("/auth/verify/:token", require("../controllers/auth/authController").verificarCuenta);
 
 // Logistics System
 router.use("/rutas", require("./rutas"));
