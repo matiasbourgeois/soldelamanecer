@@ -5,8 +5,6 @@ import 'leaflet/dist/leaflet.css';
 import { useState, useEffect } from "react";
 import AlertaSistema from "@components/feedback/AlertaSistema";
 import { setMostrarAlertaCustom } from "@core/utils/alertaGlobal.jsx";
-import "@styles/botonesSistema.css";
-
 import { Container, Box, rem } from '@mantine/core';
 import Navbar from "@components/layout/Navbar";
 import Footer from "@components/layout/Footer";
@@ -274,7 +272,7 @@ function App() {
         </AppLayout>
       ) : (
         // 🔹 Si NO está logueado, mostrar Navbar pública + Content + Footer (Sticky Footer Fix)
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', backgroundColor: 'white' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'white' }}>
           <Navbar />
           <main style={{
             flex: 1,

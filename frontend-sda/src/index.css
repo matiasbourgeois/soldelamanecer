@@ -1,34 +1,26 @@
-/* Asegurar que el `#root` ocupe toda la pantalla */
 #root {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  /* Evita el scroll global */
+  min-height: 100vh;
   background-color: white;
 }
 
-/* Hacer que el contenido principal ocupe todo el espacio disponible */
 main {
   flex: 1;
   display: flex;
   flex-direction: column;
   width: 100%;
   padding: 0;
-  overflow: hidden;
-  /* El scroll debe ser interno si es absolutamente necesario */
   background-color: white;
 }
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
   font-family: 'Montserrat', sans-serif;
   background-color: white;
-  overflow: hidden;
-  /* Evita que el body tenga scroll */
 }
 
 .page-wrapper {

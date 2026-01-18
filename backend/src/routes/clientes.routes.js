@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Usuario = require("../models/Usuario");
 
-router.get("/clientes", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const clientes = await Usuario.find({ rol: "cliente" }).select("nombre email dni");
     res.json(clientes);

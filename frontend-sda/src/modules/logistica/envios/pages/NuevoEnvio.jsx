@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 import { apiSistema, apiClientes } from "../../../../core/api/apiSistema";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
+import AuthContext from "../../../../core/context/AuthProvider";
 
 const NuevoEnvio = () => {
+  const { auth } = useContext(AuthContext);
   const [clientes, setClientes] = useState([]);
   const [clienteRemitenteId, setClienteRemitenteId] = useState("");
   const [clienteRemitenteInfo, setClienteRemitenteInfo] = useState(null);
@@ -107,7 +109,7 @@ const NuevoEnvio = () => {
     const obtenerDatos = async () => {
       // 1. Obtener Clientes (Remitentes)
       try {
-        const clientesRes = await axios.get(apiSistema("/api/clientes")); // Corregido endpoint
+        const clientesRes = await axios.get(apiSistema("/clientes")); // Corregido el endpoint local
         setClientes(clientesRes.data);
       } catch (error) {
         console.error("Error al obtener clientes:", error);
