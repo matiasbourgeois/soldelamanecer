@@ -68,3 +68,38 @@ El frontend se sirve desde Hostinger, pero consume la API del VPS.
 
 > [!CAUTION]
 > Si el frontend apunta a `localhost:5000` en producción, el sistema se verá vacío. Verificar siempre las variables de entorno antes de compilar.
+
+---
+
+# 📜 Pacto de los Dioses: Protocolo de Despliegue Infalible
+
+Este protocolo es de cumplimiento **OBLIGATORIO** para cualquier IA o humano. Su objetivo es erradicar el error de `localhost` en producción y garantizar la integridad de los ambientes.
+
+### 1. El Seguro de Construcción (Pre-build Check)
+**PROHIBIDO** generar un build que contenga la cadena `http://localhost`. 
+*   **Acción**: Antes de comprimir el `dist/`, se debe verificar que las URLs apunten a `https://api-choferes.cotizadorlogistico.site`.
+*   **Automatización**: Se recomienda usar `npm run build:prod` (o similar) vinculado exclusivamente a `.env.vps`.
+
+### 2. Gestión de Entornos (Strict Env Policy)
+*   **Ambiente Local (`.env`)**: Solo para desarrollo. Nunca debe tocarse durante un despliegue.
+*   **Ambiente de Producción (`.env.vps`)**: Fuente de verdad para despliegues a Hostinger.
+*   **Consistencia**: Cualquier cambio en la lógica de red debe reflejarse en ambos ambientes de forma simétrica.
+
+### 3. El Ritual de Despliegue (Paso a Paso)
+
+#### A. Backend (VPS):
+1.  **SSH Interactivo**: Entrar siempre al entorno (`ssh root@69.62.86.69`).
+2.  **Sincronización**: `git fetch origin && git reset --hard origin/main`.
+3.  **Instalación**: `npm install --omit=dev`.
+4.  **Reinicio**: `pm2 restart sda-backend && pm2 flush sda-backend`.
+5.  **Verificación**: `pm2 status` y revisión de logs.
+
+#### B. Frontend (Hostinger):
+1.  **Configuración**: Cargar `.env.vps` con la URL de la API real.
+2.  **Build**: Ejecutar construcción en modo producción.
+3.  **Validación**: Buscar "localhost" en `dist/`. Si existe, **abortar**.
+4.  **ZIP**: Generar `frontend_build_god_tier.zip`.
+5.  **Hostinger**: Subir y descomprimir.
+
+### 4. Mandato para Futuras IAs
+Cualquier asistente de IA que trabaje en este repositorio **DEBE** leer este archivo íntegramente antes de proponer cualquier cambio en el flujo de despliegue o configuración de red. El incumplimiento de este protocolo se considera un fallo crítico en la ejecución de la tarea.
