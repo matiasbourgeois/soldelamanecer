@@ -64,6 +64,7 @@ const loginUsuario = async (req, res) => {
         direccion,
         localidad,
         provincia,
+        fotoPerfil: usuario.fotoPerfil
       },
     });
   } catch (error) {
