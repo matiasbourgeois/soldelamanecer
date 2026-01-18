@@ -30,7 +30,8 @@ const register = async (req, res) => {
 
     await nuevoUsuario.save();
 
-    const enlaceVerificacion = `https://api.soldelamanecer.ar/api/auth/verify/${tokenVerificacion}`;
+    const apiBaseUrl = process.env.API_URL || "https://api-choferes.cotizadorlogistico.site";
+    const enlaceVerificacion = `${apiBaseUrl}/api/auth/verify/${tokenVerificacion}`;
 
     // 📧 Intentar enviar email, pero no bloquear registro si falla (Soft Fail)
     try {
@@ -81,7 +82,7 @@ const verificarCuenta = async (req, res) => {
             <div class="check">✅</div>
             <h2>¡Cuenta verificada con éxito!</h2>
             <p>Ahora podés iniciar sesión en la plataforma.</p>
-            <a class="btn" href="https://www.soldelamanecer.ar/login">Ir a Iniciar Sesión</a>
+            <a class="btn" href="${process.env.FRONTEND_URL || 'https://www.soldelamanecer.ar'}/login">Ir a Iniciar Sesión</a>
           </div>
         </body>
       </html>

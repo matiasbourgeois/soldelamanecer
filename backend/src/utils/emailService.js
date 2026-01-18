@@ -52,7 +52,7 @@ const generarHtmlCorreo = ({ titulo, nombre, mensaje, numeroSeguimiento }) => {
         </p>
 
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://soldelamanecer.ar/seguimiento/resultado/${numeroSeguimiento}"
+          <a href="${process.env.FRONTEND_URL || 'https://soldelamanecer.ar'}/seguimiento/resultado/${numeroSeguimiento}"
             style="
               background-color: #ffc107;
               color: #000;
