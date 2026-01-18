@@ -32,8 +32,8 @@ const FormularioVehiculo = ({ onClose, vehiculo, recargar }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = vehiculo
-      ? apiSistema(`/api/vehiculos/${vehiculo._id}`)
-      : apiSistema("/api/vehiculos");
+      ? apiSistema(`/vehiculos/${vehiculo._id}`)
+      : apiSistema("/vehiculos");
 
     const method = vehiculo ? "PATCH" : "POST";
 

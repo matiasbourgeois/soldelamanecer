@@ -60,7 +60,7 @@ export function AppLayout({ children, auth, handleLogout }) {
         const checkMaintenance = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get(apiSistema('/api/vehiculos/paginado?pagina=0&limite=100'), {
+                const response = await axios.get(apiSistema('/vehiculos/paginado?pagina=0&limite=100'), {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
@@ -374,7 +374,7 @@ export function AppLayout({ children, auth, handleLogout }) {
                         <Stack gap="xs">
                             <Group wrap="nowrap">
                                 <Avatar
-                                    src={auth?.fotoPerfil ? `${apiUsuarios(auth.fotoPerfil)}` : null}
+                                    src={auth?.fotoPerfil ? `${apiSistema(auth.fotoPerfil)}` : null}
                                     size="md"
                                     radius="xl"
                                     color="cyan"

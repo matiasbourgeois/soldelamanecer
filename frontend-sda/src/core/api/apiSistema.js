@@ -1,16 +1,15 @@
 // utils/api.js
 
-const API_USUARIOS = import.meta.env.VITE_API_USUARIOS;
-const API_COTIZADOR = import.meta.env.VITE_API_COTIZADOR;
-const API_SISTEMA = import.meta.env.VITE_API_SISTEMA;
-const API_LOCALIDADES = import.meta.env.VITE_API_LOCALIDADES;
-const API_CLIENTES = import.meta.env.VITE_API_CLIENTES;
+const API_BASE = import.meta.env.VITE_API_BASE;
 
-export const apiUsuarios = (ruta) => `${API_USUARIOS}${ruta}`;
-export const apiCotizador = (ruta) => `${API_COTIZADOR}${ruta}`;
-export const apiSistema = (ruta) => `${API_SISTEMA}${ruta}`;
-export const apiClientes = (ruta) => `${API_CLIENTES}${ruta}`;
-export const apiLocalidades = (ruta) => `${API_LOCALIDADES}${ruta}`;
-
-// 🧩 Helper para simplificar rutas de usuarios
-export const apiUsuariosApi = (ruta) => `${API_USUARIOS}${ruta}`;
+/**
+ * Los helpers ahora añaden el prefijo del módulo automáticamente.
+ * Las llamadas en los componentes NO deben incluir /api/usuarios o /api/.
+ * Ejemplo: apiUsuarios("/login") -> BASE + /usuarios/login
+ */
+export const apiUsuarios = (ruta) => `${API_BASE}/usuarios${ruta}`;
+export const apiUsuariosApi = (ruta) => `${API_BASE}/usuarios${ruta}`;
+export const apiSistema = (ruta) => `${API_BASE}${ruta}`;
+export const apiClientes = (ruta) => `${API_BASE}/clientes${ruta}`;
+export const apiLocalidades = (ruta) => `${API_BASE}/localidades${ruta}`;
+export const apiCotizador = (ruta) => `${API_BASE}${ruta}`;

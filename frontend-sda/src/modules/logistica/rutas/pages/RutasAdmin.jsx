@@ -27,7 +27,7 @@ const RutasAdmin = () => {
       // Backend usually expects 0-based index if not changed, let's adjust if needed.
       // Based on previous code: fetchRutas(paginaActual, filtro) where paginaActual was 0 initial.
       const pageIndex = pagina - 1;
-      const res = await fetch(apiSistema(`/api/rutas?pagina=${pageIndex}&busqueda=${busqueda}`));
+      const res = await fetch(apiSistema(`/rutas?pagina=${pageIndex}&busqueda=${busqueda}`));
       const data = await res.json();
       if (res.ok) {
         setRutas(data.rutas);
@@ -45,7 +45,7 @@ const RutasAdmin = () => {
 
   const fetchLocalidades = async () => {
     try {
-      const res = await fetch(apiSistema("/api/localidades"));
+      const res = await fetch(apiSistema("/localidades"));
       const data = await res.json();
       setLocalidades(data);
     } catch (error) {
@@ -82,7 +82,7 @@ const RutasAdmin = () => {
     if (!confirmado) return;
 
     try {
-      const res = await fetch(apiSistema(`/api/rutas/${id}`), {
+      const res = await fetch(apiSistema(`/rutas/${id}`), {
         method: "DELETE",
       });
 

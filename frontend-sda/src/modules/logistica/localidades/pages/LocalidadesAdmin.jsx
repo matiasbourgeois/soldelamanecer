@@ -28,7 +28,7 @@ const LocalidadesAdmin = () => {
       query.append("limite", limite);
       if (busqueda) query.append("busqueda", busqueda);
 
-      const { data } = await axios.get(apiSistema(`/api/localidades/paginadas?${query.toString()}`));
+      const { data } = await axios.get(apiSistema(`/localidades/paginadas?${query.toString()}`));
       setLocalidades(data.resultados);
       setTotalLocalidades(data.total);
     } catch (error) {
@@ -42,9 +42,9 @@ const LocalidadesAdmin = () => {
   const guardarLocalidad = async (localidad) => {
     try {
       if (localidad._id) {
-        await axios.put(apiSistema(`/api/localidades/${localidad._id}`), localidad);
+        await axios.put(apiSistema(`/localidades/${localidad._id}`), localidad);
       } else {
-        await axios.post(apiSistema("/api/localidades"), localidad);
+        await axios.post(apiSistema("/localidades"), localidad);
       }
       mostrarAlerta(localidad._id ? "✅ Localidad actualizada" : "✅ Localidad creada", "success");
       obtenerLocalidades(paginaActual, filtro);
@@ -62,7 +62,7 @@ const LocalidadesAdmin = () => {
     );
     if (!confirmado) return;
     try {
-      await axios.delete(apiSistema(`/api/localidades/${id}`));
+      await axios.delete(apiSistema(`/localidades/${id}`));
       mostrarAlerta("✅ Localidad eliminada", "success");
       obtenerLocalidades(paginaActual, filtro);
     } catch (error) {
@@ -73,7 +73,7 @@ const LocalidadesAdmin = () => {
 
   const cambiarEstado = async (id) => {
     try {
-      await axios.patch(apiSistema(`/api/localidades/estado/${id}`));
+      await axios.patch(apiSistema(`/localidades/estado/${id}`));
       // Optimistic or refresh? Refresh is safer.
       obtenerLocalidades(paginaActual, filtro);
     } catch (error) {

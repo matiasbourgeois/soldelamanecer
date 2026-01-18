@@ -129,7 +129,7 @@ const MantenimientoAdmin = () => {
     const fetchTiposMantenimiento = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get(apiSistema('/api/mantenimientos-tipo'), {
+            const res = await axios.get(apiSistema('/mantenimientos-tipo'), {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setTiposMantenimiento(res.data);
@@ -142,7 +142,7 @@ const MantenimientoAdmin = () => {
         setCargando(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(apiSistema(`/api/vehiculos/paginado?pagina=${pagina - 1}&limite=${limite}`), {
+            const response = await axios.get(apiSistema(`/vehiculos/paginado?pagina=${pagina - 1}&limite=${limite}`), {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.data.resultados) {
@@ -163,7 +163,7 @@ const MantenimientoAdmin = () => {
     const handleUpdateKm = async () => {
         try {
             const token = localStorage.getItem('token');
-            await axios.patch(apiSistema(`/api/vehiculos/${selectedVehiculo._id}/km`),
+            await axios.patch(apiSistema(`/vehiculos/${selectedVehiculo._id}/km`),
                 { kilometraje: nuevoKm }, { headers: { Authorization: `Bearer ${token}` } }
             );
             notifications.show({ title: 'KM Actualizado', message: 'El kilometraje ha sido registrado.', color: 'green' });
@@ -177,7 +177,7 @@ const MantenimientoAdmin = () => {
     const handleRegisterService = async () => {
         try {
             const token = localStorage.getItem('token');
-            await axios.post(apiSistema(`/api/vehiculos/${selectedVehiculo._id}/mantenimiento/registro`), {
+            await axios.post(apiSistema(`/vehiculos/${selectedVehiculo._id}/mantenimiento/registro`), {
                 nombreTipo: tipoService, costo: costoService, observaciones: obsService,
                 fecha: fechaService, kmAlMomento: kmService
             }, { headers: { Authorization: `Bearer ${token}` } });
@@ -196,7 +196,7 @@ const MantenimientoAdmin = () => {
         }
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post(apiSistema(`/api/vehiculos/${selectedVehiculo._id}/mantenimiento/config`), {
+            const res = await axios.post(apiSistema(`/vehiculos/${selectedVehiculo._id}/mantenimiento/config`), {
                 nombre: nuevoTipoNombre,
                 frecuenciaKm: nuevoTipoFrecuencia,
                 ultimoKm: nuevoTipoUltimoKm
@@ -221,7 +221,7 @@ const MantenimientoAdmin = () => {
         if (!window.confirm(`¿Seguro que querés eliminar "${nombreConfig}"?`)) return;
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.delete(apiSistema(`/api/vehiculos/${selectedVehiculo._id}/mantenimiento/config/${nombreConfig}`), {
+            const res = await axios.delete(apiSistema(`/vehiculos/${selectedVehiculo._id}/mantenimiento/config/${nombreConfig}`), {
                 headers: { Authorization: `Bearer ${token}` }
             });
             notifications.show({ title: 'Éxito', message: 'Mantenimiento eliminado', color: 'blue' });
@@ -243,7 +243,7 @@ const MantenimientoAdmin = () => {
         }
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.put(apiSistema(`/api/vehiculos/${selectedVehiculo._id}/mantenimiento/config`), {
+            const res = await axios.put(apiSistema(`/vehiculos/${selectedVehiculo._id}/mantenimiento/config`), {
                 nombre: editandoConfig.nombre,
                 nuevaFrecuenciaKm: nuevaFrecuenciaEdit,
                 ultimoKm: nuevaUltimoKmEdit
@@ -267,7 +267,7 @@ const MantenimientoAdmin = () => {
     const handleAddTipoBase = async () => {
         try {
             const token = localStorage.getItem('token');
-            await axios.post(apiSistema('/api/mantenimientos-tipo'), nuevoTipoBase, {
+            await axios.post(apiSistema('/mantenimientos-tipo'), nuevoTipoBase, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             notifications.show({ title: 'Éxito', message: 'Tipo agregado a la base de conocimiento', color: 'green' });
@@ -282,7 +282,7 @@ const MantenimientoAdmin = () => {
         if (!window.confirm("¿Seguro que querés eliminar este tipo de la base de conocimiento?")) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(apiSistema(`/api/mantenimientos-tipo/${id}`), {
+            await axios.delete(apiSistema(`/mantenimientos-tipo/${id}`), {
                 headers: { Authorization: `Bearer ${token}` }
             });
             notifications.show({ title: 'Eliminado', color: 'blue' });
@@ -296,7 +296,7 @@ const MantenimientoAdmin = () => {
         if (!editandoTipoBase) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.put(apiSistema(`/api/mantenimientos-tipo/${editandoTipoBase._id}`), editandoTipoBase, {
+            await axios.put(apiSistema(`/mantenimientos-tipo/${editandoTipoBase._id}`), editandoTipoBase, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             notifications.show({ title: 'Actualizado', color: 'green' });

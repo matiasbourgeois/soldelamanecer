@@ -60,7 +60,7 @@ const NuevoEnvio = () => {
 
       setCargandoBusqueda(true);
       try {
-        const res = await axios.get(apiSistema(`/api/destinatarios/buscar`), {
+        const res = await axios.get(apiSistema(`/destinatarios/buscar`), {
           params: {
             busqueda: busquedaDestinatario,
             pagina: 0,
@@ -109,7 +109,7 @@ const NuevoEnvio = () => {
     const obtenerDatos = async () => {
       // 1. Obtener Clientes (Remitentes)
       try {
-        const clientesRes = await axios.get(apiSistema("/api/clientes")); // Corregido el endpoint local
+        const clientesRes = await axios.get(apiSistema("/clientes")); // Corregido el endpoint local
         setClientes(clientesRes.data);
       } catch (error) {
         console.error("Error al obtener clientes:", error);
@@ -117,7 +117,7 @@ const NuevoEnvio = () => {
 
       // 2. Obtener Localidades (Destinatarios)
       try {
-        const localidadesRes = await axios.get(apiSistema("/api/localidades"));
+        const localidadesRes = await axios.get(apiSistema("/localidades"));
         console.log("📍 Localidades loaded:", localidadesRes.data?.length || 0);
         setLocalidades(localidadesRes.data);
       } catch (error) {
@@ -155,7 +155,7 @@ const NuevoEnvio = () => {
     };
 
     try {
-      const res = await axios.post(apiSistema("/api/envios"), envio);
+      const res = await axios.post(apiSistema("/envios"), envio);
       mostrarAlerta("Envío creado con éxito", "success");
       navigate("/perfil");
     } catch (error) {
@@ -171,10 +171,10 @@ const NuevoEnvio = () => {
     }
 
     try {
-      const res = await axios.post(apiSistema("/api/destinatarios"), nuevoDestinatario);
+      const res = await axios.post(apiSistema("/destinatarios"), nuevoDestinatario);
 
       // Hacer una segunda llamada con populate
-      const resPopulado = await axios.get(apiSistema(`/api/destinatarios/${res.data._id}`));
+      const resPopulado = await axios.get(apiSistema(`/destinatarios/${res.data._id}`));
 
       setDestinatarioId(resPopulado.data._id);
       setDestinatarioInfo(resPopulado.data);

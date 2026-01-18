@@ -35,7 +35,7 @@ const ChoferesAdmin = () => {
   const fetchChoferes = async (pagina = 1, busqueda = "") => {
     try {
       const res = await fetch(
-        apiSistema(`/api/choferes?pagina=${pagina - 1}&busqueda=${busqueda}`)
+        apiSistema(`/choferes?pagina=${pagina - 1}&busqueda=${busqueda}`)
       );
       const data = await res.json();
 
@@ -172,7 +172,7 @@ const ChoferesAdmin = () => {
       });
 
       // 2. Crear el chofer en el backend del sistema
-      await axios.post(apiSistema("/api/choferes"), {
+      await axios.post(apiSistema("/choferes"), {
         usuario: usuarioSeleccionado._id,
         dni: usuarioSeleccionado.dni,
         telefono: usuarioSeleccionado.telefono,
@@ -214,7 +214,7 @@ const ChoferesAdmin = () => {
       });
 
       // 2. Actualizar chofer en backend sistema
-      await axios.put(apiSistema(`/api/choferes/${choferEditando._id}`), {
+      await axios.put(apiSistema(`/choferes/${choferEditando._id}`), {
         dni: formulario.dni,
         telefono: formulario.telefono,
         tipoVinculo: formulario.tipoVinculo,
@@ -239,7 +239,7 @@ const ChoferesAdmin = () => {
     const confirmar = await confirmarAccion("¿Eliminar chofer?", "Esta acción no se puede deshacer");
     if (!confirmar) return;
     try {
-      await axios.delete(apiSistema(`/api/choferes/${id}`));
+      await axios.delete(apiSistema(`/choferes/${id}`));
       mostrarAlerta("Chofer eliminado", "success");
       fetchChoferes(paginaActual, filtro);
     } catch (error) {

@@ -24,7 +24,7 @@ const MantenimientoMetricas = () => {
     const fetchVehiculos = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(apiSistema('/api/vehiculos/paginado?pagina=0&limite=100'), {
+            const response = await axios.get(apiSistema('/vehiculos/paginado?pagina=0&limite=100'), {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const data = response.data.resultados || response.data;

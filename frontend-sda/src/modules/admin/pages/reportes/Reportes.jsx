@@ -47,7 +47,7 @@ const Reportes = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(apiSistema("/api/reportes/dashboard"), {
+      const response = await fetch(apiSistema("/reportes/dashboard"), {
         headers: {
           "Authorization": `Bearer ${token}`
         }

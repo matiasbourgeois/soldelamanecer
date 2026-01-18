@@ -73,7 +73,7 @@ function Registro() {
     setLoading(true);
 
     try {
-      const response = await fetch(apiUsuarios("/api/usuarios/register"), {
+      const response = await fetch(apiUsuarios("/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

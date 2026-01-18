@@ -32,7 +32,7 @@ const ConsultarHojasReparto = () => {
 
     const exportarHoja = async (hojaId, numeroHoja) => {
         try {
-            const response = await axios.get(apiSistema(`/api/hojas-reparto/exportar/${hojaId}`), {
+            const response = await axios.get(apiSistema(`/hojas-reparto/exportar/${hojaId}`), {
                 responseType: "blob",
             });
 
@@ -82,7 +82,7 @@ const ConsultarHojasReparto = () => {
                 if (hastaFormatted) params.append("hasta", hastaFormatted);
             }
 
-            const res = await axios.get(apiSistema(`/api/hojas-reparto/paginado?${params.toString()}`));
+            const res = await axios.get(apiSistema(`/hojas-reparto/paginado?${params.toString()}`));
 
             setHojas(res.data.hojas || []);
             setTotalPaginas(Math.ceil(res.data.total / limite));

@@ -61,7 +61,7 @@ const ConsultarRemitos = () => {
         if (hastaFormatted) params.append("hasta", hastaFormatted);
       }
 
-      const res = await axios.get(apiSistema(`/api/remitos?${params.toString()}`));
+      const res = await axios.get(apiSistema(`/remitos?${params.toString()}`));
 
       console.log("🔽 Remitos recibidos:", res.data);
 
@@ -190,7 +190,7 @@ const ConsultarRemitos = () => {
                               variant="subtle"
                               color="red"
                               component="a"
-                              href={apiSistema(`/api/remitos/${typeof remito.envio === 'object' ? remito.envio._id : remito.envio}/pdf?t=${Date.now()}`)}
+                              href={apiSistema(`/remitos/${typeof remito.envio === 'object' ? remito.envio._id : remito.envio}/pdf?t=${Date.now()}`)}
                               target="_blank"
                               rel="noopener noreferrer"
                             >

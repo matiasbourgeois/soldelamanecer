@@ -19,7 +19,7 @@ const VehiculosAdmin = () => {
     setLoading(true);
     try {
       const res = await fetch(
-        apiSistema(`/api/vehiculos/paginado?pagina=${pagina - 1}&limite=${limite}&busqueda=${search}`)
+        apiSistema(`/vehiculos/paginado?pagina=${pagina - 1}&limite=${limite}&busqueda=${search}`)
       );
       const data = await res.json();
       if (res.ok) {

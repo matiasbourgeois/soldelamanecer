@@ -56,7 +56,7 @@ const Perfil = () => {
   const fetchPerfil = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(apiUsuarios("/api/usuarios/perfil"), {
+      const response = await axios.get(apiUsuarios("/perfil"), {
         headers: {
           Authorization: `Bearer ${auth.token}`,
         },
@@ -84,7 +84,7 @@ const Perfil = () => {
 
     setUploading(true);
     try {
-      await axios.post(apiUsuarios("/api/usuarios/subir-foto"), formData, {
+      await axios.post(apiUsuarios("/subir-foto"), formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${auth.token}`,

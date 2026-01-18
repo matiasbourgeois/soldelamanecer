@@ -40,7 +40,7 @@ const HistorialVehiculo = () => {
         const fetchList = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get(apiSistema("/api/vehiculos"), {
+                const res = await axios.get(apiSistema("/vehiculos"), {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const mapped = res.data.map(v => ({ value: v._id, label: `${v.patente} - ${v.marca} ${v.modelo}` }));
@@ -66,13 +66,13 @@ const HistorialVehiculo = () => {
 
             // 1. Obtener datos detallados del vehículo
             // Usamos el listado ya que el backend por ahora devuelve todo en /api/vehiculos
-            const resVehiculos = await axios.get(apiSistema(`/api/vehiculos`), {
+            const resVehiculos = await axios.get(apiSistema(`/vehiculos`), {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const v = resVehiculos.data.find(veh => veh._id === id);
 
             // 2. Obtener Historial PAGINADO
-            const resLogs = await axios.get(apiSistema(`/api/vehiculos/${id}/mantenimiento/historial?pagina=${page - 1}&limite=${limite}`), {
+            const resLogs = await axios.get(apiSistema(`/vehiculos/${id}/mantenimiento/historial?pagina=${page - 1}&limite=${limite}`), {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -80,7 +80,7 @@ const HistorialVehiculo = () => {
             const total = resLogs.data.total || 0;
 
             // 3. Obtener Estadísticas Reales (Diaria/Mensual) desde el backend
-            const resStats = await axios.get(apiSistema(`/api/vehiculos/${id}/estadisticas`), {
+            const resStats = await axios.get(apiSistema(`/vehiculos/${id}/estadisticas`), {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

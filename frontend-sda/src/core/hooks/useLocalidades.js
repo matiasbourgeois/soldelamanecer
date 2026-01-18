@@ -16,7 +16,7 @@ export const useLocalidades = () => {
             try {
                 setLoading(true);
                 // Llamamos al endpoint de la Web App
-                const response = await axios.get(apiLocalidades('/api/localidades'));
+                const response = await axios.get(apiLocalidades('/localidades'));
 
                 // Mapeo de datos: Backend (nombre, codigoPostal) -> Frontend (name, cp)
                 const mappedData = response.data

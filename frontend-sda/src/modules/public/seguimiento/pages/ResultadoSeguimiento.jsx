@@ -42,7 +42,7 @@ const ResultadoSeguimiento = () => {
         const buscarEnvio = async () => {
             try {
                 setLoading(true);
-                const { data } = await axios.get(apiSistema(`/api/seguimiento/${codigo}`));
+                const { data } = await axios.get(apiSistema(`/seguimiento/${codigo}`));
 
                 setEnvio(data);
                 setError("");

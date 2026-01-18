@@ -40,7 +40,7 @@ const TablaVehiculos = ({
     if (!confirmado) return;
 
     try {
-      const res = await fetch(apiSistema(`/api/vehiculos/${vehiculo._id}/estado`), {
+      const res = await fetch(apiSistema(`/vehiculos/${vehiculo._id}/estado`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ activo: !vehiculo.activo }),
@@ -64,7 +64,7 @@ const TablaVehiculos = ({
     if (!confirmado) return;
 
     try {
-      const res = await fetch(apiSistema(`/api/vehiculos/${id}`), { method: 'DELETE' });
+      const res = await fetch(apiSistema(`/vehiculos/${id}`), { method: 'DELETE' });
       if (res.ok) {
         mostrarAlerta("Vehículo eliminado", "success");
         recargar();

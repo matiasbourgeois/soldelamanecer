@@ -42,7 +42,7 @@ const MisEnvios = () => {
     setCargando(true);
     try {
       const token = auth?.token;
-      const { data } = await axios.get(apiSistema("/api/envios/mis-envios"), {
+      const { data } = await axios.get(apiSistema("/envios/mis-envios"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },

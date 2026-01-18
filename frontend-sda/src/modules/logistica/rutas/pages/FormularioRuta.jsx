@@ -24,9 +24,9 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
     const fetchDatos = async () => {
       try {
         const [lRes, cRes, vRes] = await Promise.all([
-          fetch(apiSistema("/api/localidades")),
-          fetch(apiSistema("/api/choferes/solo-nombres")),
-          fetch(apiSistema("/api/vehiculos")),
+          fetch(apiSistema("/localidades")),
+          fetch(apiSistema("/choferes/solo-nombres")),
+          fetch(apiSistema("/vehiculos")),
         ]);
 
         const localidadesData = await lRes.json();
@@ -88,7 +88,7 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const url = ruta ? apiSistema(`/api/rutas/${ruta._id}`) : apiSistema("/api/rutas");
+    const url = ruta ? apiSistema(`/rutas/${ruta._id}`) : apiSistema("/rutas");
     const method = ruta ? "PATCH" : "POST";
 
     const body = {

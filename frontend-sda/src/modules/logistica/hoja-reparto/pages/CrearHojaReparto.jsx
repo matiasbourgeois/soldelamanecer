@@ -58,7 +58,7 @@ const CrearHojaReparto = () => {
     useEffect(() => {
         const obtenerRutas = async () => {
             try {
-                const res = await axios.get(apiSistema("/api/rutas/todas"));
+                const res = await axios.get(apiSistema("/rutas/todas"));
                 setRutas(res.data.rutas || []);
             } catch (error) {
                 console.error("Error al obtener rutas:", error);
@@ -67,7 +67,7 @@ const CrearHojaReparto = () => {
 
         const obtenerChoferes = async () => {
             try {
-                const res = await axios.get(apiSistema("/api/choferes/solo-nombres"));
+                const res = await axios.get(apiSistema("/choferes/solo-nombres"));
                 setListaChoferes(res.data || []);
             } catch (error) {
                 console.error("Error al obtener choferes:", error);
@@ -76,7 +76,7 @@ const CrearHojaReparto = () => {
 
         const obtenerVehiculos = async () => {
             try {
-                const res = await axios.get(apiSistema("/api/vehiculos"));
+                const res = await axios.get(apiSistema("/vehiculos"));
                 setListaVehiculos(res.data);
             } catch (error) {
                 console.error("Error al obtener vehículos:", error);
@@ -123,7 +123,7 @@ const CrearHojaReparto = () => {
             const ruta = rutas.find((r) => r._id === rutaSeleccionada);
             const localidadesRuta = ruta?.localidades || [];
 
-            const res = await axios.post(apiSistema("/api/hojas-reparto/preliminar"), {
+            const res = await axios.post(apiSistema("/hojas-reparto/preliminar"), {
                 rutaId: ruta._id,
                 choferId: typeof chofer === "object" ? chofer?._id : chofer,
                 vehiculoId: vehiculo?._id || vehiculo,
@@ -151,7 +151,7 @@ const CrearHojaReparto = () => {
         try {
             const enviosSoloIds = envios.map(e => e?._id || e);
 
-            const res = await axios.post(apiSistema("/api/hojas-reparto/confirmar"), {
+            const res = await axios.post(apiSistema("/hojas-reparto/confirmar"), {
                 hojaId: hojaCreada._id,
                 envios: enviosSoloIds,
                 choferId: typeof chofer === "object" ? chofer?._id : chofer,

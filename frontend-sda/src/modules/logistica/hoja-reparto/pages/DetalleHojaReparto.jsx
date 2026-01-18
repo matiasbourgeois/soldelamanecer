@@ -23,7 +23,7 @@ const DetalleHojaReparto = () => {
     useEffect(() => {
         const obtenerDetalle = async () => {
             try {
-                const res = await axios.get(apiSistema(`/api/hojas-reparto/${id}`));
+                const res = await axios.get(apiSistema(`/hojas-reparto/${id}`));
                 setHoja(res.data);
             } catch (error) {
                 console.error("Error al obtener hoja:", error);
@@ -37,7 +37,7 @@ const DetalleHojaReparto = () => {
 
     const exportarHoja = async (hojaId, numeroHoja) => {
         try {
-            const response = await axios.get(apiSistema(`/api/hojas-reparto/exportar/${hojaId}`), {
+            const response = await axios.get(apiSistema(`/hojas-reparto/exportar/${hojaId}`), {
                 responseType: "blob",
             });
             const blob = new Blob([response.data], { type: "application/pdf" });

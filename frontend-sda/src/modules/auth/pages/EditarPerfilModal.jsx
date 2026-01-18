@@ -71,14 +71,13 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
 
     try {
       let rutaFotoSubida = datosUsuario.fotoPerfil;
-      const baseUrl = import.meta.env.VITE_API_USUARIOS;
 
       // 1. Upload photo if exists
       if (archivoOriginal) {
         const formDataFoto = new FormData();
         formDataFoto.append("foto", archivoOriginal);
 
-        const uploadUrl = `${baseUrl}/api/usuarios/subir-foto`;
+        const uploadUrl = apiUsuarios("/subir-foto");
 
         const respuesta = await axios.post(
           uploadUrl,
@@ -104,7 +103,7 @@ const EditarPerfilModal = ({ show, handleClose, datosUsuario, onPerfilActualizad
         fotoPerfil: rutaFotoSubida,
       };
 
-      const updateUrl = `${baseUrl}/api/usuarios/perfil-completo`;
+      const updateUrl = apiUsuarios("/perfil-completo");
 
       await axios.put(
         updateUrl,

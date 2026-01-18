@@ -39,7 +39,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch(apiUsuarios("/api/usuarios/login"), {
+      const response = await fetch(apiUsuarios("/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -55,7 +55,7 @@ function Login() {
         localStorage.setItem("usuario", JSON.stringify(usuarioConToken));
 
         // Fetch complete profile
-        const perfilResponse = await fetch(apiUsuarios("/api/usuarios/perfil"), {
+        const perfilResponse = await fetch(apiUsuarios("/perfil"), {
           headers: { Authorization: `Bearer ${token}` },
         });
         const perfilData = await perfilResponse.json();

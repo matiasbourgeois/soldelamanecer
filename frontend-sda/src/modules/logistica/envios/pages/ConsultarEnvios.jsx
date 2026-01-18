@@ -54,7 +54,7 @@ const ConsultarEnvios = () => {
             const pageIndex = paginaActual - 1;
 
             const res = await axios.get(apiSistema(
-                `/api/envios?pagina=${pageIndex}&limite=${LIMITE}&estado=${filtroEstado || ""}&fechaDesde=${desde}&fechaHasta=${hasta}&busqueda=${debouncedBusqueda}`
+                `/envios?pagina=${pageIndex}&limite=${LIMITE}&estado=${filtroEstado || ""}&fechaDesde=${desde}&fechaHasta=${hasta}&busqueda=${debouncedBusqueda}`
             ), {
                 headers: { Authorization: `Bearer ${auth.token}` },
             });
@@ -89,7 +89,7 @@ const ConsultarEnvios = () => {
         if (!confirmar) return;
 
         try {
-            await axios.delete(apiSistema(`/api/envios/${id}`), {
+            await axios.delete(apiSistema(`/envios/${id}`), {
                 headers: { Authorization: `Bearer ${auth.token}` },
             });
 
