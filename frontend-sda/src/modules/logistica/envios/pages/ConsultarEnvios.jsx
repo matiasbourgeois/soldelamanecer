@@ -5,8 +5,8 @@ import {
     Button, Pagination, Badge, ActionIcon, Tooltip, Text, Loader, Center, Stack, ThemeIcon, Box, rem
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { IconSearch, IconTrash, IconCalendar, IconX } from "@tabler/icons-react"; // Or lucide-react if standard
-import { Search, Trash2, Calendar as CalendarIcon, X, Package } from "lucide-react"; // Using Lucide as per project standard
+import { IconSearch, IconTrash, IconCalendar, IconX, IconFileText } from "@tabler/icons-react"; // Or lucide-react if standard
+import { Search, Trash2, Calendar as CalendarIcon, X, Package, FileText } from "lucide-react"; // Using Lucide as per project standard
 import AuthContext from "../../../../core/context/AuthProvider";
 import { apiSistema } from "../../../../core/api/apiSistema";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
@@ -263,6 +263,19 @@ const ConsultarEnvios = () => {
                                                     </Badge>
                                                 </Table.Td>
                                                 <Table.Td style={{ textAlign: 'right' }}>
+                                                    <Tooltip label="Descargar Remito PDF" withArrow>
+                                                        <ActionIcon
+                                                            variant="subtle"
+                                                            color="red"
+                                                            component="a"
+                                                            href={apiSistema(`/remitos/${envio._id}/pdf?t=${Date.now()}`)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            mr="xs"
+                                                        >
+                                                            <IconFileText size={20} stroke={1.5} />
+                                                        </ActionIcon>
+                                                    </Tooltip>
                                                     {envio.permisoEliminar && (
                                                         <Tooltip label="Eliminar" withArrow>
                                                             <ActionIcon

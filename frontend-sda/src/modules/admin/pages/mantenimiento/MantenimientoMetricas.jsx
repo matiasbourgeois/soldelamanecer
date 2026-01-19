@@ -211,126 +211,126 @@ const MantenimientoMetricas = () => {
     };
 
     return (
-        <ScrollArea h="calc(100vh - 60px)" offsetScrollbars scrollbarSize={12}>
-            <Container size="xl" py="xl">
-                {/* HEADER */}
-                <Group justify="space-between" mb={40} align="flex-end">
-                    <div>
-                        <Group gap="xs" mb={5}>
-                            <ThemeIcon variant="transparent" color="cyan" size="sm">
-                                <Truck size={20} />
-                            </ThemeIcon>
-                            <Text tt="uppercase" c="cyan" fw={800} fz="xs" ls={1.5}>
-                                Logística & Flota
-                            </Text>
-                        </Group>
-                        <Title order={1} fw={900} style={{ letterSpacing: '-1px' }}>
-                            Centro de Control
-                        </Title>
-                        <Text c="dimmed" size="lg">Monitoreo de estado y mantenimiento preventivo.</Text>
-                    </div>
-                    <Button
-                        variant="default"
-                        size="md"
-                        leftSection={<LayoutDashboard size={18} />}
-                        onClick={() => navigate('/admin/mantenimiento/control')}
-                    >
-                        Ir a Tabla General
-                    </Button>
-                </Group>
 
-                {cargando ? (
-                    <Stack align="center" py="xl">
-                        <Loader size="lg" />
-                        <Text c="dimmed">Analizando flota...</Text>
+        <Container size="xl" py="xl">
+            {/* HEADER */}
+            <Group justify="space-between" mb={40} align="flex-end">
+                <div>
+                    <Group gap="xs" mb={5}>
+                        <ThemeIcon variant="transparent" color="cyan" size="sm">
+                            <Truck size={20} />
+                        </ThemeIcon>
+                        <Text tt="uppercase" c="cyan" fw={800} fz="xs" ls={1.5}>
+                            Logística & Flota
+                        </Text>
+                    </Group>
+                    <Title order={1} fw={900} style={{ letterSpacing: '-1px' }}>
+                        Centro de Control
+                    </Title>
+                    <Text c="dimmed" size="lg">Monitoreo de estado y mantenimiento preventivo.</Text>
+                </div>
+                <Button
+                    variant="default"
+                    size="md"
+                    leftSection={<LayoutDashboard size={18} />}
+                    onClick={() => navigate('/admin/mantenimiento/control')}
+                >
+                    Ir a Tabla General
+                </Button>
+            </Group>
+
+            {cargando ? (
+                <Stack align="center" py="xl">
+                    <Loader size="lg" />
+                    <Text c="dimmed">Analizando flota...</Text>
+                </Stack>
+            ) : (
+                <>
+                    {/* METRICS GRID */}
+                    <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg" mb={50}>
+                        <MetricCard
+                            title="Salud de Flota"
+                            value={`${healthScore}%`}
+                            color={healthScore > 80 ? 'teal' : 'yellow'}
+                            icon={Activity}
+                            description="Puntaje global operativo"
+                            isScore
+                        />
+                        <MetricCard
+                            title="Total Vehículos"
+                            value={vehiculos.length}
+                            color="blue"
+                            icon={Truck} // Standard but distinct
+                            description="Unidades registradas en sistema"
+                        />
+                        <MetricCard
+                            title="Alertas Críticas"
+                            value={critical.length}
+                            color="red"
+                            icon={AlertTriangle} // High visibility
+                            description="Acción inmediata requerida"
+                        />
+                        <MetricCard
+                            title="Mantenimientos Próximos"
+                            value={warning.length}
+                            color="orange"
+                            icon={CalendarClock} // Clear meaning
+                            description="En menos de 1000 km"
+                        />
+                    </SimpleGrid>
+
+                    {/* CONTENT SECTIONS */}
+                    <Stack gap={40}>
+
+                        {/* CRITICAL SECTION */}
+                        <Box>
+                            <Group mb="md">
+                                <Title order={3} fw={800}>Prioridad Alta</Title>
+                                <Badge color="red" variant="filled" size="lg" circle>{critical.length}</Badge>
+                            </Group>
+
+                            {critical.length === 0 ? (
+                                <Paper withBorder p="xl" bg="var(--mantine-color-gray-0)" ta="center" radius="md">
+                                    <ThemeIcon color="green" variant="light" size={50} radius="xl" mb="md">
+                                        <CheckCircle2 size={28} />
+                                    </ThemeIcon>
+                                    <Title order={4}>Todo en orden</Title>
+                                    <Text c="dimmed">No hay vehículos con mantenimiento vencido.</Text>
+                                </Paper>
+                            ) : (
+                                <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
+                                    {critical.map((item, i) => (
+                                        <AlertCard key={i} item={item} type="critical" />
+                                    ))}
+                                </SimpleGrid>
+                            )}
+                        </Box>
+
+                        <Divider variant="dashed" />
+
+                        {/* WARNING SECTION */}
+                        <Box>
+                            <Group mb="md">
+                                <Title order={3} fw={800} c="dimmed">Planificación</Title>
+                                <Badge color="yellow" variant="light" size="lg" circle>{warning.length}</Badge>
+                            </Group>
+
+                            {warning.length === 0 ? (
+                                <Text c="dimmed" fs="italic">No hay mantenimientos próximos.</Text>
+                            ) : (
+                                <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
+                                    {warning.map((item, i) => (
+                                        <AlertCard key={i} item={item} type="warning" />
+                                    ))}
+                                </SimpleGrid>
+                            )}
+                        </Box>
+
                     </Stack>
-                ) : (
-                    <>
-                        {/* METRICS GRID */}
-                        <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg" mb={50}>
-                            <MetricCard
-                                title="Salud de Flota"
-                                value={`${healthScore}%`}
-                                color={healthScore > 80 ? 'teal' : 'yellow'}
-                                icon={Activity}
-                                description="Puntaje global operativo"
-                                isScore
-                            />
-                            <MetricCard
-                                title="Total Vehículos"
-                                value={vehiculos.length}
-                                color="blue"
-                                icon={Truck} // Standard but distinct
-                                description="Unidades registradas en sistema"
-                            />
-                            <MetricCard
-                                title="Alertas Críticas"
-                                value={critical.length}
-                                color="red"
-                                icon={AlertTriangle} // High visibility
-                                description="Acción inmediata requerida"
-                            />
-                            <MetricCard
-                                title="Mantenimientos Próximos"
-                                value={warning.length}
-                                color="orange"
-                                icon={CalendarClock} // Clear meaning
-                                description="En menos de 1000 km"
-                            />
-                        </SimpleGrid>
+                </>
+            )}
+        </Container>
 
-                        {/* CONTENT SECTIONS */}
-                        <Stack gap={40}>
-
-                            {/* CRITICAL SECTION */}
-                            <Box>
-                                <Group mb="md">
-                                    <Title order={3} fw={800}>Prioridad Alta</Title>
-                                    <Badge color="red" variant="filled" size="lg" circle>{critical.length}</Badge>
-                                </Group>
-
-                                {critical.length === 0 ? (
-                                    <Paper withBorder p="xl" bg="var(--mantine-color-gray-0)" ta="center" radius="md">
-                                        <ThemeIcon color="green" variant="light" size={50} radius="xl" mb="md">
-                                            <CheckCircle2 size={28} />
-                                        </ThemeIcon>
-                                        <Title order={4}>Todo en orden</Title>
-                                        <Text c="dimmed">No hay vehículos con mantenimiento vencido.</Text>
-                                    </Paper>
-                                ) : (
-                                    <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
-                                        {critical.map((item, i) => (
-                                            <AlertCard key={i} item={item} type="critical" />
-                                        ))}
-                                    </SimpleGrid>
-                                )}
-                            </Box>
-
-                            <Divider variant="dashed" />
-
-                            {/* WARNING SECTION */}
-                            <Box>
-                                <Group mb="md">
-                                    <Title order={3} fw={800} c="dimmed">Planificación</Title>
-                                    <Badge color="yellow" variant="light" size="lg" circle>{warning.length}</Badge>
-                                </Group>
-
-                                {warning.length === 0 ? (
-                                    <Text c="dimmed" fs="italic">No hay mantenimientos próximos.</Text>
-                                ) : (
-                                    <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
-                                        {warning.map((item, i) => (
-                                            <AlertCard key={i} item={item} type="warning" />
-                                        ))}
-                                    </SimpleGrid>
-                                )}
-                            </Box>
-
-                        </Stack>
-                    </>
-                )}
-            </Container>
-        </ScrollArea>
     );
 };
 
