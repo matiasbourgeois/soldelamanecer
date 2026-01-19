@@ -108,8 +108,8 @@ const Servicios = () => {
           </Text>
         </Stack>
 
-        {/* TIME SERVICES (SAME DAY / NEXT DAY) */}
-        <SimpleGrid cols={{ base: 1, sm: 2 }} gap="xl" mb={80}>
+        {/* TIME SERVICES (SAME DAY / NEXT DAY / PHARMA) */}
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} gap="xl" mb={80}>
           <Card padding="xl" radius="md" withBorder style={{ backgroundColor: '#f8fafc', borderLeft: `${rem(6)} solid var(--mantine-color-cyan-6)` }}>
             <Group align="flex-start" wrap="nowrap">
               <ThemeIcon size={54} radius="md" color="cyan" variant="light">
@@ -136,6 +136,21 @@ const Servicios = () => {
                   Distribución garantizada en 24 horas a las principales ciudades del interior provincial. Confiabilidad absoluta.
                 </Text>
                 <Badge variant="dot" color="indigo" mt="xs">Frecuencia Garantizada</Badge>
+              </Stack>
+            </Group>
+          </Card>
+
+          <Card padding="xl" radius="md" withBorder style={{ backgroundColor: '#f8fafc', borderLeft: `${rem(6)} solid var(--mantine-color-teal-6)` }}>
+            <Group align="flex-start" wrap="nowrap">
+              <ThemeIcon size={54} radius="md" color="teal" variant="light">
+                <ShieldCheck size={30} />
+              </ThemeIcon>
+              <Stack gap={5}>
+                <Title order={3} fw={800} size="xl">Servicio Dedicado: Farma 24h</Title>
+                <Text size="sm" c="dimmed" fw={500}>
+                  Logística sanitaria de alta precisión. Unidades exclusivas para el transporte de medicamentos con trazabilidad total.
+                </Text>
+                <Badge variant="dot" color="teal" mt="xs">Protocolo Estricto</Badge>
               </Stack>
             </Group>
           </Card>
