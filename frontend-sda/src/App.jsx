@@ -26,6 +26,7 @@ import CotizadorCordobaPage from "./modules/public/pages/CotizadorCordoba"; // M
 import Perfil from "./modules/auth/pages/Perfil"; // Moved to Auth
 import UsuariosAdmin from "./modules/admin/pages/UsuariosAdmin";
 import DashboardAdmin from "./modules/admin/pages/DashboardAdmin";
+import AdminArcade from "./modules/admin/pages/AdminArcade";
 import ChoferesAdmin from "./modules/admin/pages/ChoferesAdmin";
 import Reportes from "./modules/admin/pages/reportes/Reportes"; // Assuming subfolder moved
 
@@ -110,6 +111,14 @@ function App() {
               element={
                 <ProtectedByRole allowedRoles="admin">
                   <UsuariosAdmin />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/juegos"
+              element={
+                <ProtectedByRole allowedRoles="admin">
+                  <AdminArcade />
                 </ProtectedByRole>
               }
             />

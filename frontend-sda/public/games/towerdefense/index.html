@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Pixel Defense HD</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+        }
+
+        canvas {
+            display: block;
+            background: #1a1a1b;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            pointer-events: none;
+            text-shadow: 2px 2px #000;
+        }
+
+        #shop {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #444;
+        }
+
+        .tower {
+            padding: 10px;
+            background: #333;
+            border: 2px solid #555;
+            cursor: pointer;
+            border-radius: 5px;
+            text-align: center;
+            width: 80px;
+        }
+
+        .tower:hover {
+            border-color: #0ff;
+        }
+
+        .tower.selected {
+            border-color: #f0f;
+            box-shadow: 0 0 10px #f0f;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui">
+        MONEY: $<span id="money">100</span> | HEALTH: <span id="health">20</span> | WAVE: <span id="wave">1</span>
+    </div>
+    <div id="shop">
+        <div class="tower" onclick="selectTower('fast')">Fast<br>$20</div>
+        <div class="tower" onclick="selectTower('heavy')">Heavy<br>$50</div>
+        <div class="tower" onclick="selectTower('sniper')">Sniper<br>$75</div>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const moneyEl = document.getElementById('money');
+        const healthEl = document.getElementById('health');
+        const waveEl = document.getElementById('wave');
+
+        let money = 100;
+        let health = 20;
+        let wave = 1;
+        let selectedTowerType = 'fast';
+        let towers = [];
+        let enemies = [];
+        let bullets = [];
+        let path = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            generatePath();
+        }
+
+        window.onresize = resize;
+        resize();
+
+        function generatePath() {
+            path = [];
+            const segments = 10;
+            let currentX = 0;
+            let currentY = canvas.height / 2;
+            path.push({ x: currentX, y: currentY });
+            for (let i = 1; i < segments; i++) {
+                currentX += canvas.width / segments;
+                currentY += (Math.random() - 0.5) * canvas.height * 0.4;
+                path.push({ x: currentX, y: currentY });
+            }
+            path.push({ x: canvas.width, y: currentY });
+        }
+
+        function selectTower(type) {
+            selectedTowerType = type;
+            document.querySelectorAll('.tower').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+        }
+
+        canvas.addEventListener('click', e => {
+            let cost = selectedTowerType === 'fast' ? 20 : (selectedTowerType === 'heavy' ? 50 : 75);
+            if (money >= cost) {
+                towers.push({
+                    x: e.clientX,
+                    y: e.clientY,
+                    type: selectedTowerType,
+                    range: selectedTowerType === 'sniper' ? 300 : 150,
+                    cooldown: 0,
+                    maxCooldown: selectedTowerType === 'fast' ? 20 : (selectedTowerType === 'heavy' ? 60 : 100)
+                });
+                money -= cost;
+                moneyEl.innerText = money;
+            }
+        });
+
+        function spawnWave() {
+            for (let i = 0; i < wave * 5; i++) {
+                setTimeout(() => {
+                    enemies.push({
+                        pathIndex: 0,
+                        x: path[0].x,
+                        y: path[0].y,
+                        hp: 10 + wave * 5,
+                        speed: 1 + Math.random(),
+                        maxHp: 10 + wave * 5
+                    });
+                }, i * 1000);
+            }
+            setTimeout(() => {
+                wave++;
+                waveEl.innerText = wave;
+                spawnWave();
+            }, (wave * 5 + 5) * 1000);
+        }
+
+        function loop() {
+            ctx.fillStyle = '#1a1a1b';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Path
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 40;
+            ctx.beginPath();
+            ctx.moveTo(path[0].x, path[0].y);
+            path.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.stroke();
+
+            // Towers
+            towers.forEach(t => {
+                ctx.fillStyle = t.type === 'fast' ? '#0f0' : (t.type === 'heavy' ? '#f00' : '#00f');
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Attack
+                if (t.cooldown > 0) t.cooldown--;
+                if (t.cooldown === 0) {
+                    let target = enemies.find(e => Math.hypot(e.x - t.x, e.y - t.y) < t.range);
+                    if (target) {
+                        bullets.push({
+                            x: t.x, y: t.y,
+                            tx: target.x, ty: target.y,
+                            speed: 5,
+                            damage: t.type === 'heavy' ? 10 : 3,
+                            target: target
+                        });
+                        t.cooldown = t.maxCooldown;
+                    }
+                }
+            });
+
+            // Enemies
+            enemies.forEach((e, i) => {
+                let target = path[e.pathIndex + 1];
+                if (target) {
+                    let angle = Math.atan2(target.y - e.y, target.x - e.x);
+                    e.x += Math.cos(angle) * e.speed;
+                    e.y += Math.sin(angle) * e.speed;
+                    if (Math.hypot(e.x - target.x, e.y - target.y) < 5) e.pathIndex++;
+                } else {
+                    health -= 1;
+                    healthEl.innerText = health;
+                    enemies.splice(i, 1);
+                }
+
+                // Draw Enemy
+                ctx.fillStyle = '#ff0';
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+                // HP bar
+                ctx.fillStyle = '#f00';
+                ctx.fillRect(e.x - 10, e.y - 15, 20, 3);
+                ctx.fillStyle = '#0f0';
+                ctx.fillRect(e.x - 10, e.y - 15, (e.hp / e.maxHp) * 20, 3);
+
+                if (e.hp <= 0) {
+                    money += 5;
+                    moneyEl.innerText = money;
+                    enemies.splice(i, 1);
+                }
+            });
+
+            // Bullets
+            bullets.forEach((b, i) => {
+                let angle = Math.atan2(b.ty - b.y, b.tx - b.x);
+                b.x += Math.cos(angle) * b.speed;
+                b.y += Math.sin(angle) * b.speed;
+
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (Math.hypot(b.x - b.tx, b.y - b.ty) < 5) {
+                    if (b.target) b.target.hp -= b.damage;
+                    bullets.splice(i, 1);
+                }
+            });
+
+            requestAnimationFrame(loop);
+        }
+
+        spawnWave();
+        loop();
+        selectTower('fast');
+    </script>
+</body>
+
+</html>

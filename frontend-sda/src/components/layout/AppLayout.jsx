@@ -36,7 +36,8 @@ import {
     Calculator as IconCalculator,
     Wrench as IconTool,
     Bell as IconBell,
-    AlertTriangle as IconAlertTriangle
+    AlertTriangle as IconAlertTriangle,
+    Gamepad2
 } from 'lucide-react';
 import { apiSistema, apiUsuarios, apiEstaticos } from '../../core/api/apiSistema';
 import axios from 'axios';
@@ -233,6 +234,12 @@ export function AppLayout({ children, auth, handleLogout }) {
                     <>
                         <Divider my="md" color="gray.2" />
                         <NavLink
+                            label="Juegos"
+                            leftSection={<Gamepad2 size={20} stroke={1.5} />}
+                            rightSection={isActive('/admin/juegos') && <IconChevronRight size={14} />}
+                            {...getLinkProps('/admin/juegos')}
+                        />
+                        <NavLink
                             label="Usuarios del Sistema"
                             leftSection={<IconUsers size={20} stroke={1.5} />}
                             rightSection={isActive('/admin/usuarios') && <IconChevronRight size={14} />}
@@ -252,9 +259,10 @@ export function AppLayout({ children, auth, handleLogout }) {
                 breakpoint: 'md',
                 collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
             }}
-            padding="md"
+            padding={location.pathname === '/admin/juegos' ? 0 : 'md'}
             style={{ backgroundColor: '#f3f4f6' }} // Light gray background for content area
         >
+            {/* ... Header and Navbar components ... */}
             <AppShell.Header style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <Group h="100%" px="md" justify="space-between">
                     {/* BRANDING LEFT */}
@@ -428,7 +436,12 @@ export function AppLayout({ children, auth, handleLogout }) {
             </AppShell.Navbar>
 
             <AppShell.Main>
-                <Box style={{ maxWidth: 1600, margin: '0 auto' }}>
+                <Box
+                    style={location.pathname === '/admin/juegos'
+                        ? { maxWidth: 'none', margin: '0', width: '100%', height: '100%' }
+                        : { maxWidth: 1600, margin: '0 auto' }
+                    }
+                >
                     {children}
                 </Box>
             </AppShell.Main>
