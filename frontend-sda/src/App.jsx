@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AuthContext from "@core/context/AuthProvider";
 import { useContext } from "react";
 import 'leaflet/dist/leaflet.css';
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import AlertaSistema from "@components/feedback/AlertaSistema";
 import { setMostrarAlertaCustom } from "@core/utils/alertaGlobal.jsx";
 import { Container, Box, rem } from '@mantine/core';
@@ -26,7 +26,7 @@ import CotizadorCordobaPage from "./modules/public/pages/CotizadorCordoba"; // M
 import Perfil from "./modules/auth/pages/Perfil"; // Moved to Auth
 import UsuariosAdmin from "./modules/admin/pages/UsuariosAdmin";
 import DashboardAdmin from "./modules/admin/pages/DashboardAdmin";
-import AdminArcade from "./modules/admin/pages/AdminArcade";
+const AdminArcade = lazy(() => import("./modules/admin/pages/AdminArcade"));
 import ChoferesAdmin from "./modules/admin/pages/ChoferesAdmin";
 import Reportes from "./modules/admin/pages/reportes/Reportes"; // Assuming subfolder moved
 
@@ -118,7 +118,9 @@ function App() {
               path="/admin/juegos"
               element={
                 <ProtectedByRole allowedRoles="admin">
-                  <AdminArcade />
+                  <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: 'white' }}>Cargando Zona Arcade...</div>}>
+                    <AdminArcade />
+                  </Suspense>
                 </ProtectedByRole>
               }
             />

@@ -31,6 +31,7 @@ function Registro() {
     nombre: "",
     email: "",
     contrasena: "",
+    confirmPassword: ""
   });
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
@@ -59,6 +60,11 @@ function Registro() {
     e.preventDefault();
     if (!termsAccepted) {
       setError("Debes aceptar los términos y condiciones.");
+      return;
+    }
+
+    if (formData.contrasena !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden.");
       return;
     }
 
@@ -106,6 +112,7 @@ function Registro() {
   const hasMinLength = pwd.length >= 8;
   const hasTwoNums = (pwd.match(/\d/g) || []).length >= 2;
   const hasSym = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(pwd);
+  const passwordsMatch = formData.contrasena === formData.confirmPassword;
 
   return (
     <div style={{
@@ -121,15 +128,15 @@ function Registro() {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: rem(60),
+        padding: rem(30),
         backgroundColor: 'white',
         zIndex: 2,
         position: 'relative',
         boxShadow: '20px 0 50px rgba(0,0,0,0.02)'
       }}>
         <Container size={400} px={0} m={0} style={{ width: '100%' }}>
-          <Stack gap="xs" mb={30}>
-            <Title order={1} style={{ fontSize: rem(42), fontWeight: 900, letterSpacing: '-1.5px' }}>
+          <Stack gap="xs" mb={10}>
+            <Title order={1} style={{ fontSize: rem(28), fontWeight: 900, letterSpacing: '-1.5px' }}>
               Registro de <Text span inherit variant="gradient" gradient={{ from: 'cyan', to: 'indigo' }}>usuarios</Text>
             </Title>
             <Text c="dimmed" size="md">
@@ -149,8 +156,9 @@ function Registro() {
             </Alert>
           )}
 
+
           <form onSubmit={handleSubmit}>
-            <Stack gap="md">
+            <Stack gap="xs">
               <TextInput
                 label="Nombre Completo"
                 placeholder="Su nombre completo"
@@ -160,7 +168,7 @@ function Registro() {
                 onChange={handleChange}
                 size="md"
                 radius="md"
-                styles={{ input: { height: rem(48) } }}
+                styles={{ input: { height: rem(36) } }}
               />
 
               <TextInput
@@ -172,7 +180,7 @@ function Registro() {
                 onChange={handleChange}
                 size="md"
                 radius="md"
-                styles={{ input: { height: rem(48) } }}
+                styles={{ input: { height: rem(36) } }}
               />
 
               <PasswordInput
@@ -184,8 +192,43 @@ function Registro() {
                 onChange={handleChange}
                 size="md"
                 radius="md"
-                styles={{ input: { height: rem(48) } }}
+                styles={{ input: { height: rem(36) } }}
               />
+
+              <PasswordInput
+                label="Confirmar Contraseña"
+                placeholder="Repita su contraseña"
+                required
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                size="md"
+                radius="md"
+                styles={{ input: { height: rem(36) } }}
+              />
+
+              {/* Password Requirements Box - ALWAYS VISIBLE */}
+              <Paper withBorder p="xs" radius="md" bg="gray.0">
+                <Text size="sm" fw={700} mb="xs" c="dimmed">Requisitos de contraseña:</Text>
+                <List spacing="xs" size="sm" center icon={
+                  <ThemeIcon color="gray" size="xs" radius="xl">
+                    <IconX size={8} />
+                  </ThemeIcon>
+                }>
+                  <List.Item icon={getRequirementIcon(hasMinLength)}>
+                    Mínimo 8 caracteres
+                  </List.Item>
+                  <List.Item icon={getRequirementIcon(hasTwoNums)}>
+                    Al menos 2 números
+                  </List.Item>
+                  <List.Item icon={getRequirementIcon(hasSym)}>
+                    Al menos 1 símbolo
+                  </List.Item>
+                  <List.Item icon={getRequirementIcon(passwordsMatch && formData.contrasena.length > 0)}>
+                    Las contraseñas coinciden
+                  </List.Item>
+                </List>
+              </Paper>
 
               <Group align="center" gap="xs">
                 <Checkbox
@@ -205,11 +248,11 @@ function Registro() {
                 color="cyan"
                 radius="md"
                 style={{
-                  height: rem(55),
-                  fontSize: rem(16),
+                  height: rem(42),
+                  fontSize: rem(15),
                   fontWeight: 800,
                   boxShadow: '0 10px 30px rgba(34, 184, 209, 0.3)',
-                  marginTop: rem(10)
+                  marginTop: rem(5)
                 }}
               >
                 REGISTRARSE
