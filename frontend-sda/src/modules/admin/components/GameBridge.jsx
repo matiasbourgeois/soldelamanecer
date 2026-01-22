@@ -29,7 +29,7 @@ const GameBridge = ({ url, title = "Game" }) => {
                     display: 'block'
                 }}
                 sandbox="allow-scripts allow-same-origin allow-pointer-lock"
-                allow="autoplay; fullscreen; keyboard"
+                allow="autoplay; fullscreen"
             />
         </Box>
     );
