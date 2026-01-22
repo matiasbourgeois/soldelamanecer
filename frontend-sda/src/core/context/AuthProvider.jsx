@@ -1,6 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import axios from "axios";
-import { apiUsuariosApi } from "../api/apiSistema";
+import clienteAxios from "../api/clienteAxios";
 
 const AuthContext = createContext();
 
@@ -23,11 +22,7 @@ const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await axios.get(apiUsuariosApi("/perfil"), {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await clienteAxios.get("/usuarios/perfil");
 
         const usuario = res.data.usuario;
 

@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import { apiUsuarios } from "@core/api/apiSistema";
+import clienteAxios from "@core/api/clienteAxios";
 import AuthContext from "@core/context/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import {
@@ -39,51 +40,40 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch(apiUsuarios("/login"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const response = await clienteAxios.post("/usuarios/login", formData);
+      const data = response.data;
 
-      const data = await response.json();
+      const { token, usuario } = data;
+      const usuarioConToken = { ...usuario, _id: usuario._id || usuario.id, token };
 
-      if (response.ok) {
-        const { token, usuario } = data;
-        const usuarioConToken = { ...usuario, _id: usuario._id || usuario.id, token };
+      localStorage.setItem("token", token);
+      localStorage.setItem("usuario", JSON.stringify(usuarioConToken));
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("usuario", JSON.stringify(usuarioConToken));
+      // Fetch complete profile using the interceptor-equipped client
+      const perfilResponse = await clienteAxios.get("/usuarios/perfil");
+      const perfilData = perfilResponse.data;
 
-        // Fetch complete profile
-        const perfilResponse = await fetch(apiUsuarios("/perfil"), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const perfilData = await perfilResponse.json();
+      const usuarioActualizado = {
+        ...perfilData.usuario,
+        token,
+        _id: perfilData.usuario._id || perfilData.usuario.id,
+      };
 
-        const usuarioActualizado = {
-          ...perfilData.usuario,
-          token,
-          _id: perfilData.usuario._id || perfilData.usuario.id,
-        };
+      localStorage.setItem("token", token);
+      localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+      setAuth(usuarioActualizado);
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
-        setAuth(usuarioActualizado);
-
-        setTimeout(() => {
-          if (usuario.rol === "cliente" && !usuario.perfilCompleto) {
-            navigate("/completar-perfil");
-          } else {
-            navigate("/perfil");
-          }
-        }, 800);
-      } else {
-        setError(data.error || "Credenciales incorrectas");
-        setLoading(false);
-      }
+      setTimeout(() => {
+        if (usuario.rol === "cliente" && !usuario.perfilCompleto) {
+          navigate("/completar-perfil");
+        } else {
+          navigate("/perfil");
+        }
+      }, 800);
     } catch (error) {
       console.error("Login error:", error);
-      setError("Error de conexión. Intente nuevamente.");
+      const errorMsg = error.response?.data?.error || error.response?.data?.msg || "Credenciales incorrectas";
+      setError(errorMsg);
       setLoading(false);
     }
   };

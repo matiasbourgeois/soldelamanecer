@@ -10,6 +10,7 @@ import Navbar from "@components/layout/Navbar";
 import Footer from "@components/layout/Footer";
 import { AppLayout } from "@components/layout/AppLayout"; // Layout Mantine
 import ProtectedByRole from "@components/protected/ProtectedByRole";
+import TransitionScreen from "@components/layout/TransitionScreen";
 
 // Pages
 // Pages - Auth
@@ -86,7 +87,7 @@ function App() {
     });
   }, []);
 
-  if (cargando) return null; // ⛔ No renderices nada hasta que auth esté listo
+  if (cargando) return <TransitionScreen message="Cargando sistema..." />;
 
   return (
     <Router>
@@ -103,7 +104,7 @@ function App() {
             <Route path="/completar-perfil" element={<CompletarPerfilCliente />} />
             <Route path="/cotizador-online" element={<CotizadorCordobaPage />} />
             <Route path="/servicios" element={<Servicios />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<TransitionScreen message="Preparando su espacio..." />} />
 
             {/* Rutas Protegidas y Admin */}
             <Route

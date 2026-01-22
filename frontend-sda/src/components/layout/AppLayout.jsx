@@ -40,7 +40,7 @@ import {
     Gamepad2
 } from 'lucide-react';
 import { apiSistema, apiUsuarios, apiEstaticos } from '../../core/api/apiSistema';
-import axios from 'axios';
+import clienteAxios from '../../core/api/clienteAxios';
 
 import { useState, useEffect } from 'react';
 
@@ -60,10 +60,7 @@ export function AppLayout({ children, auth, handleLogout }) {
 
         const checkMaintenance = async () => {
             try {
-                const token = localStorage.getItem('token');
-                const response = await axios.get(apiSistema('/vehiculos/paginado?pagina=0&limite=100'), {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const response = await clienteAxios.get('/vehiculos/paginado?pagina=0&limite=100');
 
                 const vehiculos = response.data.resultados || response.data;
                 let criticalCount = 0;
