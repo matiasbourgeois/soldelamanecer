@@ -1,5 +1,7 @@
 const Vehiculo = require("../../models/Vehiculo");
 const MantenimientoLog = require("../../models/MantenimientoLog");
+const fs = require('fs');
+const path = require('path');
 
 // Crear vehículo
 const crearVehiculo = async (req, res) => {
@@ -162,7 +164,17 @@ const registrarMantenimiento = async (req, res) => {
 
     // Actualizar ultimoKm al kilometraje del service (manual o actual)
     const kmRegistro = kmAlMomento ? Number(kmAlMomento) : vehiculo.kilometrajeActual;
-    const fechaRegistro = fecha ? new Date(fecha) : new Date();
+
+    // Si viene fecha del frontend (ej: 2026-01-24), suele venir a medianoche UTC.
+    // Para evitar que el desfasaje horario lo mueva de día, lo forzamos a 12:00:00 del día indicado.
+    let fechaRegistro = new Date();
+    if (fecha) {
+      fechaRegistro = new Date(fecha);
+      if (!isNaN(fechaRegistro.getTime())) {
+        // Si es una fecha exacta a medianoche, le sumamos 12 horas para que caiga siempre en el mismo día sin importar el TZ local
+        fechaRegistro.setUTCHours(12, 0, 0, 0);
+      }
+    }
 
     // Actualizamos el ultimoKm del mantenimiento
     vehiculo.configuracionMantenimiento[configIndex].ultimoKm = kmRegistro;
@@ -202,11 +214,37 @@ const agregarTipoMantenimiento = async (req, res) => {
     const vehiculo = await Vehiculo.findById(id);
     if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
 
+    // Validar que el tipo exista en la Base de Conocimiento Global
+    const TipoMantenimiento = require("../../models/TipoMantenimiento");
+    const tipoExistenteGlobal = await TipoMantenimiento.findOne({ nombre });
+    if (!tipoExistenteGlobal) {
+      return res.status(400).json({ error: `El mantenimiento '${nombre}' no existe en la Base de Conocimiento. Primero debe crearse allí.` });
+    }
+
+    // Validar duplicados por nombre
+    const existe = vehiculo.configuracionMantenimiento.some(c => c.nombre === nombre);
+    if (existe) {
+      return res.status(400).json({ error: `El mantenimiento '${nombre}' ya está configurado para este vehículo.` });
+    }
+
     const finalUltimoKm = req.body.ultimoKm !== undefined ? req.body.ultimoKm : vehiculo.kilometrajeActual;
 
-    // Validación: No puede ser mayor al actual
+    // 1. Validación: No puede ser mayor al actual
     if (finalUltimoKm > vehiculo.kilometrajeActual) {
-      return res.status(400).json({ error: `El kilometraje base (${finalUltimoKm}) no puede ser mayor al kilometraje actual (${vehiculo.kilometrajeActual})` });
+      return res.status(400).json({ error: `El kilometraje base (${finalUltimoKm.toLocaleString()} km) no puede ser mayor al kilometraje actual (${vehiculo.kilometrajeActual.toLocaleString()} km)` });
+    }
+
+    // 2. Validación: No puede ser menor al último service registrado
+    const MantenimientoLog = require("../../models/MantenimientoLog");
+    const ultimoLog = await MantenimientoLog.findOne({
+      vehiculo: id,
+      tipo: nombre
+    }).sort({ kmAlMomento: -1 });
+
+    if (ultimoLog && finalUltimoKm < ultimoLog.kmAlMomento) {
+      return res.status(400).json({
+        error: `No se puede establecer un punto de partida de ${finalUltimoKm.toLocaleString()} km porque ya existe un service registrado a los ${ultimoLog.kmAlMomento.toLocaleString()} km.`
+      });
     }
 
     vehiculo.configuracionMantenimiento.push({
@@ -229,6 +267,7 @@ const editarTipoMantenimiento = async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, nuevaFrecuenciaKm } = req.body;
+    const nuevoUltimoKmReq = req.body.ultimoKm;
 
     const vehiculo = await Vehiculo.findById(id);
     if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
@@ -238,16 +277,29 @@ const editarTipoMantenimiento = async (req, res) => {
 
     if (nuevaFrecuenciaKm !== undefined) item.frecuenciaKm = nuevaFrecuenciaKm;
 
-    if (req.body.ultimoKm !== undefined) {
-      // Validación: No puede ser mayor al actual
-      if (req.body.ultimoKm > vehiculo.kilometrajeActual) {
-        return res.status(400).json({ error: `El kilometraje base (${req.body.ultimoKm}) no puede ser mayor al kilometraje actual (${vehiculo.kilometrajeActual})` });
+    if (nuevoUltimoKmReq !== undefined) {
+      // 1. Validar contra kilometraje actual
+      if (nuevoUltimoKmReq > vehiculo.kilometrajeActual) {
+        return res.status(400).json({ error: `El punto de partida (${nuevoUltimoKmReq.toLocaleString()} km) no puede ser mayor al kilometraje actual del vehículo (${vehiculo.kilometrajeActual.toLocaleString()} km).` });
       }
-      item.ultimoKm = req.body.ultimoKm;
+
+      // 2. Validar contra último registro histórico (Logs)
+      const MantenimientoLog = require("../../models/MantenimientoLog");
+      const ultimoLog = await MantenimientoLog.findOne({
+        vehiculo: id,
+        tipo: nombre
+      }).sort({ kmAlMomento: -1 });
+
+      if (ultimoLog && nuevoUltimoKmReq < ultimoLog.kmAlMomento) {
+        return res.status(400).json({
+          error: `No se puede establecer un punto de partida de ${nuevoUltimoKmReq.toLocaleString()} km porque ya existe un service registrado a los ${ultimoLog.kmAlMomento.toLocaleString()} km (${new Date(ultimoLog.fecha).toLocaleDateString('es-AR')}).`
+        });
+      }
+
+      item.ultimoKm = nuevoUltimoKmReq;
     }
 
     await vehiculo.save();
-
     res.json(vehiculo);
   } catch (error) {
     console.error("Error edit config:", error);
@@ -342,9 +394,9 @@ const registrarReporteChofer = async (req, res) => {
       kmAlMomento: kilometraje,
       litrosCargados: litros || 0,
       ruta: rutaId || null,
-      fecha: fecha ? new Date(fecha) : new Date(),
+      fecha: fecha ? new Date(new Date(fecha).setUTCHours(12, 0, 0, 0)) : new Date(),
       registradoPor: req.usuario ? req.usuario.id : null,
-      observaciones: `Reporte diario desde App Móvil.` // Opcional
+      observaciones: observaciones || `Reporte diario desde App Móvil.`
     });
 
     await log.save();
@@ -418,6 +470,66 @@ const obtenerEstadisticasVehiculo = async (req, res) => {
   }
 };
 
+// 8. Subir Documentos (PDF/Fotos)
+const subirDocumentosVehiculo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombreDocumento } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No se subió ningún archivo." });
+    }
+
+    const vehiculo = await Vehiculo.findById(id);
+    if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
+
+    const nuevoDocumento = {
+      nombre: nombreDocumento || req.file.originalname,
+      path: `uploads/vehiculos/${req.file.filename}`,
+      fechaSubida: new Date()
+    };
+
+    vehiculo.documentos.push(nuevoDocumento);
+    await vehiculo.save();
+
+    res.json({ mensaje: "Documento subido con éxito", documento: nuevoDocumento, vehiculo });
+  } catch (error) {
+    console.error("Error al subir documento:", error);
+    res.status(500).json({ error: "Error interno al subir documento" });
+  }
+};
+
+// 9. Eliminar Documento
+const eliminarDocumentoVehiculo = async (req, res) => {
+  try {
+    const { id, docId } = req.params;
+    const vehiculo = await Vehiculo.findById(id);
+    if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
+
+    const docIndex = vehiculo.documentos.findIndex(d => d._id.toString() === docId);
+    if (docIndex === -1) return res.status(404).json({ error: "Documento no encontrado" });
+
+    const doc = vehiculo.documentos[docIndex];
+
+    try {
+      const filePath = path.join(process.cwd(), doc.path);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (e) {
+      console.warn("No se pudo eliminar el archivo físico:", doc.path);
+    }
+
+    vehiculo.documentos.splice(docIndex, 1);
+    await vehiculo.save();
+
+    res.json({ mensaje: "Documento eliminado", vehiculo });
+  } catch (error) {
+    console.error("Error al eliminar documento:", error);
+    res.status(500).json({ error: "Error al eliminar documento" });
+  }
+};
+
 module.exports = {
   crearVehiculo,
   obtenerVehiculos,
@@ -432,5 +544,7 @@ module.exports = {
   obtenerLogMantenimiento,
   registrarReporteChofer,
   obtenerEstadisticasVehiculo,
-  eliminarTipoMantenimiento
+  eliminarTipoMantenimiento,
+  subirDocumentosVehiculo,
+  eliminarDocumentoVehiculo
 };

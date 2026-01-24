@@ -8,8 +8,11 @@ import {
     Surface,
     Button,
     IconButton,
-    Divider
+    Divider,
+    Portal,
+    Modal
 } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../api/client';
 import { useAuth } from '../hooks/useAuth';
 import EnvioCard from '../components/hojaReparto/EnvioCard';
@@ -101,13 +104,19 @@ const HojaRepartoScreen = ({ navigation }: any) => {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+            <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+            <LinearGradient
+                colors={['#020617', '#0f172a']} // Deep Navy / Pure Black
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+            />
 
             {/* Header Limpio */}
-            <Appbar.Header style={styles.appbar}>
-                {/* Lógica de Back: Si hay selección múltiple activa, vuelve a lista. Si no, vuelve al Home */}
+            <Appbar.Header style={styles.appbar} elevated={false}>
                 <Appbar.BackAction
-                    color={theme.colors.onSurface}
+                    color="white"
                     onPress={() => {
                         if (hojasDisponibles.length > 1 && hojaSeleccionada) {
                             setHojaSeleccionada(null); // Volver a lista interna
@@ -117,7 +126,7 @@ const HojaRepartoScreen = ({ navigation }: any) => {
                     }}
                 />
                 <Appbar.Content title="Hoja de Reparto" titleStyle={styles.appbarTitle} />
-                <Appbar.Action icon="reload" color={theme.colors.onSurface} onPress={fetchHojaReparto} />
+                <Appbar.Action icon="reload" color="white" onPress={fetchHojaReparto} />
             </Appbar.Header>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -126,35 +135,40 @@ const HojaRepartoScreen = ({ navigation }: any) => {
                     {hojaSeleccionada ? (
                         <>
                             {/* 📄 RESUMEN SIMPLE Y VISIBLE */}
-                            <Surface style={styles.summaryCard} elevation={2}>
-                                <View style={styles.summaryRow}>
-                                    <View>
-                                        <Text style={styles.sheetTitle}>
-                                            Hoja #{hojaSeleccionada.numeroHoja?.split('-').pop()}
-                                        </Text>
-                                        <Text style={styles.dateLabel}>
-                                            {new Date(hojaSeleccionada.fecha).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                                        </Text>
+                            <View style={styles.summaryCard}>
+                                <LinearGradient
+                                    colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)']}
+                                    style={styles.summaryGradient}
+                                >
+                                    <View style={styles.summaryRow}>
+                                        <View>
+                                            <Text style={styles.sheetTitle}>
+                                                Hoja #{hojaSeleccionada.numeroHoja?.split('-').pop()}
+                                            </Text>
+                                            <Text style={styles.dateLabel}>
+                                                {new Date(hojaSeleccionada.fecha).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                            </Text>
+                                        </View>
+                                        <View style={styles.countBadge}>
+                                            <Text style={styles.countText}>{hojaSeleccionada.envios?.length}</Text>
+                                            <Text style={styles.countLabel}>Envíos</Text>
+                                        </View>
                                     </View>
-                                    <View style={styles.countBadge}>
-                                        <Text style={styles.countText}>{hojaSeleccionada.envios?.length}</Text>
-                                        <Text style={styles.countLabel}>Envíos</Text>
-                                    </View>
-                                </View>
 
-                                <Divider style={styles.divider} />
+                                    <View style={styles.divider} />
 
-                                <View style={styles.detailsRow}>
-                                    <View style={styles.detailItem}>
-                                        <IconButton icon="map-marker-path" size={20} iconColor="#868e96" style={styles.detailIcon} />
-                                        <Text style={styles.detailText}>{hojaSeleccionada.ruta?.codigo || 'Ruta General'}</Text>
+                                    <View style={styles.detailsRow}>
+                                        <View style={styles.detailItem}>
+                                            <IconButton icon="map-marker-path" size={18} iconColor="#38bdf8" style={styles.detailIcon} />
+                                            <Text style={styles.detailText}>{hojaSeleccionada.ruta?.codigo || 'Ruta General'}</Text>
+                                        </View>
+                                        <View style={styles.detailItem}>
+                                            <IconButton icon="truck-outline" size={18} iconColor="#38bdf8" style={styles.detailIcon} />
+                                            <Text style={styles.detailText}>{hojaSeleccionada.vehiculo?.patente || '---'}</Text>
+                                        </View>
                                     </View>
-                                    <View style={styles.detailItem}>
-                                        <IconButton icon="truck-outline" size={20} iconColor="#868e96" style={styles.detailIcon} />
-                                        <Text style={styles.detailText}>{hojaSeleccionada.vehiculo?.patente || '---'}</Text>
-                                    </View>
-                                </View>
-                            </Surface>
+                                </LinearGradient>
+                            </View>
 
                             <Text style={styles.sectionTitle}>LISTADO DE ENVÍOS</Text>
 
@@ -204,7 +218,7 @@ const HojaRepartoScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#020617',
     },
     loadingContainer: {
         flex: 1,
@@ -217,13 +231,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff'
     },
     appbar: {
-        backgroundColor: '#f8f9fa',
+        backgroundColor: 'transparent',
         elevation: 0,
     },
     appbarTitle: {
-        fontWeight: 'bold',
-        color: '#212529',
+        fontWeight: '900',
+        color: 'white',
         fontSize: 20,
+        letterSpacing: 0.5,
     },
     scrollContent: {
         paddingHorizontal: 16,
@@ -232,10 +247,15 @@ const styles = StyleSheet.create({
 
     // --- SUMMARY CARD SIMPLE ---
     summaryCard: {
-        borderRadius: 16,
-        backgroundColor: 'white',
-        padding: 20,
+        borderRadius: 24,
+        backgroundColor: 'transparent',
         marginBottom: 24,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+    },
+    summaryGradient: {
+        padding: 24,
     },
     summaryRow: {
         flexDirection: 'row',
@@ -244,38 +264,40 @@ const styles = StyleSheet.create({
     },
     sheetTitle: {
         fontSize: 26,
-        fontWeight: '800',
-        color: '#212529',
+        fontWeight: '900',
+        color: 'white',
         letterSpacing: -1,
         marginBottom: 4,
     },
     dateLabel: {
         fontSize: 14,
-        color: '#868e96',
+        color: 'rgba(255,255,255,0.5)',
         textTransform: 'capitalize',
-        fontWeight: '500',
+        fontWeight: '600',
     },
     countBadge: {
         alignItems: 'center',
-        backgroundColor: '#f1f3f5',
-        paddingVertical: 8,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        paddingVertical: 10,
         paddingHorizontal: 16,
-        borderRadius: 12,
+        borderRadius: 16,
     },
     countText: {
         fontSize: 20,
         fontWeight: '900',
-        color: '#212529',
+        color: 'white',
     },
     countLabel: {
-        fontSize: 10,
-        fontWeight: 'bold',
-        color: '#adb5bd',
+        fontSize: 9,
+        fontWeight: '900',
+        color: '#38bdf8',
         textTransform: 'uppercase',
+        letterSpacing: 1,
     },
     divider: {
-        marginVertical: 16,
-        backgroundColor: '#f1f3f5'
+        marginVertical: 20,
+        height: 1,
+        backgroundColor: 'rgba(255,255,255,0.05)'
     },
     detailsRow: {
         flexDirection: 'row',
@@ -294,19 +316,20 @@ const styles = StyleSheet.create({
         marginRight: 6,
     },
     detailText: {
-        color: '#495057',
+        color: 'rgba(255,255,255,0.7)',
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '700',
     },
 
     // HEADERS
     sectionTitle: {
-        fontSize: 13,
-        fontWeight: '800',
-        color: '#adb5bd',
+        fontSize: 11,
+        fontWeight: '900',
+        color: '#38bdf8',
         marginBottom: 16,
         marginLeft: 4,
-        letterSpacing: 1,
+        letterSpacing: 2,
+        opacity: 0.8,
     },
 
     // Empty

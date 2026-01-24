@@ -97,6 +97,7 @@ const TablaVehiculos = ({
               <Table.Th>Vehículo</Table.Th>
               <Table.Th>Capacidad</Table.Th>
               <Table.Th>Estado</Table.Th>
+              <Table.Th>Combustible</Table.Th>
               <Table.Th>Propiedad</Table.Th>
               <Table.Th ta="center">Disponibilidad</Table.Th>
               <Table.Th ta="right">Acciones</Table.Th>
@@ -120,10 +121,20 @@ const TablaVehiculos = ({
                         <Truck size={14} style={{ stroke: 'white' }} stroke={1.5} />
                       </ThemeIcon>
                       <div>
-                        <Text fw={700} size="sm" c="dark.4">{v.marca} {v.modelo}</Text>
-                        <Text size="xs" c="dimmed" ff="monospace" fw={600} style={{ letterSpacing: 0.5 }}>
-                          {v.patente}
+                        <Text fw={700} size="sm" c="dark.4">
+                          {v.marca} {v.modelo}
+                          {v.añoModelo && <Text span c="dimmed" size="xs" ml={5} fw={500}>({v.añoModelo})</Text>}
                         </Text>
+                        <Group gap={4}>
+                          <Text size="xs" c="dimmed" ff="monospace" fw={600} style={{ letterSpacing: 0.5 }}>
+                            {v.patente}
+                          </Text>
+                          {v.documentos?.length > 0 && (
+                            <Badge variant="dot" size="xs" color="cyan" tt="none">
+                              {v.documentos.length} doc{v.documentos.length > 1 ? 's' : ''}
+                            </Badge>
+                          )}
+                        </Group>
                       </div>
                     </Group>
                   </Table.Td>
@@ -131,6 +142,11 @@ const TablaVehiculos = ({
                     <Text size="sm" fw={500}>{v.capacidadKg.toLocaleString()} kg</Text>
                   </Table.Td>
                   <Table.Td>{getEstadoBadge(v.estado)}</Table.Td>
+                  <Table.Td>
+                    <Badge variant="dot" color="gray" size="sm">
+                      {v.tipoCombustible || "Diesel"}
+                    </Badge>
+                  </Table.Td>
                   <Table.Td>
                     <Badge variant="outline" color="gray" size="sm" style={{ textTransform: 'capitalize' }}>
                       {v.tipoPropiedad}

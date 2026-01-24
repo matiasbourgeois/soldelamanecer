@@ -169,79 +169,76 @@ const AdminArcade = () => {
             {!selectedGame ? (
                 /* MENU VIEW */
                 /* MENU VIEW */
-                <Box p="xl" style={{ flex: 1, width: '100%', overflowY: 'auto', backgroundColor: 'var(--mantine-color-gray-0)' }}>
-                    <Stack gap="xl" maw={1400} mx="auto">
-                        <Group justify="center" mb="lg">
-                            <ThemeIcon size={80} radius="xl" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }} style={{ boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-                                <Gamepad2 size={48} />
+                <Box p="md" style={{ flex: 1, width: '100%', overflowY: 'auto', backgroundColor: 'white' }}>
+                    <Stack gap="md" maw={1400} mx="auto">
+                        <Group justify="center" mb="xs" gap="xs">
+                            <ThemeIcon size={40} radius="md" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }} style={{ boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+                                <Gamepad2 size={24} />
                             </ThemeIcon>
                             <Box>
-                                <Title order={1} fw={900} size={42} style={{ letterSpacing: '-1px', color: '#2C2E33', lineHeight: 1 }}>
+                                <Title order={1} fw={900} size={24} style={{ letterSpacing: '-0.5px', color: '#2C2E33', lineHeight: 1 }}>
                                     ADMIN <span style={{ color: 'var(--mantine-color-blue-6)' }}>ARCADE</span>
                                 </Title>
-                                <Text c="dimmed" size="lg" ta="center" fw={500} style={{ letterSpacing: '0.5px' }}>Zona de Recreo • Oficial</Text>
                             </Box>
                         </Group>
 
-                        <SimpleGrid cols={{ base: 1, xs: 2, md: 3, lg: 4 }} spacing={24} verticalSpacing={24} w="100%">
+                        <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 6 }} spacing="sm" verticalSpacing="sm" w="100%">
                             {GAMES.map((game) => (
                                 <Card
                                     key={game.id}
                                     shadow="sm"
                                     padding="0"
-                                    radius="lg"
+                                    radius="md"
                                     withBorder
                                     style={{
                                         cursor: 'pointer',
-                                        transition: 'all 0.3s ease',
+                                        transition: 'all 0.2s ease',
                                         backgroundColor: 'white',
                                         overflow: 'hidden',
                                         height: '100%',
                                         display: 'flex',
                                         flexDirection: 'column',
                                         '&:hover': {
-                                            transform: 'translateY(-5px)',
-                                            boxShadow: '0 20px 30px rgba(0,0,0,0.1)',
+                                            transform: 'translateY(-3px)',
+                                            boxShadow: '0 8px 15px rgba(0,0,0,0.1)',
                                             borderColor: `var(--mantine-color-${game.color}-4)`
                                         }
                                     }}
                                     onClick={() => setSelectedGame(game.id)}
                                 >
-                                    <Box style={{ position: 'relative', overflow: 'hidden', height: 150 }}>
+                                    <Box style={{ position: 'relative', overflow: 'hidden', height: 110 }}>
                                         <Image
                                             src={game.image}
-                                            height={150}
+                                            height={110}
                                             alt={game.title}
                                             fallbackSrc={`https://placehold.co/600x400/1a1a1b/white?text=${game.title}`}
-                                            style={{ transition: 'transform 0.5s ease' }}
+                                            style={{ transition: 'transform 0.5s ease', objectFit: 'cover' }}
                                         />
                                         <Badge
-                                            style={{ position: 'absolute', top: 10, right: 10, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                                            style={{ position: 'absolute', top: 5, right: 5, fontSize: '9px', height: '16px' }}
                                             color={game.color}
                                             variant="filled"
-                                            size="sm"
                                         >
-                                            {game.category}
+                                            {game.category.split('/')[0]}
                                         </Badge>
                                     </Box>
 
-                                    <Stack p="md" gap="xs" style={{ flex: 1 }}>
-                                        <Title order={4} fw={700}>{game.title}</Title>
-                                        <Text size="sm" c="dimmed" lineClamp={2} style={{ flex: 1 }}>
+                                    <Stack p="xs" gap={4} style={{ flex: 1 }}>
+                                        <Title order={5} fw={700} size="sm" lineClamp={1}>{game.title}</Title>
+                                        <Text size="xs" c="dimmed" lineClamp={1} mb={4}>
                                             {game.description}
                                         </Text>
 
                                         <Button
                                             fullWidth
-                                            radius="md"
+                                            radius="sm"
                                             color={game.color}
                                             variant="light"
-                                            size="sm"
-                                            className="play-button"
-                                            leftSection={<PlayCircle size={18} />}
-                                            style={{ transition: 'all 0.2s', fontWeight: 600 }}
+                                            size="compact-xs"
+                                            leftSection={<PlayCircle size={14} />}
+                                            style={{ fontWeight: 600, fontSize: '10px' }}
                                         >
-                                            Jugar Ahora
+                                            Jugar
                                         </Button>
                                     </Stack>
                                 </Card>

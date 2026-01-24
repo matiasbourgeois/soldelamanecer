@@ -258,7 +258,9 @@ const HistorialVehiculo = () => {
                                             <Clock size={18} color="var(--mantine-color-indigo-7)" />
                                             <Text fw={800} size="sm" c="indigo.8">ÚLTIMOS 30 DÍAS</Text>
                                         </Group>
-                                        <Badge color="indigo" variant="filled">{stats.mensual.rendimiento} km/L</Badge>
+                                        <Badge color="indigo" variant="filled">
+                                            {stats.mensual.rendimiento} km/{vehiculo?.tipoCombustible === 'GNC' ? 'm³' : 'L'}
+                                        </Badge>
                                     </Group>
                                     <Grid gutter="xs">
                                         <Grid.Col span={6}>
@@ -267,7 +269,9 @@ const HistorialVehiculo = () => {
                                         </Grid.Col>
                                         <Grid.Col span={6}>
                                             <Text size="xs" c="dimmed" fw={700}>LITROS TOTALES</Text>
-                                            <Text fw={800} size="sm">{stats.mensual.litros} L</Text>
+                                            <Text fw={800} size="sm">
+                                                {stats.mensual.litros} {vehiculo?.tipoCombustible === 'GNC' ? 'm³' : 'L'}
+                                            </Text>
                                         </Grid.Col>
                                     </Grid>
                                 </Paper>
@@ -335,7 +339,9 @@ const HistorialVehiculo = () => {
                                                             <Group justify="space-between" pr="md">
                                                                 <Text fw={700} size="sm">{item.tipo}</Text>
                                                                 <Badge variant="outline" color="gray" size="xs">
-                                                                    {new Date(item.fecha).toLocaleString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                                                                    {new Date(item.fecha).getUTCHours() === 12
+                                                                        ? "Registro Diario"
+                                                                        : new Date(item.fecha).toLocaleString('es-AR', { hour: '2-digit', minute: '2-digit' }) + " hs"}
                                                                 </Badge>
                                                             </Group>
                                                         }
@@ -351,7 +357,9 @@ const HistorialVehiculo = () => {
                                                                 <Grid.Col span={6}>
                                                                     <Group gap={6}>
                                                                         <Calendar size={14} color="#64748b" />
-                                                                        <Text size="xs" fw={700} c="dark.3">{new Date(item.fecha).toLocaleDateString()}</Text>
+                                                                        <Text size="xs" fw={700} c="dark.3">
+                                                                            {new Date(item.fecha).toLocaleDateString('es-AR', { timeZone: 'UTC' })}
+                                                                        </Text>
                                                                     </Group>
                                                                 </Grid.Col>
 
@@ -372,9 +380,13 @@ const HistorialVehiculo = () => {
                                                                         <Stack gap={0}>
                                                                             <Group gap={4}>
                                                                                 <Droplets size={12} color="#f97316" />
-                                                                                <Text size="xs" c="dimmed" fw={700}>COMBUSTIBLE</Text>
+                                                                                <Text size="xs" c="dimmed" fw={700}>
+                                                                                    {vehiculo?.tipoCombustible ? `CARGA ${vehiculo.tipoCombustible.toUpperCase()}` : 'COMBUSTIBLE'}
+                                                                                </Text>
                                                                             </Group>
-                                                                            <Text fw={800} size="sm" c="orange.8">{item.litrosCargados} L</Text>
+                                                                            <Text fw={800} size="sm" c="orange.8">
+                                                                                {item.litrosCargados} {vehiculo?.tipoCombustible === 'GNC' ? 'm³' : 'L'}
+                                                                            </Text>
                                                                         </Stack>
                                                                     </Grid.Col>
                                                                 )}

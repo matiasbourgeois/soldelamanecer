@@ -15,6 +15,20 @@ const VehiculoSchema = new mongoose.Schema({
     enum: ["propio", "externo"],
     required: true
   },
+  tipoCombustible: {
+    type: String,
+    enum: ["Diesel", "Nafta", "GNC"],
+    default: "Diesel"
+  },
+
+  // --- INFORMACIÓN TÉCNICA EXTRA ---
+  añoModelo: { type: Number },
+  numeroChasis: { type: String, trim: true },
+  documentos: [{
+    nombre: { type: String, required: true },
+    path: { type: String, required: true },
+    fechaSubida: { type: Date, default: Date.now }
+  }],
 
   // --- MANTENIMIENTO DINÁMICO ---
   kilometrajeActual: {

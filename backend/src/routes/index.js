@@ -16,6 +16,7 @@ router.use("/destinatarios", require("./destinatarios"));
 router.use("/hojas-reparto", require("./hojaRepartoRoutes"));
 router.use("/mantenimientos-tipo", require("./mantenimientosTipo"));
 router.use("/seguimiento", require("./seguimiento"));
+router.use("/proveedores", require("./proveedores"));
 
 // Rutas de Reportes
 router.use("/reportes", require("./reportes.routes"));

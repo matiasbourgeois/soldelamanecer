@@ -11,13 +11,16 @@ exports.obtenerTodos = async (req, res) => {
 
 exports.crear = async (req, res) => {
     try {
-        const { nombre, frecuenciaKmDefault, descripcion } = req.body;
-        const nuevoTipo = new TipoMantenimiento({ nombre, frecuenciaKmDefault, descripcion });
+        const { nombre, codigo, frecuenciaKmDefault, descripcion } = req.body;
+        const nuevoTipo = new TipoMantenimiento({ nombre, codigo, frecuenciaKmDefault, descripcion });
         await nuevoTipo.save();
         res.status(201).json(nuevoTipo);
     } catch (error) {
         if (error.code === 11000) {
-            return res.status(400).json({ error: "Ya existe un mantenimiento con ese nombre" });
+            const field = Object.keys(error.keyPattern)[0];
+            return res.status(400).json({
+                error: `Ya existe un mantenimiento con ese ${field === 'codigo' ? 'código' : 'nombre'}`
+            });
         }
         res.status(500).json({ error: "Error al crear el tipo de mantenimiento" });
     }
@@ -26,15 +29,21 @@ exports.crear = async (req, res) => {
 exports.actualizar = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, frecuenciaKmDefault, descripcion } = req.body;
+        const { nombre, codigo, frecuenciaKmDefault, descripcion } = req.body;
         const tipoActualizado = await TipoMantenimiento.findByIdAndUpdate(
             id,
-            { nombre, frecuenciaKmDefault, descripcion },
+            { nombre, codigo, frecuenciaKmDefault, descripcion },
             { new: true, runValidators: true }
         );
         if (!tipoActualizado) return res.status(404).json({ error: "Tipo no encontrado" });
         res.json(tipoActualizado);
     } catch (error) {
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            return res.status(400).json({
+                error: `Ya existe un mantenimiento con ese ${field === 'codigo' ? 'código' : 'nombre'}`
+            });
+        }
         res.status(500).json({ error: "Error al actualizar el tipo de mantenimiento" });
     }
 };

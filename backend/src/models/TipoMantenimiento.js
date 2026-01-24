@@ -7,6 +7,13 @@ const TipoMantenimientoSchema = new mongoose.Schema({
         unique: true,
         trim: true
     },
+    codigo: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        uppercase: true
+    },
     frecuenciaKmDefault: {
         type: Number,
         default: 10000

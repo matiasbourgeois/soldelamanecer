@@ -249,7 +249,7 @@ const obtenerSelectoresReporte = async (req, res) => {
       estado: { $ne: "fuera de servicio" },
       tipoPropiedad: "propio" // Solo flota propia
     })
-      .select("patente marca modelo kilometrajeActual tipoPropiedad")
+      .select("patente marca modelo kilometrajeActual tipoPropiedad tipoCombustible")
       .lean();
 
     // 2. Rutas Activas (Traemos todas por si el flag activo no está seteado)

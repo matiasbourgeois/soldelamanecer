@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import AuthContext from "@core/context/AuthProvider";
 import { useContext } from "react";
 import 'leaflet/dist/leaflet.css';
@@ -30,6 +30,7 @@ import DashboardAdmin from "./modules/admin/pages/DashboardAdmin";
 const AdminArcade = lazy(() => import("./modules/admin/pages/AdminArcade"));
 import ChoferesAdmin from "./modules/admin/pages/ChoferesAdmin";
 import Reportes from "./modules/admin/pages/reportes/Reportes"; // Assuming subfolder moved
+import ProveedoresAdmin from "./modules/admin/pages/proveedores/ProveedoresAdmin";
 
 // Pages - Logistica (Envios)
 import GestionEnvios from "./modules/logistica/envios/pages/GestionEnvios";
@@ -95,8 +96,7 @@ function App() {
         // ✅ Si está logueado, usar el AppLayout de Mantine
         <AppLayout auth={auth} handleLogout={handleLogout}>
           <Routes>
-            <Route path="/" element={<Inicio />} /> {/* Podríamos redirigir a Perfil */}
-            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/" element={<Navigate to="/perfil" replace />} />
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/seguimiento" element={<BuscarSeguimiento />} />
             <Route path="/seguimiento/resultado/:codigo" element={<ResultadoSeguimiento />} />
@@ -130,6 +130,14 @@ function App() {
               element={
                 <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
                   <ChoferesAdmin />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/proveedores"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <ProveedoresAdmin />
                 </ProtectedByRole>
               }
             />

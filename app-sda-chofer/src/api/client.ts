@@ -1,8 +1,10 @@
 import axios from 'axios';
 
-// ⚠️ HARDCODED URL: Change this if your local IP changes.
-// Future improvement: Use environment variables (expo-constants).
-const BASE_URL = 'https://api-choferes.cotizadorlogistico.site/api';
+// 🌐 DYNAMIC URL: Use local IP for dev (Expo) and production domain for builds.
+const PROD_URL = 'https://api-choferes.cotizadorlogistico.site/api';
+const DEV_URL = 'http://192.168.0.131:5000/api'; // ⚠️ Check your local IP if it changes
+
+const BASE_URL = __DEV__ ? DEV_URL : PROD_URL;
 
 export const api = axios.create({
     baseURL: BASE_URL,

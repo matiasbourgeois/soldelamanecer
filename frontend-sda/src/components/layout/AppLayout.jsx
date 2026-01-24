@@ -216,6 +216,14 @@ export function AppLayout({ children, auth, handleLogout }) {
                             />
                         </NavLink>
 
+                        {/* Grupo Proveedores (NUEVO) */}
+                        <NavLink
+                            label="Proveedores"
+                            leftSection={<IconUsers size={20} stroke={1.5} />}
+                            rightSection={isActive('/admin/proveedores') && <IconChevronRight size={14} />}
+                            {...getLinkProps('/admin/proveedores')}
+                        />
+
                         {/* Reportes */}
                         <NavLink
                             label="Reportes y Métricas"

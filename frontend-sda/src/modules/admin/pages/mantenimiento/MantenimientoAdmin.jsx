@@ -4,7 +4,8 @@ import {
     Title, Paper, Text, Group, Button, Table, Badge, ActionIcon,
     Tooltip, Modal, NumberInput, Select, Textarea, LoadingOverlay,
     Grid, Alert, Pagination, Stack, TextInput, HoverCard, Progress,
-    ThemeIcon, Divider, Avatar, Box, Center, RingProgress, Autocomplete
+    ThemeIcon, Divider, Avatar, Box, Center, RingProgress, Autocomplete,
+    Container
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -117,7 +118,7 @@ const MantenimientoAdmin = () => {
     // Knowledge Base State
     const [tiposMantenimiento, setTiposMantenimiento] = useState([]);
     const [openedTipos, { open: openTipos, close: closeTipos }] = useDisclosure(false);
-    const [nuevoTipoBase, setNuevoTipoBase] = useState({ nombre: '', frecuenciaKmDefault: 10000 });
+    const [nuevoTipoBase, setNuevoTipoBase] = useState({ nombre: '', codigo: '', frecuenciaKmDefault: 10000 });
     const [editandoTipoBase, setEditandoTipoBase] = useState(null);
 
     // Initial Fetch
@@ -160,7 +161,16 @@ const MantenimientoAdmin = () => {
     };
 
     // Actions
-    const handleUpdateKm = async () => {
+    const handleUpdateKm = async (force = false) => {
+        if (!nuevoKm && nuevoKm !== 0) return;
+
+        // Si el KM es menor al actual, pedir confirmación extra
+        if (nuevoKm < selectedVehiculo.kilometrajeActual && !force) {
+            if (!window.confirm(`¿Estás seguro de que deseas retroceder el odómetro de ${selectedVehiculo.kilometrajeActual.toLocaleString()} a ${nuevoKm.toLocaleString()}?`)) {
+                return;
+            }
+        }
+
         try {
             const token = localStorage.getItem('token');
             await axios.patch(apiSistema(`/vehiculos/${selectedVehiculo._id}/km`),
@@ -170,7 +180,11 @@ const MantenimientoAdmin = () => {
             closeKm();
             fetchVehiculos();
         } catch (error) {
-            notifications.show({ title: 'Error', message: 'Fallo al actualizar', color: 'red' });
+            notifications.show({
+                title: 'Error',
+                message: error.response?.data?.error || 'Fallo al actualizar',
+                color: 'red'
+            });
         }
     };
 
@@ -190,6 +204,20 @@ const MantenimientoAdmin = () => {
     };
 
     const handleAddConfig = async () => {
+        // Validar que el nombre coincida exactamente con uno de la base de conocimiento
+        const match = tiposMantenimiento.find(t => t.nombre === nuevoTipoNombre);
+        if (!match) {
+            notifications.show({ title: 'Error', message: 'Debés seleccionar un mantenimiento válido de la lista.', color: 'red' });
+            return;
+        }
+
+        // Validar Duplicados Locales
+        const yaExiste = selectedVehiculo.configuracionMantenimiento?.some(c => c.nombre === nuevoTipoNombre);
+        if (yaExiste) {
+            notifications.show({ title: 'Error', message: 'Este vehículo ya tiene configurado este mantenimiento.', color: 'red' });
+            return;
+        }
+
         if (nuevoTipoUltimoKm > selectedVehiculo.kilometrajeActual) {
             notifications.show({ title: 'Validación', message: 'El punto de partida no puede ser mayor al kilometraje actual', color: 'red' });
             return;
@@ -252,26 +280,38 @@ const MantenimientoAdmin = () => {
             notifications.show({ title: 'Actualizado', color: 'green' });
             setEditandoConfig(null);
 
-            // Actualizar el estado local para que el modal refleje el cambio al instante
             if (res.data) {
                 setSelectedVehiculo(res.data);
             }
 
             fetchVehiculos();
         } catch (error) {
-            notifications.show({ title: 'Error', color: 'red' });
+            notifications.show({
+                title: 'Error de Validación',
+                message: error.response?.data?.error || 'No se pudo actualizar la configuración',
+                color: 'red'
+            });
         }
     };
 
     // Tipos Mantenimiento Actions
     const handleAddTipoBase = async () => {
+        // Validar Duplicados en la Base local antes de enviar
+        const yaExisteNombre = tiposMantenimiento.some(t => t.nombre.toLowerCase() === nuevoTipoBase.nombre.toLowerCase());
+        const yaExisteCodigo = tiposMantenimiento.some(t => t.codigo?.toLowerCase() === nuevoTipoBase.codigo.toLowerCase());
+
+        if (yaExisteNombre || yaExisteCodigo) {
+            notifications.show({ title: 'Duplicado', message: 'El nombre o el código ya existen en la base.', color: 'orange' });
+            return;
+        }
+
         try {
             const token = localStorage.getItem('token');
             await axios.post(apiSistema('/mantenimientos-tipo'), nuevoTipoBase, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             notifications.show({ title: 'Éxito', message: 'Tipo agregado a la base de conocimiento', color: 'green' });
-            setNuevoTipoBase({ nombre: '', frecuenciaKmDefault: 10000 });
+            setNuevoTipoBase({ nombre: '', codigo: '', frecuenciaKmDefault: 10000 });
             fetchTiposMantenimiento();
         } catch (e) {
             notifications.show({ title: 'Error', message: e.response?.data?.error || 'No se pudo agregar', color: 'red' });
@@ -328,108 +368,110 @@ const MantenimientoAdmin = () => {
     );
 
     return (
-        <div style={{ padding: '20px', minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
-            {/* HEADER */}
-            <Group justify="space-between" mb="lg">
-                <div>
-                    <Title order={2} c="cyan.9" fw={900} style={{ letterSpacing: '-0.5px' }}>Gestión de Flota</Title>
-                    <Text c="dimmed" size="sm">Control de mantenimientos y kilometraje</Text>
-                </div>
-                <Group>
-                    <TextInput
-                        placeholder="Buscar patente..."
-                        leftSection={<IconSearch size={16} />}
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.currentTarget.value)}
-                    />
-                    <Button variant="outline" color="indigo" leftSection={<IconBooks size={18} />} onClick={openTipos}>
-                        Base de Conocimiento
-                    </Button>
-                    <Button variant="light" color="cyan" leftSection={<IconRefresh size={16} />} onClick={() => fetchVehiculos(paginaActual)}>
-                        Actualizar
-                    </Button>
-                </Group>
-            </Group>
-
-            {/* TABLE */}
-            <Paper shadow="sm" radius="md" withBorder style={{ overflow: 'hidden' }}>
-                <Table striped highlightOnHover verticalSpacing="sm">
-                    <Table.Thead bg="gray.0">
-                        <Table.Tr>
-                            <Table.Th style={{ width: 120 }}>Patente</Table.Th>
-                            <Table.Th>Vehículo</Table.Th>
-                            <Table.Th style={{ textAlign: 'center' }}>Kilometraje</Table.Th>
-                            <Table.Th style={{ textAlign: 'center' }}>Estado General</Table.Th>
-                            <Table.Th style={{ textAlign: 'right', paddingRight: 30 }}>Acciones</Table.Th>
-                        </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                        {filteredVehiculos.map(v => (
-                            <Table.Tr key={v._id}>
-                                <Table.Td>
-                                    <Badge
-                                        size="md"
-                                        variant="light"
-                                        color="cyan"
-                                        radius="sm"
-                                        style={{
-                                            width: 110,
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            fontSize: 13,
-                                            letterSpacing: '1px',
-                                            fontWeight: 700
-                                        }}
-                                    >
-                                        {v.patente}
-                                    </Badge>
-                                </Table.Td>
-                                <Table.Td>
-                                    <Text fw={600} size="sm" c="dimmed">{v.marca} {v.modelo}</Text>
-                                </Table.Td>
-                                <Table.Td style={{ textAlign: 'center' }}>
-                                    <Text
-                                        size="sm"
-                                        fw={600}
-                                        c="dimmed"
-                                    >
-                                        {v.kilometrajeActual?.toLocaleString()} km
-                                    </Text>
-                                </Table.Td>
-                                <Table.Td style={{ textAlign: 'center' }}>
-                                    <Center>
-                                        <StatusBadge vehiculo={v} />
-                                    </Center>
-                                </Table.Td>
-                                <Table.Td>
-                                    <Group justify="flex-end" gap={4} pr="md">
-                                        <Tooltip label="Actualizar KM">
-                                            <ActionIcon variant="subtle" color="blue" size="md" onClick={() => openKmModalHandler(v)}>
-                                                <IconGauge size={18} />
-                                            </ActionIcon>
-                                        </Tooltip>
-                                        <Tooltip label="Registrar Service">
-                                            <ActionIcon variant="subtle" color="cyan" size="md" onClick={() => openServiceModalHandler(v)}>
-                                                <IconTool size={18} />
-                                            </ActionIcon>
-                                        </Tooltip>
-                                        <Tooltip label="Configuración">
-                                            <ActionIcon variant="subtle" color="gray" size="md" onClick={() => openConfigModalHandler(v)}>
-                                                <IconSettings size={18} />
-                                            </ActionIcon>
-                                        </Tooltip>
-                                    </Group>
-                                </Table.Td>
-                            </Table.Tr>
-                        ))}
-                    </Table.Tbody>
-                </Table>
-                {/* Pagination (Simplified) */}
-                {totalPaginas > 1 && (
-                    <Group justify="center" p="md" bg="gray.0" style={{ borderTop: '1px solid #dee2e6' }}>
-                        <Pagination total={totalPaginas} value={paginaActual} onChange={setPaginaActual} color="cyan" />
+        <Container size="xl" py="md">
+            <Paper p="md" radius="md" shadow="sm" withBorder mb="lg">
+                {/* HEADER */}
+                <Group justify="space-between" mb="md">
+                    <div>
+                        <Title order={2} fw={700} c="dimmed">Gestión de Flota</Title>
+                        <Text c="dimmed" size="sm">Control de mantenimientos y kilometraje</Text>
+                    </div>
+                    <Group>
+                        <TextInput
+                            placeholder="Buscar patente..."
+                            leftSection={<IconSearch size={16} />}
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.currentTarget.value)}
+                        />
+                        <Button variant="outline" color="indigo" leftSection={<IconBooks size={18} />} onClick={openTipos}>
+                            Base de Conocimiento
+                        </Button>
+                        <Button variant="light" color="cyan" leftSection={<IconRefresh size={16} />} onClick={() => fetchVehiculos(paginaActual)}>
+                            Actualizar
+                        </Button>
                     </Group>
-                )}
+                </Group>
+
+                {/* TABLE */}
+                <Box style={{ overflow: 'hidden' }}>
+                    <Table striped highlightOnHover verticalSpacing="sm">
+                        <Table.Thead>
+                            <Table.Tr>
+                                <Table.Th style={{ width: 120 }}>Patente</Table.Th>
+                                <Table.Th>Vehículo</Table.Th>
+                                <Table.Th style={{ textAlign: 'center' }}>Kilometraje</Table.Th>
+                                <Table.Th style={{ textAlign: 'center' }}>Estado General</Table.Th>
+                                <Table.Th style={{ textAlign: 'right', paddingRight: 30 }}>Acciones</Table.Th>
+                            </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                            {filteredVehiculos.map(v => (
+                                <Table.Tr key={v._id}>
+                                    <Table.Td>
+                                        <Badge
+                                            size="md"
+                                            variant="light"
+                                            color="cyan"
+                                            radius="sm"
+                                            style={{
+                                                width: 110,
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                fontSize: 13,
+                                                letterSpacing: '1px',
+                                                fontWeight: 700
+                                            }}
+                                        >
+                                            {v.patente}
+                                        </Badge>
+                                    </Table.Td>
+                                    <Table.Td>
+                                        <Text fw={600} size="sm" c="dimmed">{v.marca} {v.modelo}</Text>
+                                    </Table.Td>
+                                    <Table.Td style={{ textAlign: 'center' }}>
+                                        <Text
+                                            size="sm"
+                                            fw={600}
+                                            c="dimmed"
+                                        >
+                                            {v.kilometrajeActual?.toLocaleString()} km
+                                        </Text>
+                                    </Table.Td>
+                                    <Table.Td style={{ textAlign: 'center' }}>
+                                        <Center>
+                                            <StatusBadge vehiculo={v} />
+                                        </Center>
+                                    </Table.Td>
+                                    <Table.Td>
+                                        <Group justify="flex-end" gap={4} pr="md">
+                                            <Tooltip label="Actualizar KM">
+                                                <ActionIcon variant="subtle" color="blue" size="md" onClick={() => openKmModalHandler(v)}>
+                                                    <IconGauge size={18} />
+                                                </ActionIcon>
+                                            </Tooltip>
+                                            <Tooltip label="Registrar Service">
+                                                <ActionIcon variant="subtle" color="cyan" size="md" onClick={() => openServiceModalHandler(v)}>
+                                                    <IconTool size={18} />
+                                                </ActionIcon>
+                                            </Tooltip>
+                                            <Tooltip label="Configuración">
+                                                <ActionIcon variant="subtle" color="gray" size="md" onClick={() => openConfigModalHandler(v)}>
+                                                    <IconSettings size={18} />
+                                                </ActionIcon>
+                                            </Tooltip>
+                                        </Group>
+                                    </Table.Td>
+                                </Table.Tr>
+                            ))}
+                        </Table.Tbody>
+                    </Table>
+                    {/* Pagination (Simplified) */}
+                    {totalPaginas > 1 && (
+                        <Group justify="center" p="md" style={{ borderTop: '1px solid #dee2e6' }}>
+                            <Pagination total={totalPaginas} value={paginaActual} onChange={setPaginaActual} color="cyan" />
+                        </Group>
+                    )}
+                </Box>
             </Paper>
 
             {/* --- MODALS --- */}
@@ -438,11 +480,17 @@ const MantenimientoAdmin = () => {
             <Modal opened={modalKmOpened} onClose={closeKm} title={<Text fw={700}>Actualizar Kilometraje</Text>} centered>
                 {selectedVehiculo && (
                     <Stack>
-                        <Alert icon={<IconGauge size={16} />} color="blue" variant="light">
-                            Ingresá el nuevo valor del odómetro. No puede ser menor al actual.
-                        </Alert>
+                        {nuevoKm < selectedVehiculo.kilometrajeActual ? (
+                            <Alert icon={<IconAlertTriangle size={16} />} color="orange" variant="light">
+                                Estás ingresando un kilometraje <b>menor</b> al actual. Esto corregirá el odómetro del vehículo.
+                            </Alert>
+                        ) : (
+                            <Alert icon={<IconGauge size={16} />} color="blue" variant="light">
+                                Ingresá el nuevo valor del odómetro.
+                            </Alert>
+                        )}
                         <Group grow>
-                            <Paper withBorder p="xs" ta="center" bg="gray.0">
+                            <Paper withBorder p="xs" ta="center">
                                 <Text size="xs" c="dimmed" tt="uppercase">Actual</Text>
                                 <Text fw={700} size="lg">{selectedVehiculo.kilometrajeActual?.toLocaleString()}</Text>
                             </Paper>
@@ -457,7 +505,7 @@ const MantenimientoAdmin = () => {
                             placeholder="Ej: 15500"
                             value={nuevoKm}
                             onChange={(val) => setNuevoKm(val)}
-                            min={selectedVehiculo.kilometrajeActual}
+                            min={0}
                             step={100}
                             size="md"
                         />
@@ -540,7 +588,7 @@ const MantenimientoAdmin = () => {
 
                         <Paper withBorder radius="md" style={{ overflowX: 'auto' }}>
                             <Table verticalSpacing="sm">
-                                <Table.Thead bg="gray.0">
+                                <Table.Thead>
                                     <Table.Tr>
                                         <Table.Th>Tipo</Table.Th>
                                         <Table.Th style={{ width: 150 }}>Frecuencia</Table.Th>
@@ -577,6 +625,7 @@ const MantenimientoAdmin = () => {
                                                             step={1000}
                                                             suffix=" km"
                                                             max={selectedVehiculo.kilometrajeActual}
+                                                            error={nuevaUltimoKmEdit > selectedVehiculo.kilometrajeActual ? "No puede ser mayor al actual" : null}
                                                         />
                                                     ) : (
                                                         <Text size="sm" fw={700} c="dimmed">{c.ultimoKm?.toLocaleString()} km</Text>
@@ -626,22 +675,28 @@ const MantenimientoAdmin = () => {
                             </Table>
                         </Paper>
 
-                        <Paper withBorder p="md" radius="md" bg="gray.0">
+                        <Paper withBorder p="md" radius="md">
                             <Text fw={700} size="xs" mb="md" c="indigo" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                                 + Agregar Nuevo Mantenimiento
                             </Text>
                             <Grid align="flex-end" gutter="xs">
                                 <Grid.Col span={{ base: 12, md: 4 }}>
-                                    <Autocomplete
+                                    <Select
                                         label="Mantenimiento"
-                                        placeholder="Ej: Aceite y Filtro"
-                                        data={tiposMantenimiento.map(t => t.nombre)}
+                                        placeholder="Buscá por nombre o código"
+                                        data={tiposMantenimiento.map(t => ({
+                                            value: t.nombre,
+                                            label: `[${t.codigo}] ${t.nombre}`
+                                        }))}
+                                        searchable
+                                        nothingFoundMessage="No se encontró el mantenimiento"
                                         value={nuevoTipoNombre}
                                         onChange={(val) => {
                                             setNuevoTipoNombre(val);
                                             const match = tiposMantenimiento.find(t => t.nombre === val);
                                             if (match) setNuevoTipoFrecuencia(match.frecuenciaKmDefault);
                                         }}
+                                        error={selectedVehiculo.configuracionMantenimiento?.some(c => c.nombre === nuevoTipoNombre) ? "Ya está configurado" : null}
                                         styles={{ label: { fontSize: 12, fontWeight: 700 } }}
                                     />
                                 </Grid.Col>
@@ -665,6 +720,7 @@ const MantenimientoAdmin = () => {
                                         onChange={setNuevoTipoUltimoKm}
                                         step={1000}
                                         max={selectedVehiculo.kilometrajeActual}
+                                        error={nuevoTipoUltimoKm > selectedVehiculo.kilometrajeActual ? "Supera el KM actual" : null}
                                         styles={{
                                             label: { fontSize: 12, fontWeight: 700 },
                                             description: { fontSize: 9, marginTop: -2 }
@@ -691,27 +747,38 @@ const MantenimientoAdmin = () => {
             {/* MODAL: BASE DE CONOCIMIENTO (TIPOS) */}
             <Modal opened={openedTipos} onClose={closeTipos} title="Base de Conocimiento de Mantenimientos" size="lg">
                 <Stack>
-                    <Paper withBorder p="md" radius="md" bg="gray.0">
+                    <Paper withBorder p="md" radius="md">
                         <Text fw={700} size="xs" mb="md" c="indigo">+ Nuevo Tipo de Mantenimiento</Text>
                         <Grid align="flex-end" gutter="xs">
-                            <Grid.Col span={6}>
+                            <Grid.Col span={4}>
+                                <TextInput
+                                    label="Código"
+                                    placeholder="Ej: MANT-01"
+                                    value={nuevoTipoBase.codigo}
+                                    onChange={(e) => setNuevoTipoBase({ ...nuevoTipoBase, codigo: e.currentTarget.value.toUpperCase() })}
+                                    error={tiposMantenimiento.some(t => t.codigo === nuevoTipoBase.codigo) ? "Código repetido" : null}
+                                />
+                            </Grid.Col>
+                            <Grid.Col span={4}>
                                 <TextInput
                                     label="Nombre"
                                     placeholder="Ej: Correa de Distribución"
                                     value={nuevoTipoBase.nombre}
                                     onChange={(e) => setNuevoTipoBase({ ...nuevoTipoBase, nombre: e.currentTarget.value })}
+                                    error={tiposMantenimiento.some(t => t.nombre.toLowerCase() === nuevoTipoBase.nombre.toLowerCase()) ? "Nombre repetido" : null}
                                 />
                             </Grid.Col>
-                            <Grid.Col span={4}>
+                            <Grid.Col span={3}>
                                 <NumberInput
-                                    label="Frecuencia Default (KM)"
+                                    label="Frecuencia Default"
                                     value={nuevoTipoBase.frecuenciaKmDefault}
                                     onChange={(val) => setNuevoTipoBase({ ...nuevoTipoBase, frecuenciaKmDefault: val })}
                                     step={1000}
+                                    suffix=" km"
                                 />
                             </Grid.Col>
-                            <Grid.Col span={2}>
-                                <Button fullWidth color="indigo" onClick={handleAddTipoBase} disabled={!nuevoTipoBase.nombre}>
+                            <Grid.Col span={1}>
+                                <Button fullWidth color="indigo" onClick={handleAddTipoBase} disabled={!nuevoTipoBase.nombre || !nuevoTipoBase.codigo}>
                                     Crear
                                 </Button>
                             </Grid.Col>
@@ -721,6 +788,7 @@ const MantenimientoAdmin = () => {
                     <Table verticalSpacing="xs">
                         <Table.Thead>
                             <Table.Tr>
+                                <Table.Th style={{ width: 100 }}>Código</Table.Th>
                                 <Table.Th>Nombre</Table.Th>
                                 <Table.Th>Frecuencia Sugerida</Table.Th>
                                 <Table.Th style={{ textAlign: 'right' }}>Acciones</Table.Th>
@@ -733,8 +801,21 @@ const MantenimientoAdmin = () => {
                                         {editandoTipoBase?._id === t._id ? (
                                             <TextInput
                                                 size="xs"
+                                                value={editandoTipoBase.codigo}
+                                                onChange={(e) => setEditandoTipoBase({ ...editandoTipoBase, codigo: e.currentTarget.value.toUpperCase() })}
+                                                error={tiposMantenimiento.some(item => item._id !== t._id && item.codigo === editandoTipoBase.codigo) ? "Ya existe" : null}
+                                            />
+                                        ) : (
+                                            <Badge variant="outline" color="gray">{t.codigo}</Badge>
+                                        )}
+                                    </Table.Td>
+                                    <Table.Td>
+                                        {editandoTipoBase?._id === t._id ? (
+                                            <TextInput
+                                                size="xs"
                                                 value={editandoTipoBase.nombre}
                                                 onChange={(e) => setEditandoTipoBase({ ...editandoTipoBase, nombre: e.currentTarget.value })}
+                                                error={tiposMantenimiento.some(item => item._id !== t._id && item.nombre.toLowerCase() === editandoTipoBase.nombre.toLowerCase()) ? "Ya existe" : null}
                                             />
                                         ) : (
                                             <Text fw={600}>{t.nombre}</Text>
@@ -779,7 +860,7 @@ const MantenimientoAdmin = () => {
                     </Table>
                 </Stack>
             </Modal>
-        </div>
+        </Container>
     );
 };
 

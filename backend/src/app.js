@@ -37,10 +37,20 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads"), {
 app.use("/pdfs", express.static(path.join(__dirname, "../pdfs")));
 
 // Rutas (Placeholder para Phase 2)
-app.get("/", (req, res) => {
+app.get("/health", (req, res) => {
     res.json({ message: "API Monolito Sol del Amanecer - Running 🚀" });
 });
 
 app.use("/api", require("./routes")); // Mounts index.js
+
+// --- SERVIR FRONTEND (SPA FALLBACK) ---
+// 1. Servir archivos estáticos del build de React
+app.use(express.static(path.join(__dirname, "../../frontend-sda/dist")));
+
+// 2. Ruta comodín para manejar el F5/Routing de React
+// IMPORTANTE: Esta ruta DEBE ir al final de todo
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../../frontend-sda/dist", "index.html"));
+});
 
 module.exports = app;

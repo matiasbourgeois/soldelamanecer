@@ -30,6 +30,10 @@ const RutaSchema = new mongoose.Schema({
     default: null
   },
 
+  // --- STANDARD RATES & DISTANCE ---
+  kilometrosEstimados: { type: Number, default: 0 },
+  precioKm: { type: Number, default: 0 },
+
   activa: { type: Boolean, default: true }
 }, { timestamps: true });
 

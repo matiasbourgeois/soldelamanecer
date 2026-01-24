@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, TextInput, Select, MultiSelect, Group, Stack, LoadingOverlay } from "@mantine/core";
+import { Modal, Button, TextInput, Select, MultiSelect, Group, Stack, LoadingOverlay, Paper } from "@mantine/core";
 import { apiSistema } from "../../../../core/api/apiSistema";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
+import AuthContext from "../../../../core/context/AuthProvider";
+import { useContext } from "react";
 
 const FormularioRuta = ({ onClose, ruta, recargar }) => {
+  const { auth } = useContext(AuthContext);
+  const isAdmin = auth?.rol === 'admin';
   // Mantine MultiSelect works with string arrays for values.
   const [formData, setFormData] = useState({
     codigo: "",
@@ -214,6 +218,18 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
               clearable
             />
           </Group>
+
+          <Paper withBorder p="md" bg="gray.0">
+            <TextInput
+              label="Precio por KM ($)"
+              placeholder="Ej: 150.50"
+              name="precioKm"
+              value={formData.precioKm}
+              onChange={handleChange}
+              disabled={!isAdmin}
+              description={!isAdmin ? "Solo lectura (Solo Admin puede modificar tarifas)" : "Tarifa base para liquidaciones"}
+            />
+          </Paper>
 
           <Group justify="flex-end" mt="lg">
             <Button variant="default" onClick={onClose}>Cancelar</Button>

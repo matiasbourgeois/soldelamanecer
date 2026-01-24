@@ -14,6 +14,7 @@ const HomeScreen = ({ navigation }: any) => {
     const [config, setConfig] = useState<any>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [profileModalVisible, setProfileModalVisible] = useState(false);
+    const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
     const fetchConfig = async () => {
         try {
@@ -49,7 +50,7 @@ const HomeScreen = ({ navigation }: any) => {
                 title: "Cargar Kilometraje",
                 subtitle: "Registro diario y control",
                 icon: "speedometer",
-                colors: ['#06b6d4', '#0891b2'], // Cyan / Teal
+                colors: ['#00d2ff', '#3a7bd5'], // Deep Blue / Cyan gradient
                 route: "CargaKilometraje",
                 requiresDependency: true
             },
@@ -57,7 +58,7 @@ const HomeScreen = ({ navigation }: any) => {
                 title: "Hoja de Reparto",
                 subtitle: "Mis entregas del día",
                 icon: "clipboard-text-play-outline",
-                colors: ['#22d3ee', '#06b6d4'], // Brighter Cyan
+                colors: ['#059669', '#10b981'], // Emerald / Green gradient
                 route: "HojaReparto",
                 requiresDependency: false
             }
@@ -79,8 +80,10 @@ const HomeScreen = ({ navigation }: any) => {
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
             <LinearGradient
-                colors={['#083344', '#164e63']} // Deep Cyan / Dark Teal background
+                colors={['#020617', '#0f172a']} // Deep Navy / Pure Black
                 style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
             />
 
             {/* NO MORE DECORATIVE CIRCLES AS REQUESTED */}
@@ -104,7 +107,7 @@ const HomeScreen = ({ navigation }: any) => {
                         <Text style={styles.headerSubtitle}>Panel de Operaciones</Text>
                     </View>
                     <View style={styles.headerActions}>
-                        <TouchableOpacity onPress={logout} style={styles.logoutIcon}>
+                        <TouchableOpacity onPress={() => setLogoutModalVisible(true)} style={styles.logoutIcon}>
                             <IconButton icon="logout-variant" iconColor="#ef4444" size={24} />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => setProfileModalVisible(true)} activeOpacity={0.7}>
@@ -118,11 +121,11 @@ const HomeScreen = ({ navigation }: any) => {
                     </View>
                 </View>
 
-                {/* REDESIGNED STATUS CARD - STABLE & CLEAN */}
+                {/* STATUS CARDS (Pure Information - Glassmorphism) */}
                 <View style={styles.statusCard}>
                     <View style={styles.statusItem}>
-                        <View style={[styles.statusIconBase, { backgroundColor: '#22d3ee15' }]}>
-                            <IconButton icon="truck-delivery" iconColor="#22d3ee" size={24} />
+                        <View style={styles.statusIconBase}>
+                            <IconButton icon="truck-delivery" iconColor="#38bdf8" size={24} />
                         </View>
                         <View style={styles.statusTextContainer}>
                             <Text style={styles.statusLabel}>VEHÍCULO ASIGNADO</Text>
@@ -140,8 +143,8 @@ const HomeScreen = ({ navigation }: any) => {
                     <View style={styles.statusDivider} />
 
                     <View style={styles.statusItem}>
-                        <View style={[styles.statusIconBase, { backgroundColor: '#06b6d415' }]}>
-                            <IconButton icon="map-marker-distance" iconColor="#22d3ee" size={24} />
+                        <View style={styles.statusIconBase}>
+                            <IconButton icon="map-marker-distance" iconColor="#38bdf8" size={24} />
                         </View>
                         <View style={styles.statusTextContainer}>
                             <Text style={styles.statusLabel}>RUTA ACTIVA</Text>
@@ -272,6 +275,50 @@ const HomeScreen = ({ navigation }: any) => {
                     </View>
                 </Modal>
             </Portal>
+
+            {/* LOGOUT CONFIRMATION MODAL (GOD TIER) */}
+            <Portal>
+                <Modal
+                    visible={logoutModalVisible}
+                    onDismiss={() => setLogoutModalVisible(false)}
+                    contentContainerStyle={styles.logoutModalContainer}
+                >
+                    <LinearGradient
+                        colors={['#1e1b4b', '#020617']}
+                        style={styles.logoutModalContent}
+                    >
+                        <View style={[styles.logoutIconRing, { borderColor: 'rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(239, 68, 68, 0.05)' }]}>
+                            <IconButton icon="logout-variant" size={32} iconColor="#ef4444" />
+                        </View>
+                        <Text style={styles.confirmTitle}>¿Cerrar Sesión?</Text>
+                        <Text style={styles.confirmSubtitle}>Tu jornada se guardará, pero tendrás que volver a ingresar tus credenciales.</Text>
+
+                        <View style={styles.logoutActionRow}>
+                            <TouchableOpacity
+                                onPress={() => setLogoutModalVisible(false)}
+                                style={[styles.logoutBtn, styles.logoutBtnCancel]}
+                            >
+                                <Text style={styles.logoutBtnTextCancel}>CANCELAR</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={logout}
+                                activeOpacity={0.9}
+                                style={styles.logoutBtn}
+                            >
+                                <LinearGradient
+                                    colors={['#ef4444', '#b91c1c']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.logoutBtnGradient}
+                                >
+                                    <Text style={styles.logoutBtnTextConfirm}>SALIR</Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        </View>
+                    </LinearGradient>
+                </Modal>
+            </Portal>
         </View>
     );
 };
@@ -279,7 +326,7 @@ const HomeScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#083344',
+        backgroundColor: '#020617',
     },
     scrollContent: {
         paddingTop: 60, // Space for translucent status bar
@@ -302,6 +349,9 @@ const styles = StyleSheet.create({
         fontWeight: '900',
         color: 'white',
         letterSpacing: -0.8,
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
     },
     headerSubtitle: {
         fontSize: 13,
@@ -332,39 +382,46 @@ const styles = StyleSheet.create({
     },
     // NEW STATUS CARD (STABLE)
     statusCard: {
-        backgroundColor: 'rgba(255,255,255,0.06)',
-        borderRadius: 28,
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        borderRadius: 24,
         padding: 24,
         marginBottom: 35,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.08)',
+        borderColor: 'rgba(255,255,255,0.05)',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
     },
     statusItem: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     statusIconBase: {
-        width: 52,
-        height: 52,
-        borderRadius: 26,
+        width: 44,
+        height: 44,
+        borderRadius: 14,
+        backgroundColor: 'rgba(56, 189, 248, 0.05)',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 18,
+        marginRight: 16,
     },
     statusTextContainer: {
         flex: 1,
     },
     statusLabel: {
-        fontSize: 10,
+        fontSize: 9,
         fontWeight: '900',
-        color: 'rgba(34, 211, 238, 0.6)',
-        letterSpacing: 1.2,
+        color: '#38bdf8',
+        letterSpacing: 1.5,
         marginBottom: 2,
+        opacity: 0.8,
     },
     statusMainValue: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: '800',
         color: 'white',
+        letterSpacing: 0.5,
     },
     statusSubDetail: {
         fontSize: 13,
@@ -392,18 +449,18 @@ const styles = StyleSheet.create({
     accentLine: {
         flex: 1,
         height: 1,
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: 'rgba(255,255,255,0.05)',
     },
     // ACTION CARDS
     actionCardWrapper: {
-        marginBottom: 16,
-        borderRadius: 28,
+        marginBottom: 20,
+        borderRadius: 24,
         overflow: 'hidden',
-        elevation: 6,
+        elevation: 12,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.4,
+        shadowRadius: 15,
     },
     actionGradient: {
         padding: 24,
@@ -413,21 +470,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     actionIconContainer: {
-        width: 54,
-        height: 54,
-        borderRadius: 27,
-        backgroundColor: 'rgba(255,255,255,0.18)',
+        width: 60,
+        height: 60,
+        borderRadius: 18,
+        backgroundColor: 'rgba(255,255,255,0.15)',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 18,
+        marginRight: 20,
     },
     actionTextContent: {
         flex: 1,
     },
     actionItemTitle: {
-        fontSize: 21,
-        fontWeight: 'bold',
+        fontSize: 22,
+        fontWeight: '900',
         color: 'white',
+        letterSpacing: 0.5,
     },
     actionItemSubtitle: {
         fontSize: 13,
@@ -544,6 +602,78 @@ const styles = StyleSheet.create({
         fontSize: 14,
         textTransform: 'uppercase',
         letterSpacing: 1,
+    },
+    // LOGOUT MODAL SPECIFIC
+    logoutModalContainer: {
+        backgroundColor: 'transparent',
+        padding: 24,
+        justifyContent: 'center',
+    },
+    logoutModalContent: {
+        borderRadius: 32,
+        padding: 30,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+    },
+    logoutIconRing: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        borderWidth: 2,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    logoutActionRow: {
+        flexDirection: 'row',
+        width: '100%',
+        marginTop: 25,
+        gap: 12,
+    },
+    logoutBtn: {
+        flex: 1,
+        height: 54,
+        borderRadius: 16,
+        overflow: 'hidden',
+    },
+    logoutBtnCancel: {
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    logoutBtnGradient: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    logoutBtnTextCancel: {
+        color: 'rgba(255,255,255,0.5)',
+        fontWeight: '900',
+        fontSize: 14,
+        letterSpacing: 1,
+    },
+    logoutBtnTextConfirm: {
+        color: 'white',
+        fontWeight: '900',
+        fontSize: 14,
+        letterSpacing: 1,
+    },
+    confirmTitle: {
+        fontSize: 24,
+        fontWeight: '900',
+        color: 'white',
+        letterSpacing: -0.5,
+        marginBottom: 10,
+    },
+    confirmSubtitle: {
+        fontSize: 15,
+        color: 'rgba(255,255,255,0.6)',
+        lineHeight: 22,
+        paddingHorizontal: 10,
     },
 });
 
