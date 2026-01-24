@@ -359,7 +359,7 @@ const obtenerLogMantenimiento = async (req, res) => {
 const registrarReporteChofer = async (req, res) => {
   try {
     const { id } = req.params;
-    const { kilometraje, litros, rutaId, fecha } = req.body;
+    const { kilometraje, litros, rutaId, fecha, observaciones } = req.body;
 
     const vehiculo = await Vehiculo.findById(id);
     if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
