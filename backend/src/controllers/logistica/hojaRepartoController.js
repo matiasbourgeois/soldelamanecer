@@ -46,6 +46,22 @@ const crearHojaPreliminar = async (req, res) => {
             choferSeleccionado = ruta.choferAsignado._id;
         }
 
+        // --- VALIDACIÓN DE UNICIDAD (Fase 1 God Level) ---
+        const hoy = new Date();
+        const inicioDia = new Date(hoy).setHours(0, 0, 0, 0);
+        const finDia = new Date(hoy).setHours(23, 59, 59, 999);
+
+        const existe = await HojaReparto.findOne({
+            ruta: rutaId,
+            fecha: { $gte: inicioDia, $lte: finDia }
+        });
+
+        if (existe) {
+            return res.status(400).json({
+                error: `Ya existe una hoja de reparto para esta ruta hoy (${existe.numeroHoja || 'En Planificación'}). Use el Control Operativo para editarla.`
+            });
+        }
+
 
 
         // Extraer IDs de localidades
@@ -89,6 +105,10 @@ const crearHojaPreliminar = async (req, res) => {
             envios: idsEnvios,
             estado: 'pendiente',
             observaciones,
+            // Snapshot de precios y KMs (Fase 1 Plan Maestro)
+            kilometrosEstimados: ruta.kilometrosEstimados || 0,
+            precioKm: ruta.precioKm || 0,
+            proveedor: ruta.proveedorAsignado || null,
             historialMovimientos: [
                 {
                     usuario: usuarioId,
@@ -563,9 +583,14 @@ const cerrarHojaManualmente = async (req, res) => {
 
         hoja.estado = "cerrada";
         hoja.cerradaAutomaticamente = true;
+
+        // Capturar información del usuario que fuerza el cierre
+        const Usuario = require("../../models/Usuario");
+        const usuario = req.usuario?.id ? await Usuario.findById(req.usuario.id) : null;
+
         hoja.historialMovimientos.push({
-            usuario: null, // si lo hacés desde admin, podés enviar un ID
-            accion: "cierre forzado de hoja",
+            usuario: req.usuario?.id || null,
+            accion: `Cierre forzado de hoja por ${usuario?.nombre || 'sistema'}`,
         });
 
         await hoja.save();
@@ -582,15 +607,23 @@ const consultarHojasPaginado = async (req, res) => {
         const pagina = parseInt(req.query.pagina) || 0;
         const limite = parseInt(req.query.limite) || 10;
         const busqueda = req.query.busqueda || "";
-        const { desde, hasta, estado } = req.query; // New filters
+        const { desde, hasta, estado, proveedorId } = req.query; // New filters
 
-        // Filtrar SOLO hojas confirmadas o cerradas (no pendientes) par defecto, pero permitir override
-        const filtro = {
-            estado: estado ? estado : { $ne: "pendiente" }
-        };
+        // Filtrar SOLO hojas confirmadas o cerradas (no pendientes) por defecto, pero permitir override
+        const filtro = {};
+        if (estado && estado !== "all") {
+            filtro.estado = estado;
+        } else if (!estado) {
+            filtro.estado = { $ne: "pendiente" };
+        }
 
         if (busqueda) {
             filtro.numeroHoja = { $regex: busqueda, $options: "i" };
+        }
+
+        // Filtro por Proveedor (Snapshot)
+        if (proveedorId) {
+            filtro.proveedor = proveedorId;
         }
 
         // Filtro de Fechas
@@ -610,7 +643,15 @@ const consultarHojasPaginado = async (req, res) => {
             .sort({ fecha: -1 })
             .skip(pagina * limite)
             .limit(limite)
-            .populate("ruta vehiculo")
+            .populate({
+                path: "ruta",
+                populate: [
+                    { path: "choferAsignado", populate: { path: "usuario", select: "nombre dni" } },
+                    { path: "vehiculoAsignado" }
+                ]
+            })
+            .populate("vehiculo")
+            .populate("proveedor")
             .populate({
                 path: "chofer",
                 populate: { path: "usuario", select: "nombre dni" }
@@ -639,9 +680,27 @@ const consultarHojasPaginado = async (req, res) => {
             return hojaObj;
         });
 
+        // Detección de duplicados (misma ruta y fecha)
+        const hojasConDuplicados = await Promise.all(hojasConRemitos.map(async (hoja) => {
+            if (!hoja.ruta?._id) return { ...hoja, esDuplicada: false };
+
+            const fechaInicio = new Date(hoja.fecha);
+            fechaInicio.setHours(0, 0, 0, 0);
+            const fechaFin = new Date(hoja.fecha);
+            fechaFin.setHours(23, 59, 59, 999);
+
+            const count = await HojaReparto.countDocuments({
+                ruta: hoja.ruta._id,
+                fecha: { $gte: fechaInicio, $lte: fechaFin },
+                _id: { $ne: hoja._id }
+            });
+
+            return { ...hoja, esDuplicada: count > 0 };
+        }));
+
         res.status(200).json({
             total,
-            hojas: hojasConRemitos
+            hojas: hojasConDuplicados
         });
     } catch (error) {
         console.error("❌ Error en consulta paginada de hojas:", error);
@@ -651,6 +710,145 @@ const consultarHojasPaginado = async (req, res) => {
 
 
 
+
+// Motor de Generación Silenciosa (Job Nocturno 00:01 AR)
+const generarHojasAutomaticas = async (fechaReferencia) => {
+    try {
+        const logger = require("../../utils/logger");
+
+        // 1. Buscar todas las rutas activas
+        const rutas = await Ruta.find({ activa: true });
+
+        logger.info(`🗺️ Iniciando generación automática para ${rutas.length} rutas activas.`);
+
+        const resultados = { creadas: 0, saltadas: 0, errores: 0 };
+
+        for (const ruta of rutas) {
+            try {
+                // 2. Definir "Hoy" en formato Date (00:00:00) para la comparación
+                const inicioDia = new Date(fechaReferencia);
+                inicioDia.setHours(0, 0, 0, 0);
+                const finDia = new Date(fechaReferencia);
+                finDia.setHours(23, 59, 59, 999);
+
+                // 3. Verificar si ya existe una hoja para esta ruta y esta fecha
+                const existe = await HojaReparto.findOne({
+                    ruta: ruta._id,
+                    fecha: { $gte: inicioDia, $lte: finDia }
+                });
+
+                if (existe) {
+                    logger.info(`⏭️ Saltando ruta ${ruta.codigo}: Ya existe una hoja para hoy.`);
+                    resultados.saltadas++;
+                    continue;
+                }
+
+                // 4. Crear la Hoja de Reparto (Solo Estructura, sin envíos automáticos)
+                const nuevaHoja = new HojaReparto({
+                    numeroHoja: null, // Se asigna al confirmar manualmente
+                    fecha: inicioDia,
+                    ruta: ruta._id,
+                    chofer: ruta.choferAsignado,
+                    vehiculo: ruta.vehiculoAsignado,
+                    envios: [], // ⚠️ Orden: Sin confirmación automática de encomiendas
+                    estado: 'pendiente',
+                    observaciones: `Generada automáticamente por el sistema (Motor Silencioso).`,
+                    // Snapshot de precios y KMs (Fase 1 Plan Maestro)
+                    kilometrosEstimados: ruta.kilometrosEstimados || 0,
+                    precioKm: ruta.precioKm || 0,
+                    proveedor: ruta.proveedorAsignado || null,
+                    historialMovimientos: [{
+                        usuario: null, // Sistema
+                        accion: 'generación automática silenciosa'
+                    }]
+                });
+
+                await nuevaHoja.save();
+                logger.info(`✅ Hoja generada para ruta ${ruta.codigo}.`);
+                resultados.creadas++;
+
+            } catch (err) {
+                logger.error(`❌ Error generando hoja para ruta ${ruta.codigo}: ${err.message}`);
+                resultados.errores++;
+            }
+        }
+
+        return resultados;
+    } catch (error) {
+        console.error("❌ Error crítico en generarHojasAutomaticas:", error);
+    }
+};
+
+// Actualizar datos de la hoja (Fase 1 - Quick Edit) con Auditoría
+const actualizarHoja = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { chofer, vehiculo } = req.body;
+
+        // Obtener hoja original para comparar cambios
+        const hojaOriginal = await HojaReparto.findById(id)
+            .populate("chofer vehiculo")
+            .populate({ path: "ruta", populate: { path: "choferAsignado vehiculoAsignado" } });
+
+        if (!hojaOriginal) return res.status(404).json({ error: "Hoja no encontrada" });
+
+        // Si la hoja está cerrada, registrar auditoría
+        if (hojaOriginal.estado === 'cerrada') {
+            const Usuario = require("../../models/Usuario");
+            const Chofer = require("../../models/Chofer");
+            const Vehiculo = require("../../models/Vehiculo");
+
+            const usuario = await Usuario.findById(req.usuario.id);
+            const cambios = [];
+
+            // Detectar cambio de chofer
+            if (chofer && chofer !== (hojaOriginal.chofer?._id?.toString() || hojaOriginal.chofer?.toString())) {
+                const choferAnterior = hojaOriginal.chofer
+                    ? await Chofer.findById(hojaOriginal.chofer).populate("usuario")
+                    : null;
+                const choferNuevo = await Chofer.findById(chofer).populate("usuario");
+
+                const nombreAnterior = choferAnterior?.usuario?.nombre || "Sin asignar";
+                const nombreNuevo = choferNuevo?.usuario?.nombre || "Desconocido";
+
+                cambios.push(`chofer cambiado de "${nombreAnterior}" a "${nombreNuevo}"`);
+            }
+
+            // Detectar cambio de vehículo
+            if (vehiculo && vehiculo !== (hojaOriginal.vehiculo?._id?.toString() || hojaOriginal.vehiculo?.toString())) {
+                const vehiculoAnterior = hojaOriginal.vehiculo
+                    ? await Vehiculo.findById(hojaOriginal.vehiculo)
+                    : null;
+                const vehiculoNuevo = await Vehiculo.findById(vehiculo);
+
+                const patenteAnterior = vehiculoAnterior?.patente || "Sin asignar";
+                const patenteNueva = vehiculoNuevo?.patente || "Desconocido";
+
+                cambios.push(`vehículo cambiado de "${patenteAnterior}" a "${patenteNueva}"`);
+            }
+
+            // Registrar en historial si hubo cambios
+            if (cambios.length > 0) {
+                hojaOriginal.historialMovimientos.push({
+                    usuario: req.usuario.id,
+                    accion: `Edición post-cierre por ${usuario.nombre}: ${cambios.join(", ")}`
+                });
+            }
+        }
+
+        // Actualizar hoja
+        Object.assign(hojaOriginal, req.body);
+        await hojaOriginal.save();
+
+        const hojaActualizada = await HojaReparto.findById(id)
+            .populate("ruta chofer vehiculo");
+
+        res.json(hojaActualizada);
+    } catch (error) {
+        console.error("❌ Error al actualizar hoja:", error);
+        res.status(500).json({ error: "Error al actualizar la hoja" });
+    }
+};
 
 module.exports = {
     crearHojaPreliminar,
@@ -663,5 +861,7 @@ module.exports = {
 
     obtenerHojasPorChofer,
     cerrarHojasVencidas,
-    cerrarHojaManualmente
+    cerrarHojaManualmente,
+    generarHojasAutomaticas,
+    actualizarHoja
 };

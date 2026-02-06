@@ -7,7 +7,8 @@ const connectDB = require("./src/config/db");
 const logger = require("./src/utils/logger");
 
 // Cron Jobs
-require("./src/tasks/cronCerrarHojas")();
+// require("./src/tasks/cronCerrarHojas")(); // Desactivado por pedido (ya no se necesita)
+require("./src/tasks/cronGenerarHojas")();
 
 connectDB();
 

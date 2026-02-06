@@ -43,6 +43,7 @@ import GestionHojasReparto from "./modules/logistica/hoja-reparto/pages/GestionH
 import CrearHojaReparto from "./modules/logistica/hoja-reparto/pages/CrearHojaReparto";
 import ConsultarHojasReparto from "./modules/logistica/hoja-reparto/pages/ConsultarHojasReparto";
 import DetalleHojaReparto from "./modules/logistica/hoja-reparto/pages/DetalleHojaReparto";
+import ControlOperativo from "./modules/logistica/hoja-reparto/pages/ControlOperativo";
 
 // Pages - Logistica (Vehiculos & Rutas)
 import VehiculosAdmin from "./modules/logistica/vehiculos/pages/VehiculosAdmin";
@@ -269,6 +270,14 @@ function App() {
               element={
                 <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
                   <ConsultarHojasReparto />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/control-operativo"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <ControlOperativo />
                 </ProtectedByRole>
               }
             />

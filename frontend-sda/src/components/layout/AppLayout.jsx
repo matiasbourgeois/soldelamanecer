@@ -168,9 +168,14 @@ export function AppLayout({ children, auth, handleLogout }) {
                             label="Gestión Operativa"
                             leftSection={<IconTruckDelivery size={20} stroke={1.5} />}
                             childrenOffset={28}
-                            defaultOpened={isParentActive(['/admin/rutas', '/admin/choferes', '/admin/vehiculos'])}
+                            defaultOpened={isParentActive(['/admin/rutas', '/admin/choferes', '/admin/vehiculos', '/admin/control-operativo'])}
                             style={{ borderRadius: theme.radius.md, fontWeight: 600, color: theme.colors.gray[7] }}
                         >
+                            <NavLink
+                                label="Control Operativo Diario"
+                                leftSection={<IconSteeringWheel size={18} />}
+                                {...getLinkProps('/admin/control-operativo')}
+                            />
                             <NavLink
                                 label="Rutas"
                                 leftSection={<IconMapRoute size={18} />}

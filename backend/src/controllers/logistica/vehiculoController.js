@@ -359,12 +359,12 @@ const obtenerLogMantenimiento = async (req, res) => {
 const registrarReporteChofer = async (req, res) => {
   try {
     const { id } = req.params;
-    const { kilometraje, litros, rutaId, fecha, observaciones } = req.body;
+    const { kilometraje, litros, rutaId, fecha, observaciones, hojaRepartoId } = req.body;
 
     const vehiculo = await Vehiculo.findById(id);
     if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
 
-    // 1. Validar Límite de Reportes Diarios (Máx 2 por día: Salida y Llegada)
+    // 1. Validar Límite de Reportes Diarios
     const fechaReporte = fecha ? new Date(fecha) : new Date();
     const startOfDay = new Date(fechaReporte); startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(fechaReporte); endOfDay.setHours(23, 59, 59, 999);
@@ -375,25 +375,51 @@ const registrarReporteChofer = async (req, res) => {
       fecha: { $gte: startOfDay, $lte: endOfDay }
     });
 
-    if (reportesHoy >= 10) { // Límite aumentado a 10 para pruebas
+    if (reportesHoy >= 10) {
       return res.status(400).json({
-        error: "Límite excedido: Ya se cargaron 10 reportes para este vehículo en la fecha seleccionada."
+        error: "Límite excedido: Ya se cargaron 10 reportes para este vehículo hoy."
       });
     }
 
-    // 2. Actualizar KM del vehículo si es mayor al actual
-    // (Permitimos correcciones menores, pero idealmente debe subir)
+    // 2. Actualizar KM del vehículo
     if (kilometraje > vehiculo.kilometrajeActual) {
       vehiculo.kilometrajeActual = kilometraje;
     }
 
-    // 2. Crear Log
+    // 3. Vincular con Hoja de Reparto si existe
+    let hojaFinalId = hojaRepartoId;
+
+    if (hojaFinalId) {
+      const HojaReparto = require("../../models/HojaReparto");
+      const hoja = await HojaReparto.findById(hojaFinalId);
+      if (hoja) {
+        // Si el chofer reportó un vehículo o ruta distinta a la planificada en la hoja, 
+        // actualizamos la hoja para que el Control Operativo detecte la "discrepancia"
+        // o simplemente para que quede registrado qué usó realmente.
+        hoja.chofer = req.usuario ? (await require("../../models/Chofer").findOne({ usuario: req.usuario.id }))?._id || hoja.chofer : hoja.chofer;
+        hoja.vehiculo = id;
+        hoja.ruta = rutaId || hoja.ruta;
+
+        // Si estaba pendiente, pasa a 'en reparto'
+        if (hoja.estado === 'pendiente') {
+          hoja.estado = 'en reparto';
+          hoja.historialMovimientos.push({
+            usuario: req.usuario ? req.usuario.id : null,
+            accion: 'inicio de viaje desde app móvil'
+          });
+        }
+        await hoja.save();
+      }
+    }
+
+    // 4. Crear Log
     const log = new MantenimientoLog({
       vehiculo: vehiculo._id,
-      tipo: "Reporte Diario", // O "Carga Combustible"
+      tipo: "Reporte Diario",
       kmAlMomento: kilometraje,
       litrosCargados: litros || 0,
       ruta: rutaId || null,
+      hojaReparto: hojaFinalId || null,
       fecha: fecha ? new Date(new Date(fecha).setUTCHours(12, 0, 0, 0)) : new Date(),
       registradoPor: req.usuario ? req.usuario.id : null,
       observaciones: observaciones || `Reporte diario desde App Móvil.`

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     Container, Paper, Title, Text, Group, Grid, LoadingOverlay,
@@ -7,9 +6,9 @@ import {
 } from "@mantine/core";
 import {
     Calendar, User, Truck, FileText, ArrowLeft,
-    MapPin, Package, Ruler, ClipboardList, CheckCircle
+    MapPin, Package, ClipboardList, CheckCircle, XCircle
 } from "lucide-react";
-import { apiSistema } from "../../../../core/api/apiSistema";
+import clienteAxios from "../../../../core/api/clienteAxios";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
 import MapaEntregas from "./MapaEntregas";
 
@@ -23,11 +22,11 @@ const DetalleHojaReparto = () => {
     useEffect(() => {
         const obtenerDetalle = async () => {
             try {
-                const res = await axios.get(apiSistema(`/hojas-reparto/${id}`));
+                const res = await clienteAxios.get(`/hojas-reparto/${id}`);
                 setHoja(res.data);
             } catch (error) {
                 console.error("Error al obtener hoja:", error);
-
+                mostrarAlerta("Error al cargar detalle", "error");
             } finally {
                 setCargando(false);
             }
@@ -37,7 +36,7 @@ const DetalleHojaReparto = () => {
 
     const exportarHoja = async (hojaId, numeroHoja) => {
         try {
-            const response = await axios.get(apiSistema(`/hojas-reparto/exportar/${hojaId}`), {
+            const response = await clienteAxios.get(`/hojas-reparto/exportar/${hojaId}`, {
                 responseType: "blob",
             });
             const blob = new Blob([response.data], { type: "application/pdf" });
@@ -51,6 +50,22 @@ const DetalleHojaReparto = () => {
         } catch (error) {
             console.error(error);
             mostrarAlerta("Error al exportar PDF", "error");
+        }
+    };
+
+    const cerrarHoja = async (hojaId) => {
+        try {
+            const confirm = window.confirm("¿Está seguro de forzar el cierre de esta hoja? Los envíos no entregados quedarán como reagendados.");
+            if (!confirm) return;
+
+            await clienteAxios.post('/hojas-reparto/forzar-cierre', { hojaId });
+            mostrarAlerta("Hoja cerrada correctamente", "success");
+            // Refresh
+            const res = await clienteAxios.get(`/hojas-reparto/${id}`);
+            setHoja(res.data);
+        } catch (error) {
+            console.error("Error al cerrar hoja:", error);
+            mostrarAlerta("Error al cerrar la hoja", "error");
         }
     };
 
@@ -116,6 +131,18 @@ const DetalleHojaReparto = () => {
                     >
                         {hoja.estado?.toUpperCase()}
                     </Badge>
+                    {hoja.estado === 'en reparto' && (
+                        <Button
+                            variant="light"
+                            color="orange"
+                            size="md"
+                            radius="md"
+                            leftSection={<XCircle size={18} />}
+                            onClick={() => cerrarHoja(hoja._id)}
+                        >
+                            Forzar Cierre
+                        </Button>
+                    )}
                     <Button
                         variant="light"
                         color="red"

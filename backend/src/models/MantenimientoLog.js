@@ -23,6 +23,11 @@ const MantenimientoLogSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    hojaReparto: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "HojaReparto",
+        default: null
+    },
     kmAlMomento: {
         type: Number,
         required: true

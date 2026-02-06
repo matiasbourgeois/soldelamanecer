@@ -17,6 +17,8 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
     // Configuración Traída del Backend
     const [vehiculoAsignado, setVehiculoAsignado] = useState<any>(null);
     const [rutaAsignada, setRutaAsignado] = useState<any>(null);
+    const [hojaRepartoId, setHojaRepartoId] = useState<string | null>(null);
+    const [esPlanificada, setEsPlanificada] = useState(false);
 
     // Formulario
     const [fecha, setFecha] = useState(new Date());
@@ -89,6 +91,8 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                 const resConfig = await api.get('/choferes/configuracion');
                 if (resConfig.data.vehiculo) setVehiculoAsignado(resConfig.data.vehiculo);
                 if (resConfig.data.ruta) setRutaAsignado(resConfig.data.ruta);
+                if (resConfig.data.hojaRepartoId) setHojaRepartoId(resConfig.data.hojaRepartoId);
+                if (resConfig.data.esPlanificada) setEsPlanificada(true);
 
                 // 2. Listas completas para selectores
                 const resSelectores = await api.get('/choferes/selectores-reporte');
@@ -197,7 +201,8 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                 litros: litrosInput ? parseFloat(litrosInput) : 0,
                 rutaId: rutaAsignada?._id || null,
                 fecha: fecha.toISOString(),
-                observaciones: observaciones
+                observaciones: observaciones,
+                hojaRepartoId: hojaRepartoId
             };
 
             await api.post(`/vehiculos/${vehiculoAsignado._id}/reporte-chofer`, payload);
@@ -255,7 +260,14 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                         <IconButton icon="arrow-left" iconColor="white" size={24} />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Reporte Diario</Text>
+                    <View style={{ alignItems: 'center' }}>
+                        <Text style={styles.headerTitle}>Reporte Diario</Text>
+                        {esPlanificada && (
+                            <View style={styles.badgePlanned}>
+                                <Text style={styles.badgePlannedText}>RUTA PLANIFICADA</Text>
+                            </View>
+                        )}
+                    </View>
                     <View style={{ width: 44 }} />
                 </View>
 
@@ -857,6 +869,21 @@ const styles = StyleSheet.create({
         width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center',
     },
     headerTitle: { fontSize: 20, fontWeight: '800', color: 'white', letterSpacing: 0.5 },
+    badgePlanned: {
+        backgroundColor: 'rgba(34, 211, 238, 0.2)',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 8,
+        marginTop: 4,
+        borderWidth: 1,
+        borderColor: 'rgba(34, 211, 238, 0.4)'
+    },
+    badgePlannedText: {
+        fontSize: 9,
+        fontWeight: '900',
+        color: '#22d3ee',
+        letterSpacing: 1
+    },
 
     content: { padding: 20 },
     sectionLabel: { fontSize: 13, fontWeight: '800', color: '#22d3ee', marginBottom: 12, letterSpacing: 1.5, textTransform: 'uppercase' },

@@ -215,23 +215,40 @@ const obtenerMiConfiguracion = async (req, res) => {
       return res.status(404).json({ msg: "Perfil de chofer no encontrado." });
     }
 
-    // Buscar si tiene alguna ruta asignada
-    // Importante: Model Ruta debe ser requerido arriba si no lo está
+    // 1. Buscar si existe una Hoja de Reparto para hoy para este chofer
+    const HojaReparto = require("../../models/HojaReparto");
+    const hoy = new Date();
+    const inicioDia = new Date(hoy).setHours(0, 0, 0, 0);
+    const finDia = new Date(hoy).setHours(23, 59, 59, 999);
+
+    const hojaHoy = await HojaReparto.findOne({
+      chofer: chofer._id,
+      fecha: { $gte: inicioDia, $lte: finDia },
+      estado: { $ne: "cerrada" }
+    }).populate("vehiculo ruta");
+
+    if (hojaHoy) {
+      return res.json({
+        vehiculo: hojaHoy.vehiculo,
+        ruta: hojaHoy.ruta,
+        hojaRepartoId: hojaHoy._id,
+        esPlanificada: true
+      });
+    }
+
+    // 2. Si no hay hoja, buscar configuración por defecto de la Ruta (Legacy fallback)
     const Ruta = require("../../models/Ruta");
-    // Buscar la ruta asignada al chofer y popular su vehículo
     const rutaAsignada = await Ruta.findOne({ choferAsignado: chofer._id }).populate("vehiculoAsignado");
 
-    // LÓGICA DE NEGOCIO CORREGIDA:
-    // El vehículo viene de la RUTA, no del chofer directamenete.
-    // Si la ruta tiene vehículo, ese es el que vale.
-    // Solo si no hay ruta, miramos si el chofer tiene uno "por defecto" (legacy).
     const vehiculoFinal = (rutaAsignada && rutaAsignada.vehiculoAsignado)
       ? rutaAsignada.vehiculoAsignado
       : chofer.vehiculoAsignado;
 
     res.json({
       vehiculo: vehiculoFinal,
-      ruta: rutaAsignada
+      ruta: rutaAsignada,
+      hojaRepartoId: null,
+      esPlanificada: false
     });
 
   } catch (error) {

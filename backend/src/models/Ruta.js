@@ -5,6 +5,7 @@ const RutaSchema = new mongoose.Schema({
   horaSalida: { type: String, required: true },                // Ej: 06:30
   frecuencia: { type: String, required: true },                // Ej: Lu a Vi
   descripcion: { type: String },                               // Breve texto explicativo
+  horarioTipico: { type: String },                             // Ej: "08:00 - 14:00"
 
   zona: {
     type: mongoose.Schema.Types.ObjectId,
@@ -27,6 +28,12 @@ const RutaSchema = new mongoose.Schema({
   vehiculoAsignado: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Vehiculo",
+    default: null
+  },
+
+  proveedorAsignado: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Proveedor",
     default: null
   },
 
