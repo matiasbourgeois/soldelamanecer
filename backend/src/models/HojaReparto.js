@@ -24,12 +24,12 @@ const hojaRepartoSchema = new mongoose.Schema({
   chofer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Chofer',
-    required: true,
+    default: null, // ✅ Opcional para hojas generadas automáticamente
   },
   vehiculo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Vehiculo',
-    required: true,
+    default: null, // ✅ Opcional para hojas generadas automáticamente
   },
   envios: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -44,12 +44,17 @@ const hojaRepartoSchema = new mongoose.Schema({
   cerradaAutomaticamente: {
     type: Boolean,
     default: false,
-  },  
+  },
   observaciones: {
     type: String,
     default: '',
   },
+  // --- SNAPSHOTS (Fase 1 Plan Maestro) ---
+  kilometrosEstimados: { type: Number, default: 0 },
+  precioKm: { type: Number, default: 0 },
+  proveedor: { type: mongoose.Schema.Types.ObjectId, ref: 'Proveedor', default: null },
+
   historialMovimientos: [historialMovimientoSchema],
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('HojaReparto', hojaRepartoSchema);
