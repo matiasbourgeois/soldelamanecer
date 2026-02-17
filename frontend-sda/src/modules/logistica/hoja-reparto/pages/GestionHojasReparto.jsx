@@ -10,7 +10,7 @@ const GestionHojasReparto = () => {
 
   const acciones = [
     {
-      titulo: "Crear Hoja de Reparto",
+      titulo: "Asignar Envíos a Hoja",
       descripcion: "Seleccioná ruta, chofer y envíos para iniciar el reparto.",
       icono: <FilePlus size={32} />,
       ruta: "/hojas-reparto/crear",

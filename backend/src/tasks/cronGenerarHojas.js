@@ -2,23 +2,29 @@
 const cron = require("node-cron");
 const { generarHojasAutomaticas } = require("../controllers/logistica/hojaRepartoController");
 const logger = require("../utils/logger");
+const { esFeriado } = require("../services/feriadoService");
 
 /**
  * Motor de Generación Silenciosa (Phase 1)
  * Configurado para ejecutarse a las 00:01 AM Hora Argentina (GMT-3)
+ * Valida feriados nacionales antes de generar hojas
  */
 const iniciarGeneracionAutomatica = () => {
-    // 00:01 AR = 03:01 UTC
-    // Si el servidor está en UTC, usamos "1 3 * * *"
-    // Si el servidor permite timezone en node-cron:
     cron.schedule("1 0 * * *", async () => {
         logger.info("🕐 Ejecutando tarea programada: Generación Silenciosa de Hojas (00:01 AR)");
 
-        // Obtenemos la fecha actual para la generación
         const hoy = new Date();
 
+        // Verificar si es feriado nacional
+        const esFeriadoNacional = await esFeriado(hoy);
+
+        if (esFeriadoNacional) {
+            logger.info("🏖️ HOY ES FERIADO NACIONAL - No se generarán hojas de reparto automáticas");
+            return;
+        }
+
         try {
-            const resultados = await generarHojasAutomaticas(hoy);
+            const resultados = await generarHojasAutomaticas(hoy, esFeriadoNacional);
             logger.info(`✅ Generación automática completada. Hojas creadas: ${resultados.creadas}, Saltadas: ${resultados.saltadas}, Errores: ${resultados.errores}`);
         } catch (error) {
             logger.error("❌ Error en tarea programada de generación automática:", error);
@@ -26,6 +32,8 @@ const iniciarGeneracionAutomatica = () => {
     }, {
         timezone: "America/Argentina/Cordoba"
     });
+
+    logger.info("✅ Cron de generación automática inicializado (00:01 AR)");
 };
 
 module.exports = iniciarGeneracionAutomatica;

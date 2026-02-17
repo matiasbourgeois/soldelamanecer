@@ -3,7 +3,18 @@ const mongoose = require("mongoose");
 const RutaSchema = new mongoose.Schema({
   codigo: { type: String, required: true, unique: true, uppercase: true, trim: true },      // Ej: L-ALCA-M1
   horaSalida: { type: String, required: true },                // Ej: 06:30
-  frecuencia: { type: String, required: true },                // Ej: Lu a Vi
+  frecuencia: {
+    tipo: {
+      type: String,
+      enum: ['dias-especificos', 'diaria', 'personalizada'],
+      default: 'dias-especificos'
+    },
+    diasSemana: {
+      type: [Boolean], // [Lun, Mar, Mié, Jue, Vie, Sáb, Dom]
+      default: [false, false, false, false, false, false, false]
+    },
+    textoLegible: { type: String } // Auto-generado: "Lun, Mié, Vie"
+  },
   descripcion: { type: String },                               // Breve texto explicativo
   horarioTipico: { type: String },                             // Ej: "08:00 - 14:00"
 

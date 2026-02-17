@@ -13,8 +13,12 @@ const {
   obtenerHojasPorChofer,
   cerrarHojaManualmente,
   generarHojasAutomaticas,
-  actualizarHoja
+  actualizarHoja,
+  buscarHojaPorRutaFecha  // 🆕 FASE 5
 } = require("../controllers/logistica/hojaRepartoController");
+
+// 🆕 FASE 5: Buscar hoja existente por ruta y fecha (para asignación de envíos)
+router.get("/buscar-por-ruta-fecha", verificarToken, buscarHojaPorRutaFecha);
 
 // Crear hoja preliminar
 router.post("/preliminar", crearHojaPreliminar);

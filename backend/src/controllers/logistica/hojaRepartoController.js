@@ -188,7 +188,7 @@ const confirmarHoja = async (req, res) => {
         hoja.estado = 'en reparto';
         hoja.envios = envios;
 
-        // Actualizar estado de envíos
+        // Actualizar estado de envíos y asignar a hoja
         for (const envioId of envios) {
             const envio = await Envio.findById(envioId).populate("clienteRemitente", "nombre email");
             if (!envio) {
@@ -196,6 +196,8 @@ const confirmarHoja = async (req, res) => {
                 continue;
             }
 
+            // 🆕 CRÍTICO: Asignar el envío a esta hoja
+            envio.hojaReparto = hojaId;
             envio.estado = "en reparto";
             envio.historialEstados.push({
                 estado: "en reparto",
@@ -712,7 +714,7 @@ const consultarHojasPaginado = async (req, res) => {
 
 
 // Motor de Generación Silenciosa (Job Nocturno 00:01 AR)
-const generarHojasAutomaticas = async (fechaReferencia) => {
+const generarHojasAutomaticas = async (fechaReferencia, esFeriadoNacional = false) => {
     try {
         const logger = require("../../utils/logger");
 
@@ -722,6 +724,12 @@ const generarHojasAutomaticas = async (fechaReferencia) => {
         logger.info(`🗺️ Iniciando generación automática para ${rutas.length} rutas activas.`);
 
         const resultados = { creadas: 0, saltadas: 0, errores: 0 };
+
+        // Calcular día de la semana (0=Domingo en JS, convertimos a 0=Lunes)
+        const diaSemanaJS = fechaReferencia.getDay();
+        const diaIndex = diaSemanaJS === 0 ? 6 : diaSemanaJS - 1; // 0=Lun, 1=Mar, ..., 6=Dom
+        const diasNombres = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+        logger.info(`📅 Día de la semana: ${diasNombres[diaIndex]} (índice ${diaIndex})`);
 
         for (const ruta of rutas) {
             try {
@@ -743,7 +751,18 @@ const generarHojasAutomaticas = async (fechaReferencia) => {
                     continue;
                 }
 
-                // 4. Crear la Hoja de Reparto (Solo Estructura, sin envíos automáticos)
+                // 4. VALIDAR FRECUENCIA - Verificar si la ruta sale hoy
+                if (ruta.frecuencia?.diasSemana && Array.isArray(ruta.frecuencia.diasSemana)) {
+                    const debeGenerarHoy = ruta.frecuencia.diasSemana[diaIndex];
+
+                    if (!debeGenerarHoy) {
+                        logger.info(`📅 Saltando ruta ${ruta.codigo}: No corresponde hoy (frecuencia: ${ruta.frecuencia.textoLegible || 'Sin configurar'})`);
+                        resultados.saltadas++;
+                        continue;
+                    }
+                }
+
+                // 5. Crear la Hoja de Reparto (Solo Estructura, sin envíos automáticos)
                 const nuevaHoja = new HojaReparto({
                     numeroHoja: null, // Se asigna al confirmar manualmente
                     fecha: inicioDia,
@@ -850,6 +869,89 @@ const actualizarHoja = async (req, res) => {
     }
 };
 
+// 🆕 FASE 5: Buscar hoja existente por ruta y fecha
+const buscarHojaPorRutaFecha = async (req, res) => {
+    try {
+        const { rutaId, fecha } = req.query;
+
+        if (!rutaId || !fecha) {
+            return res.status(400).json({ error: 'rutaId y fecha son requeridos' });
+        }
+
+        // Parsear fecha
+        const fechaBusqueda = new Date(fecha);
+        const inicioDia = new Date(fechaBusqueda);
+        inicioDia.setHours(0, 0, 0, 0);
+        const finDia = new Date(fechaBusqueda);
+        finDia.setHours(23, 59, 59, 999);
+
+        // Buscar hoja
+        const hoja = await HojaReparto.findOne({
+            ruta: rutaId,
+            fecha: { $gte: inicioDia, $lte: finDia }
+        })
+            .populate('ruta')
+            .populate('chofer')
+            .populate('vehiculo')
+            .populate({
+                path: 'envios',
+                populate: [
+                    { path: 'localidadDestino', select: 'nombre' },
+                    { path: 'clienteRemitente', select: 'nombre' },
+                    { path: 'destinatario', select: 'nombre direccion' }
+                ]
+            });
+
+        if (!hoja) {
+            return res.status(404).json({
+                error: 'No existe hoja de reparto para esta ruta y fecha',
+                sugerencia: 'Las hojas se generan automáticamente a las 00:01. Verifica que la fecha seleccionada tenga una hoja creada.'
+            });
+        }
+
+        // Buscar envíos disponibles (pendientes, sin hoja, en localidades de la ruta)
+        const ruta = await Ruta.findById(rutaId).populate('localidades');
+        const idsLocalidades = ruta.localidades.map(l => l._id);
+
+        const enviosDisponibles = await Envio.find({
+            localidadDestino: { $in: idsLocalidades },
+            estado: { $in: ['pendiente', 'reagendado'] },
+            hojaReparto: null // Solo envíos sin asignar
+        })
+            .populate([
+                { path: 'localidadDestino', select: 'nombre' },
+                { path: 'clienteRemitente', select: 'nombre' },
+                { path: 'destinatario', select: 'nombre direccion' },
+                { path: 'encomienda' }
+            ])
+            .lean();
+
+        // Obtener remitos
+        const idsEnviosDisponibles = enviosDisponibles.map(e => e._id);
+        const remitos = await Remito.find({ envio: { $in: idsEnviosDisponibles } });
+
+        const enviosConRemito = enviosDisponibles.map(envio => {
+            const remito = remitos.find(r => r.envio.toString() === envio._id.toString());
+            return {
+                ...envio,
+                remitoNumero: remito ? remito.numeroRemito : null
+            };
+        });
+
+        logger.info(`✅ Hoja encontrada: ${hoja._id}, Envíos disponibles: ${enviosConRemito.length}`);
+
+        res.json({
+            hoja,
+            enviosDisponibles: enviosConRemito,
+            ruta
+        });
+
+    } catch (error) {
+        logger.error('❌ Error buscando hoja por ruta/fecha:', error);
+        res.status(500).json({ error: 'Error al buscar hoja de reparto' });
+    }
+};
+
 module.exports = {
     crearHojaPreliminar,
     confirmarHoja,
@@ -863,5 +965,6 @@ module.exports = {
     cerrarHojasVencidas,
     cerrarHojaManualmente,
     generarHojasAutomaticas,
-    actualizarHoja
+    actualizarHoja,
+    buscarHojaPorRutaFecha  // 🆕 FASE 5
 };

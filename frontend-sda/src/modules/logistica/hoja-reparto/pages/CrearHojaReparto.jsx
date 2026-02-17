@@ -1,34 +1,29 @@
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import clienteAxios from "../../../../core/api/clienteAxios"; // ✅ Con Token
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../../../../core/context/AuthProvider";
 import { apiSistema } from "../../../../core/api/apiSistema";
-import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
-import { confirmarAccion } from "../../../../core/utils/confirmarAccion.jsx";
 import {
     Container,
-    Paper,
     Title,
-    Grid,
-    Select,
-    Button,
     Text,
+    Button,
+    Select,
+    Grid,
+    Card,
+    Stack,
     Group,
-    Box,
+    ThemeIcon,
+    Badge,
+    Alert,
     Table,
     ActionIcon,
-    Badge,
     LoadingOverlay,
-    Stepper,
-    Divider,
-    Card,
-    ThemeIcon,
-    Alert,
     Textarea,
-    rem,
-    Stack
 } from "@mantine/core";
-import { Search, Trash2, Check, Truck, User, MapPin, Package, Settings, Info } from "lucide-react";
+import { DatePickerInput } from '@mantine/dates';
+import { notifications } from '@mantine/notifications';
+import { Search, Trash2, Check, Truck, User, MapPin, Package, Settings, Info, Calendar } from "lucide-react";
 
 const CrearHojaReparto = () => {
     // ----------------------------------------------------------------------
@@ -36,17 +31,15 @@ const CrearHojaReparto = () => {
     // ----------------------------------------------------------------------
     const [rutas, setRutas] = useState([]);
     const [rutaSeleccionada, setRutaSeleccionada] = useState("");
+    const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date()); // 🆕 FASE 5
     const [chofer, setChofer] = useState(null);
     const [vehiculo, setVehiculo] = useState(null);
-    const [envios, setEnvios] = useState([]);
+    const [todosLosEnvios, setTodosLosEnvios] = useState([]); // 🆕 Todos los envíos disponibles
     const [hojaCreada, setHojaCreada] = useState(null);
     const [observaciones, setObservaciones] = useState("");
     const [cargandoEnvios, setCargandoEnvios] = useState(false);
     const [listaChoferes, setListaChoferes] = useState([]);
     const [listaVehiculos, setListaVehiculos] = useState([]);
-
-    // UI State
-    const [activeStep, setActiveStep] = useState(0);
 
     const { auth } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -58,7 +51,7 @@ const CrearHojaReparto = () => {
     useEffect(() => {
         const obtenerRutas = async () => {
             try {
-                const res = await axios.get(apiSistema("/rutas/todas"));
+                const res = await clienteAxios.get(apiSistema("/rutas/todas"));
                 setRutas(res.data.rutas || []);
             } catch (error) {
                 console.error("Error al obtener rutas:", error);
@@ -67,7 +60,7 @@ const CrearHojaReparto = () => {
 
         const obtenerChoferes = async () => {
             try {
-                const res = await axios.get(apiSistema("/choferes/solo-nombres"));
+                const res = await clienteAxios.get(apiSistema("/choferes/solo-nombres"));
                 setListaChoferes(res.data || []);
             } catch (error) {
                 console.error("Error al obtener choferes:", error);
@@ -76,10 +69,10 @@ const CrearHojaReparto = () => {
 
         const obtenerVehiculos = async () => {
             try {
-                const res = await axios.get(apiSistema("/vehiculos"));
+                const res = await clienteAxios.get(apiSistema("/vehiculos"));
                 setListaVehiculos(res.data);
             } catch (error) {
-                console.error("Error al obtener vehículos:", error);
+                console.error("Error al obtener vehícultos:", error);
             }
         };
 
@@ -88,70 +81,109 @@ const CrearHojaReparto = () => {
         obtenerVehiculos();
     }, []);
 
-    // ----------------------------------------------------------------------
-    // 🎮 HANDLERS (Logic Preserved)
-    // ----------------------------------------------------------------------
-    const manejarSeleccionRuta = (rutaId) => {
-        const ruta = rutas.find((r) => r._id === rutaId);
-        setRutaSeleccionada(rutaId);
+    const manejarSeleccionRuta = (valor) => {
+        setRutaSeleccionada(valor);
 
-        if (ruta) {
-            // Helper robusto para obtener ID
-            const getId = (val) => (typeof val === 'object' && val !== null ? val._id : val);
+        const rutaData = rutas.find((r) => r._id === valor);
 
-            const choferId = getId(ruta.choferAsignado);
-            const vehiculoId = getId(ruta.vehiculoAsignado);
-
-            // Búsqueda insensible a tipos (string vs objectID)
-            const choferCompleto = listaChoferes.find((c) => c._id == choferId);
-            const vehiculoCompleto = listaVehiculos.find((v) => v._id == vehiculoId);
-
-            setChofer(choferCompleto || null);
-            setVehiculo(vehiculoCompleto || null);
-        } else {
-            setChofer(null);
-            setVehiculo(null);
+        // Chofer por defecto (si existe en la ruta)
+        if (rutaData && rutaData.choferAsignado) {
+            const choferData = listaChoferes.find((c) => c._id === rutaData.choferAsignado._id);
+            if (choferData) {
+                setChofer(choferData);
+            }
         }
 
-        setEnvios([]);
-        setActiveStep(0);
+        // Vehículo por defecto (si existe en la ruta)
+        if (rutaData && rutaData.vehiculoAsignado) {
+            const vehiculoData = listaVehiculos.find((v) => v._id === rutaData.vehiculoAsignado._id);
+            if (vehiculoData) {
+                setVehiculo(vehiculoData);
+            }
+        }
+
+        // Reset UI
+        setTodosLosEnvios([]);
+        setHojaCreada(null);
     };
 
     const buscarEnvios = async () => {
         setCargandoEnvios(true);
         try {
             const ruta = rutas.find((r) => r._id === rutaSeleccionada);
-            const localidadesRuta = ruta?.localidades || [];
 
-            const res = await axios.post(apiSistema("/hojas-reparto/preliminar"), {
-                rutaId: ruta._id,
-                choferId: typeof chofer === "object" ? chofer?._id : chofer,
-                vehiculoId: vehiculo?._id || vehiculo,
-                observaciones,
-                usuarioId,
-                localidadesRuta,
+            if (!ruta) {
+                notifications.show({
+                    title: 'Validación',
+                    message: 'Seleccioná una ruta válida',
+                    color: 'orange'
+                });
+                setCargandoEnvios(false);
+                return;
+            }
+
+            // 🆕 FASE 5: Llamar al nuevo endpoint
+            const res = await clienteAxios.get(apiSistema("/hojas-reparto/buscar-por-ruta-fecha"), {
+                params: {
+                    rutaId: ruta._id,
+                    fecha: fechaSeleccionada.toISOString()
+                }
             });
 
-            setEnvios(res.data.envios);
+            // Hoja existente (creada por el cron)
             setHojaCreada(res.data.hoja);
-            setActiveStep(1); // Advance UI step
+
+            // Combinar TODOS los envíos (ya asignados + disponibles)
+            const enviosAsignados = res.data.hoja.envios || [];
+            const disponibles = res.data.enviosDisponibles || [];
+            const todosJuntos = [...enviosAsignados, ...disponibles];
+
+            setTodosLosEnvios(todosJuntos);
+
+            // Setear chofer y vehículo desde la hoja
+            setChofer(res.data.hoja.chofer);
+            setVehiculo(res.data.hoja.vehiculo);
+
+            notifications.show({
+                title: '✅ Hoja Encontrada',
+                message: `${todosJuntos.length} envíos disponibles para asignar`,
+                color: 'cyan'
+            });
+
         } catch (error) {
-            console.error("Error al buscar envíos:", error);
-            mostrarAlerta("Error al buscar envíos preliminares", "error");
+            console.error("Error al buscar hoja:", error);
+
+            if (error.response?.status === 404) {
+                notifications.show({
+                    title: 'Sin Hoja',
+                    message: error.response.data.sugerencia || "No existe hoja para esta ruta y fecha",
+                    color: 'orange'
+                });
+            } else {
+                notifications.show({
+                    title: 'Error',
+                    message: 'Error al buscar hoja de reparto',
+                    color: 'red'
+                });
+            }
         }
         setCargandoEnvios(false);
     };
 
     const confirmarHojaFinal = async () => {
         if (!hojaCreada?._id) {
-            mostrarAlerta("No hay hoja para confirmar.", "warning");
+            notifications.show({
+                title: 'Validación',
+                message: 'No hay hoja para confirmar',
+                color: 'orange'
+            });
             return;
         }
 
         try {
-            const enviosSoloIds = envios.map(e => e?._id || e);
+            const enviosSoloIds = todosLosEnvios.map(e => e?._id || e);
 
-            const res = await axios.post(apiSistema("/hojas-reparto/confirmar"), {
+            const res = await clienteAxios.post(apiSistema("/hojas-reparto/confirmar"), {
                 hojaId: hojaCreada._id,
                 envios: enviosSoloIds,
                 choferId: typeof chofer === "object" ? chofer?._id : chofer,
@@ -160,24 +192,26 @@ const CrearHojaReparto = () => {
             });
 
             if (res.status === 200) {
-                mostrarAlerta("✅ Hoja de Reparto confirmada con éxito", "success");
-                navigate("/hojas-reparto/consultar"); // Return to list
+                notifications.show({
+                    title: '✅ ¡Éxito!',
+                    message: 'Envíos asignados correctamente a la hoja de reparto',
+                    color: 'green'
+                });
+                navigate("/hojas-reparto/consultar");
             }
         } catch (error) {
-            console.error("❌ Error al confirmar hoja:", error);
-            mostrarAlerta("Error al confirmar hoja de reparto", "danger");
+            console.error("❌ Error al asignar envíos:", error);
+            notifications.show({
+                title: 'Error',
+                message: 'No se pudieron asignar los envíos',
+                color: 'red'
+            });
         }
     };
 
-    const quitarEnvio = async (envioId) => {
-        const confirmar = await confirmarAccion(
-            "¿Quitar envío de la hoja?",
-            "Este envío quedará fuera de la hoja de reparto actual"
-        );
-        if (!confirmar) return;
-
-        const nuevosEnvios = envios.filter((e) => e._id !== envioId);
-        setEnvios(nuevosEnvios);
+    // Quitar envío de la lista
+    const quitarEnvio = (envioId) => {
+        setTodosLosEnvios(todosLosEnvios.filter(e => e._id !== envioId));
     };
 
     // ----------------------------------------------------------------------
@@ -187,26 +221,18 @@ const CrearHojaReparto = () => {
     const choferOptions = listaChoferes.map(c => ({ value: c._id, label: `${c.usuario?.nombre || 'Sin Nombre'} (${c.usuario?.dni})` }));
     const vehiculoOptions = listaVehiculos.map(v => ({ value: v._id, label: `${v.patente} - ${v.marca} ${v.modelo}` }));
 
+    // ----------------------------------------------------------------------
+    // 🎨 JSX RENDER
+    // ----------------------------------------------------------------------
     return (
-        <Container size="xl" py={40} pb={100}>
-            {/* Header Section */}
-            <Group mb={40} justify="space-between" align="center">
-                <Box>
-                    <Group gap="xs" mb={5}>
-                        <ThemeIcon variant="light" color="blue" size="md" radius="md">
-                            <Settings size={16} />
-                        </ThemeIcon>
-                        <Text tt="uppercase" c="blue" fw={800} fz="xs" ls={1.5}>
-                            Logística y Distribución
-                        </Text>
-                    </Group>
-                    <Title order={1} style={{ fontSize: rem(42), fontWeight: 900, letterSpacing: '-1.5px', color: 'var(--mantine-color-dark-8)' }}>
-                        Crear Hoja de Reparto
-                    </Title>
-                    <Text c="dimmed" size="lg" mt={5} maw={600} lh={1.4}>
-                        Siga paso a paso la configuración de la ruta para asignar paquetes y emitir la hoja de ruta.
+        <Container size="100%" px="xl">
+            <Group justify="space-between" mb={30}>
+                <div>
+                    <Title order={2} c="dark.4">Asignar Envíos a Hojas</Title>
+                    <Text size="sm" c="dimmed">
+                        Gestión de envíos para hojas de reparto existentes
                     </Text>
-                </Box>
+                </div>
             </Group>
 
             <Grid gutter={40} align="flex-start">
@@ -232,6 +258,20 @@ const CrearHojaReparto = () => {
 
                         <Stack gap="md" pos="relative">
                             <LoadingOverlay visible={cargandoEnvios} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
+
+                            {/* 🆕 FASE 5: DatePicker ARRIBA */}
+                            <DatePickerInput
+                                label="Fecha de la Hoja"
+                                placeholder="Seleccionar fecha..."
+                                value={fechaSeleccionada}
+                                onChange={setFechaSeleccionada}
+                                leftSection={<Calendar size={16} />}
+                                size="md"
+                                clearable={false}
+                                radius="md"
+                                variant="filled"
+                                valueFormat="DD/MM/YYYY"
+                            />
 
                             <Select
                                 label="Ruta de Distribución"
@@ -309,18 +349,10 @@ const CrearHojaReparto = () => {
                     </Card>
                 </Grid.Col>
 
-                {/* 📦 RIGHT COLUMN: RESULTS & PREVIEW */}
+                {/* 📦 RIGHT COLUMN: RESULTS */}
                 <Grid.Col span={{ base: 12, md: 8 }} style={{ display: 'flex', flexDirection: 'column' }}>
-                    {/* STEPPER */}
-                    <Box mb="xl" px="sm">
-                        <Stepper active={activeStep} size="sm" iconSize={32} color="cyan">
-                            <Stepper.Step label="Configurar" description="Ruta y Chofer" allowStepSelect={false} icon={<Settings size={16} />} />
-                            <Stepper.Step label="Revisar" description="Envíos asignados" allowStepSelect={false} icon={<Package size={16} />} />
-                            <Stepper.Step label="Confirmar" description="Crear Hoja" allowStepSelect={false} icon={<Check size={16} />} />
-                        </Stepper>
-                    </Box>
 
-                    {!envios.length && !cargandoEnvios && activeStep === 0 && (
+                    {!todosLosEnvios.length && !cargandoEnvios && !hojaCreada && (
                         <Alert
                             variant="light"
                             color="gray"
@@ -328,23 +360,24 @@ const CrearHojaReparto = () => {
                             icon={<Info size={20} />}
                             radius="md"
                         >
-                            Seleccioná una ruta, chofer y vehículo en el panel izquierdo para comenzar.
+                            Seleccioná una fecha, ruta, chofer y vehículo, luego hacé click en "Buscar Envíos".
                         </Alert>
                     )}
 
-                    {!envios.length && !cargandoEnvios && activeStep === 1 && (
+                    {!todosLosEnvios.length && !cargandoEnvios && hojaCreada && (
                         <Alert
                             variant="light"
                             color="orange"
-                            title="Sin resultados"
+                            title="Sin Envíos"
                             icon={<Info size={20} />}
                             radius="md"
                         >
-                            No se encontraron remitos asociados a esta ruta. Intente con otra ruta o verifique los estados.
+                            No hay envíos pendientes para esta ruta y fecha.
                         </Alert>
                     )}
 
-                    {envios.length > 0 && (
+                    {/* 🆕 TABLA ÚNICA CON TODOS LOS ENVÍOS */}
+                    {todosLosEnvios.length > 0 && (
                         <Card shadow="sm" padding="xl" radius="lg" withBorder style={{ overflow: 'visible', flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <Group mb="lg" justify="space-between">
                                 <Group>
@@ -352,12 +385,12 @@ const CrearHojaReparto = () => {
                                         <Package size={24} />
                                     </ThemeIcon>
                                     <div>
-                                        <Text size="lg" fw={800} c="dark.4">Resultados</Text>
-                                        <Text size="sm" c="dimmed">Envíos listos para asignar</Text>
+                                        <Text size="lg" fw={800} c="dark.4">Envíos para Asignar</Text>
+                                        <Text size="sm" c="dimmed">Revisá y quitá los que no querés incluir</Text>
                                     </div>
                                 </Group>
                                 <Badge size="lg" variant="light" color="cyan">
-                                    {envios.length} Remitos
+                                    {todosLosEnvios.length} envíos
                                 </Badge>
                             </Group>
 
@@ -373,14 +406,14 @@ const CrearHojaReparto = () => {
                                         </Table.Tr>
                                     </Table.Thead>
                                     <Table.Tbody>
-                                        {envios.map((envio, index) => (
+                                        {todosLosEnvios.map((envio, index) => (
                                             <Table.Tr key={envio._id || index}>
                                                 <Table.Td style={{ textAlign: 'center' }}>
                                                     <Text size="xs" c="dimmed" fw={500}>{index + 1}</Text>
                                                 </Table.Td>
                                                 <Table.Td>
                                                     <Text size="sm" fw={600} ff="monospace" c="dark.3">
-                                                        {envio.remitoNumero || "-"}
+                                                        {envio.remitoNumero || envio.codigoSeguimiento || "-"}
                                                     </Text>
                                                     <Text size="xs" c="dimmed">{envio.destinatario?.nombre}</Text>
                                                 </Table.Td>
@@ -413,17 +446,17 @@ const CrearHojaReparto = () => {
                                 </Table>
                             </Table.ScrollContainer>
 
-                            <Divider my="md" />
-
-                            <Group justify="flex-end" mt="auto">
+                            {/* Botón de confirmación */}
+                            <Group justify="flex-end" mt="lg">
                                 <Button
-                                    color="cyan"
                                     size="lg"
-                                    radius="md"
+                                    color="cyan"
                                     leftSection={<Check size={20} />}
                                     onClick={confirmarHojaFinal}
+                                    disabled={!todosLosEnvios.length}
+                                    radius="md"
                                 >
-                                    Confirmar Hoja
+                                    Asignar Envíos a Hoja
                                 </Button>
                             </Group>
                         </Card>

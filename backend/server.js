@@ -9,6 +9,7 @@ const logger = require("./src/utils/logger");
 // Cron Jobs
 // require("./src/tasks/cronCerrarHojas")(); // Desactivado por pedido (ya no se necesita)
 require("./src/tasks/cronGenerarHojas")();
+require("./src/tasks/cronCambiarEstados")();  // Cambio automático pendiente -> en reparto
 
 connectDB();
 

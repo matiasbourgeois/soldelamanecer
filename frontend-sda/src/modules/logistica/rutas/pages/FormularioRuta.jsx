@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, TextInput, Select, MultiSelect, Group, Stack, LoadingOverlay, Paper } from "@mantine/core";
+import { Modal, Button, TextInput, Select, MultiSelect, Group, Stack, LoadingOverlay, Paper, Chip, Text } from "@mantine/core";
 import { apiSistema } from "../../../../core/api/apiSistema";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
 import AuthContext from "../../../../core/context/AuthProvider";
@@ -9,10 +9,17 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
   const { auth } = useContext(AuthContext);
   const isAdmin = auth?.rol === 'admin';
   // Mantine MultiSelect works with string arrays for values.
+  const diasNombres = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  const diasCompletos = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
   const [formData, setFormData] = useState({
     codigo: "",
     horaSalida: "",
-    frecuencia: "",
+    frecuencia: {
+      tipo: 'dias-especificos',
+      diasSemana: [false, false, false, false, false, false, false],
+      textoLegible: ''
+    },
     descripcion: "",
     localidades: [], // IDs array
     choferAsignado: "",
@@ -58,6 +65,13 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
 
       setFormData({
         ...ruta,
+        frecuencia: ruta.frecuencia && typeof ruta.frecuencia === 'object' && ruta.frecuencia.diasSemana
+          ? ruta.frecuencia
+          : {
+            tipo: 'dias-especificos',
+            diasSemana: [false, false, false, false, false, false, false],
+            textoLegible: typeof ruta.frecuencia === 'string' ? ruta.frecuencia : ''
+          },
         localidades: localidadesIDs,
         choferAsignado:
           ruta.choferAsignado &&
@@ -87,6 +101,27 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
   // Handlers for Mantine custom inputs (Select/MultiSelect) returns value directly
   const handleSelectChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Toggle día en frecuencia
+  const toggleDia = (index) => {
+    const nuevosDias = [...formData.frecuencia.diasSemana];
+    nuevosDias[index] = !nuevosDias[index];
+
+    const diasActivos = nuevosDias
+      .map((activo, i) => (activo ? diasCompletos[i] : null))
+      .filter(Boolean);
+
+    const textoLegible = diasActivos.length === 7
+      ? 'Todos los días'
+      : diasActivos.length === 0
+        ? 'Sin frecuencia'
+        : diasActivos.join(', ');
+
+    setFormData(prev => ({
+      ...prev,
+      frecuencia: { ...prev.frecuencia, diasSemana: nuevosDias, textoLegible }
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -160,24 +195,59 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
             required
           />
 
-          <Group grow>
-            <TextInput
-              label="Hora de Salida"
-              placeholder="Ej: 08:30"
-              name="horaSalida"
-              value={formData.horaSalida}
-              onChange={handleChange}
-              required
-            />
-            <TextInput
-              label="Frecuencia"
-              placeholder="Ej: Lunes a Viernes"
-              name="frecuencia"
-              value={formData.frecuencia}
-              onChange={handleChange}
-              required
-            />
-          </Group>
+          <TextInput
+            label="Hora de Salida"
+            placeholder="Ej: 08:30"
+            name="horaSalida"
+            value={formData.horaSalida}
+            onChange={handleChange}
+            required
+          />
+
+          {/* Selector de Frecuencias - God Tier Mantine */}
+          <Paper withBorder p="lg" radius="md" bg="white" mt="md">
+            <Stack gap="sm">
+              <Text fw={600} size="sm">Frecuencia de la Ruta</Text>
+              <Text size="xs" c="dimmed">
+                Seleccioná los días que esta ruta debe salir
+              </Text>
+
+              <Group gap="xs" justify="center">
+                {diasNombres.map((dia, index) => (
+                  <Chip
+                    key={index}
+                    checked={formData.frecuencia.diasSemana[index]}
+                    onChange={() => toggleDia(index)}
+                    variant="filled"
+                    color="cyan"
+                    size="lg"
+                    radius="xl"
+                    styles={{
+                      label: {
+                        width: 40,
+                        height: 40,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        backgroundColor: formData.frecuencia.diasSemana[index] ? undefined : 'white',
+                        color: formData.frecuencia.diasSemana[index] ? 'white' : '#868e96',
+                        border: formData.frecuencia.diasSemana[index] ? 'none' : '1px solid #dee2e6'
+                      },
+                      iconWrapper: { display: 'none' }
+                    }}
+                  >
+                    {dia}
+                  </Chip>
+                ))}
+              </Group>
+
+              <Text size="xs" c="dimmed" ta="center" mt="xs">
+                Resumen: <strong>{formData.frecuencia.textoLegible || 'Sin frecuencia'}</strong>
+              </Text>
+            </Stack>
+          </Paper>
 
           <TextInput
             label="Descripción"

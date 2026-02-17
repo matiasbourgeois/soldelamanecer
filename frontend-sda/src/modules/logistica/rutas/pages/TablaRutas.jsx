@@ -29,6 +29,36 @@ const TablaRutas = ({
   const [mostrarModal, setMostrarModal] = useState(false);
   const [localidadesModal, setLocalidadesModal] = useState([]);
 
+  // Función para formatear frecuencia de forma abreviada
+  const formatearFrecuencia = (frecuencia) => {
+    if (!frecuencia) return 'Sin configurar';
+
+    // Si es objeto con diasSemana
+    if (typeof frecuencia === 'object' && frecuencia.diasSemana) {
+      const diasAbrev = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+      const diasActivos = frecuencia.diasSemana
+        .map((activo, i) => activo ? diasAbrev[i] : null)
+        .filter(Boolean);
+
+      if (diasActivos.length === 7) return 'Todos los días';
+      if (diasActivos.length === 0) return 'Sin configurar';
+      return diasActivos.join(',');
+    }
+
+    // Si es string (formato antiguo), abreviar
+    const texto = frecuencia.toString();
+    return texto
+      .replace(/Lunes/gi, 'L')
+      .replace(/Martes/gi, 'M')
+      .replace(/Miércoles/gi, 'X')
+      .replace(/Jueves/gi, 'J')
+      .replace(/Viernes/gi, 'V')
+      .replace(/Sábado/gi, 'S')
+      .replace(/Domingo/gi, 'D')
+      .replace(/\s+a\s+/g, '-')
+      .replace(/,\s+/g, ',');
+  };
+
   const abrirModalLocalidades = (localidades) => {
     setLocalidadesModal(localidades);
     setMostrarModal(true);
@@ -71,7 +101,9 @@ const TablaRutas = ({
                   </Table.Td>
                   <Table.Td>{r.horaSalida}</Table.Td>
                   <Table.Td>
-                    <Text size="sm">{r.frecuencia}</Text>
+                    <Text size="sm" fw={500}>
+                      {formatearFrecuencia(r.frecuencia)}
+                    </Text>
                   </Table.Td>
                   <Table.Td>
                     <Text size="sm" c="dimmed" lineClamp={1} w={200} title={r.descripcion}>
