@@ -10,7 +10,7 @@ import { DatePickerInput } from "@mantine/dates";
 import {
     Search, FileText, Eye, Truck, User, Calendar, RefreshCcw,
     CheckCircle2, AlertCircle, XCircle, Plus, FilterX, Play, Zap, Clock, ListTodo,
-    Smartphone, BookOpen
+    Smartphone, BookOpen, FileDown
 } from "lucide-react";
 import clienteAxios from "../../../../core/api/clienteAxios";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
@@ -253,6 +253,55 @@ const ControlOperativo = () => {
         }
     };
 
+    // FASE 7: Descargar reporte mensual de discrepancias
+    const descargarReporteMensual = async () => {
+        try {
+            const hoy = new Date();
+            const mes = hoy.getMonth() + 1; // 1-12
+            const anio = hoy.getFullYear();
+
+            const response = await clienteAxios.get(`/hojas-reparto/reporte-discrepancias`, {
+                params: { mes, anio }
+            });
+
+            const { discrepancias } = response.data;
+
+            if (discrepancias.length === 0) {
+                mostrarAlerta("No hay discrepancias este mes", "info");
+                return;
+            }
+
+            // Generar CSV
+            const headers = ['Fecha', 'Nº Hoja', 'Ruta', 'Chofer Plan', 'Chofer Real', 'Vehículo Plan', 'Vehículo Real'];
+            const rows = discrepancias.map(d => [
+                new Date(d.fecha).toLocaleDateString('es-AR'),
+                d.numeroHoja,
+                d.ruta || 'N/A',
+                d.choferPlan || 'N/A',
+                d.choferReal || 'N/A',
+                d.vehiculoPlan || 'N/A',
+                d.vehiculoReal || 'N/A'
+            ]);
+
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+
+            // Descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `reporte_discrepancias_${mes}_${anio}.csv`;
+            link.click();
+
+            mostrarAlerta(`Reporte descargado: ${discrepancias.length} discrepancias`, "success");
+        } catch (error) {
+            console.error("Error al descargar reporte:", error);
+            mostrarAlerta("Error al generar el reporte", "error");
+        }
+    };
+
     useEffect(() => {
         obtenerHojas();
         obtenerRecursos();
@@ -467,11 +516,24 @@ const ControlOperativo = () => {
                             </ActionIcon>
                         )}
                     </Group>
-                    <Tooltip label="Refrescar Datos">
-                        <MantineActionIcon variant="light" color="cyan" size="xl" radius="md" onClick={obtenerHojas}>
-                            <RefreshCcw size={20} />
-                        </MantineActionIcon>
-                    </Tooltip>
+                    <Group>
+                        <Tooltip label="Descargar Reporte Mensual (CSV)">
+                            <MantineActionIcon
+                                variant="light"
+                                color="green"
+                                size="xl"
+                                radius="md"
+                                onClick={descargarReporteMensual}
+                            >
+                                <FileDown size={20} />
+                            </MantineActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Refrescar Datos">
+                            <MantineActionIcon variant="light" color="cyan" size="xl" radius="md" onClick={obtenerHojas}>
+                                <RefreshCcw size={20} />
+                            </MantineActionIcon>
+                        </Tooltip>
+                    </Group>
                 </Group>
 
                 <ScrollArea h={600} onScrollPositionChange={({ y }) => { }}>

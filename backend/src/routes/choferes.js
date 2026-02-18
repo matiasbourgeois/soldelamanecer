@@ -11,7 +11,8 @@ const {
   obtenerChoferesMinimos,
   eliminarChofer,
   obtenerMiConfiguracion,
-  obtenerSelectoresReporte
+  obtenerSelectoresReporte,
+  actualizarAsignacion
 } = require("../controllers/logistica/choferController");
 
 // Ruta base: /api/choferes
@@ -22,6 +23,9 @@ router.post("/", crearChofer);
 // Ruta para que el chofer obtenga sus defaults
 router.get("/configuracion", auth, obtenerMiConfiguracion);
 router.get("/selectores-reporte", auth, obtenerSelectoresReporte);
+
+// Actualizar asignación de ruta/vehículo desde app móvil
+router.post("/actualizar-asignacion", auth, actualizarAsignacion);
 
 // Obtener todos los choferes
 router.get("/", obtenerChoferes);

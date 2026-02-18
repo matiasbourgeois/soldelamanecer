@@ -286,6 +286,89 @@ const obtenerSelectoresReporte = async (req, res) => {
   }
 };
 
+// Actualizar asignación de chofer (Ruta/Vehículo) desde App Móvil
+const actualizarAsignacion = async (req, res) => {
+  try {
+    const { hojaRepartoId, rutaId, vehiculoId } = req.body;
+    const usuarioId = req.usuario.id;
+
+    // Buscar chofer
+    const chofer = await Chofer.findOne({ usuario: usuarioId });
+    if (!chofer) {
+      return res.status(404).json({ error: 'Chofer no encontrado' });
+    }
+
+    // Buscar hoja
+    const HojaReparto = require("../../models/HojaReparto");
+    const hoja = await HojaReparto.findById(hojaRepartoId)
+      .populate('ruta vehiculo chofer');
+
+    if (!hoja) {
+      return res.status(404).json({ error: 'Hoja de reparto no encontrada' });
+    }
+
+    // Guardar valores anteriores
+    const rutaAnterior = hoja.ruta;
+    const vehiculoAnterior = hoja.vehiculo;
+
+    // Si cambia la ruta → buscar hoja de la nueva ruta y asignar chofer
+    if (rutaId && rutaId !== hoja.ruta?._id.toString()) {
+      // Dejar hoja anterior huérfana
+      hoja.chofer = null;
+      hoja.historialMovimientos.push({
+        usuario: usuarioId,
+        accion: `Chofer ${chofer.usuario?.nombre || chofer.dni} dejó la ruta ${rutaAnterior?.codigo} desde app móvil`
+      });
+      await hoja.save();
+
+      // Buscar hoja de la NUEVA ruta para HOY
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const manana = new Date(hoy);
+      manana.setDate(manana.getDate() + 1);
+
+      let nuevaHoja = await HojaReparto.findOne({
+        ruta: rutaId,
+        fecha: { $gte: hoy, $lt: manana }
+      });
+
+      if (!nuevaHoja) {
+        return res.status(404).json({ error: 'No hay hoja creada para esa ruta hoy' });
+      }
+
+      // Asignar chofer a la nueva hoja
+      nuevaHoja.chofer = chofer._id;
+      nuevaHoja.vehiculo = vehiculoId || vehiculoAnterior; // Mantener vehículo o cambiar
+      nuevaHoja.historialMovimientos.push({
+        usuario: usuarioId,
+        accion: `Chofer reasignado desde app móvil. Vehículo: ${vehiculoId || 'sin cambios'}`
+      });
+      await nuevaHoja.save();
+
+      return res.json({
+        message: 'Ruta cambiada exitosamente',
+        hojaRepartoId: nuevaHoja._id,
+        envios: nuevaHoja.envios
+      });
+    }
+
+    // Si solo cambia vehículo (misma ruta)
+    if (vehiculoId && vehiculoId !== hoja.vehiculo?._id.toString()) {
+      hoja.vehiculo = vehiculoId;
+      hoja.historialMovimientos.push({
+        usuario: usuarioId,
+        accion: `Vehículo cambiado desde app móvil. Anterior: ${vehiculoAnterior?.patente}, Nuevo: ${vehiculoId}`
+      });
+      await hoja.save();
+    }
+
+    res.json({ message: 'Asignación actualizada', hojaRepartoId: hoja._id });
+  } catch (error) {
+    console.error('Error actualizando asignación:', error);
+    res.status(500).json({ error: 'Error al actualizar asignación' });
+  }
+};
+
 module.exports = {
   crearChofer,
   obtenerChoferes,
@@ -294,5 +377,6 @@ module.exports = {
   eliminarChofer,
   obtenerChoferesMinimos,
   obtenerMiConfiguracion,
-  obtenerSelectoresReporte
+  obtenerSelectoresReporte,
+  actualizarAsignacion
 };

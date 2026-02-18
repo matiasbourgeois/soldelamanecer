@@ -134,9 +134,22 @@ const CrearHojaReparto = () => {
             setHojaCreada(res.data.hoja);
 
             // Combinar TODOS los envíos (ya asignados + disponibles)
+            // Combinar TODOS los envíos (ya asignados + disponibles)
             const enviosAsignados = res.data.hoja.envios || [];
             const disponibles = res.data.enviosDisponibles || [];
-            const todosJuntos = [...enviosAsignados, ...disponibles];
+
+            // 🛡️ FRONTEND FIX: Separar visualmente
+            const asignadosConFlag = enviosAsignados.map(e => ({ ...e, yaEnHoja: true }));
+            const disponiblesConFlag = disponibles.map(e => ({ ...e, yaEnHoja: false }));
+
+            // 🛡️ FRONTEND DEDUPLICATION (Safety Net)
+            const todosJuntosMap = new Map();
+            [...asignadosConFlag, ...disponiblesConFlag].forEach(envio => {
+                if (envio && envio._id) {
+                    todosJuntosMap.set(envio._id.toString(), envio);
+                }
+            });
+            const todosJuntos = Array.from(todosJuntosMap.values());
 
             setTodosLosEnvios(todosJuntos);
 
@@ -144,9 +157,12 @@ const CrearHojaReparto = () => {
             setChofer(res.data.hoja.chofer);
             setVehiculo(res.data.hoja.vehiculo);
 
+            const nuevosCount = todosJuntos.filter(e => !e.yaEnHoja).length;
+            const asignadosCount = todosJuntos.filter(e => e.yaEnHoja).length;
+
             notifications.show({
                 title: '✅ Hoja Encontrada',
-                message: `${todosJuntos.length} envíos disponibles para asignar`,
+                message: `${nuevosCount} envíos disponibles (${asignadosCount} ya en hoja)`,
                 color: 'cyan'
             });
 
@@ -364,15 +380,15 @@ const CrearHojaReparto = () => {
                         </Alert>
                     )}
 
-                    {!todosLosEnvios.length && !cargandoEnvios && hojaCreada && (
+                    {!todosLosEnvios.some(e => !e.yaEnHoja) && !cargandoEnvios && hojaCreada && (
                         <Alert
                             variant="light"
                             color="orange"
-                            title="Sin Envíos"
+                            title="Sin Nuevos Envíos"
                             icon={<Info size={20} />}
                             radius="md"
                         >
-                            No hay envíos pendientes para esta ruta y fecha.
+                            No hay nuevos envíos pendientes. La hoja ya tiene {todosLosEnvios.filter(e => e.yaEnHoja).length} envíos asignados.
                         </Alert>
                     )}
 
@@ -390,7 +406,7 @@ const CrearHojaReparto = () => {
                                     </div>
                                 </Group>
                                 <Badge size="lg" variant="light" color="cyan">
-                                    {todosLosEnvios.length} envíos
+                                    {todosLosEnvios.filter(e => !e.yaEnHoja).length} nuevos
                                 </Badge>
                             </Group>
 
@@ -406,7 +422,7 @@ const CrearHojaReparto = () => {
                                         </Table.Tr>
                                     </Table.Thead>
                                     <Table.Tbody>
-                                        {todosLosEnvios.map((envio, index) => (
+                                        {todosLosEnvios.filter(e => !e.yaEnHoja).map((envio, index) => (
                                             <Table.Tr key={envio._id || index}>
                                                 <Table.Td style={{ textAlign: 'center' }}>
                                                     <Text size="xs" c="dimmed" fw={500}>{index + 1}</Text>

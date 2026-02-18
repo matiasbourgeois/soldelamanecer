@@ -26,14 +26,6 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
 
     const [kmInput, setKmInput] = useState('');
     const [litrosInput, setLitrosInput] = useState('');
-    // Listas para selectores
-    const [listaVehiculos, setListaVehiculos] = useState<any[]>([]);
-    const [listaRutas, setListaRutas] = useState<any[]>([]);
-
-    // Modal Selector
-    const [modalVisible, setModalVisible] = useState(false);
-    const [selectorTipo, setSelectorTipo] = useState<'vehiculo' | 'ruta'>('vehiculo');
-    const [searchQuery, setSearchQuery] = useState('');
 
     // State for Snackbar (Errors)
     const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -94,10 +86,7 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                 if (resConfig.data.hojaRepartoId) setHojaRepartoId(resConfig.data.hojaRepartoId);
                 if (resConfig.data.esPlanificada) setEsPlanificada(true);
 
-                // 2. Listas completas para selectores
-                const resSelectores = await api.get('/choferes/selectores-reporte');
-                if (resSelectores.data.vehiculos) setListaVehiculos(resSelectores.data.vehiculos);
-                if (resSelectores.data.rutas) setListaRutas(resSelectores.data.rutas);
+                // Ya no necesitamos las listas de selectores
 
             } catch (error) {
                 console.log('Error config:', error);
@@ -116,22 +105,7 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
         setFecha(currentDate);
     };
 
-    const abrirSelector = (tipo: 'vehiculo' | 'ruta') => {
-        setSelectorTipo(tipo);
-        setSearchQuery(''); // Resetear búsqueda
-        setModalVisible(true);
-    };
-
-    const seleccionarItem = (item: any) => {
-        if (selectorTipo === 'vehiculo') {
-            setVehiculoAsignado(item);
-            setKmInput(''); // Limpiar input para evitar confusión
-            setTempKmInput('');
-        } else {
-            setRutaAsignado(item);
-        }
-        setModalVisible(false);
-    };
+    // Selectores eliminados - ahora se cambian desde HomeScreen
 
     const handleOpenKmModal = () => {
         setTempKmInput(kmInput || (vehiculoAsignado?.kilometrajeActual?.toString() || ''));
@@ -290,39 +264,22 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                         </View>
                     </TouchableOpacity>
 
-                    {/* 2. SELECTORES (Glass Row) */}
-                    <View style={styles.row}>
-                        <View style={{ flex: 1, marginRight: 8 }}>
-                            <Text style={styles.sectionLabel}>VEHÍCULO</Text>
-                            <TouchableOpacity onPress={() => abrirSelector('vehiculo')} activeOpacity={0.85}>
-                                <View style={styles.glassCardColumn}>
-                                    <View style={[styles.iconCircleSmall, { backgroundColor: 'rgba(34, 211, 238, 0.1)' }]}>
-                                        <IconButton icon="truck" iconColor="#22d3ee" size={20} />
-                                    </View>
-                                    <Text style={styles.cardValueSmall} numberOfLines={1}>
-                                        {vehiculoAsignado?.patente?.toUpperCase() || '---'}
-                                    </Text>
-                                    <Text style={styles.cardSubtitle} numberOfLines={1}>
-                                        {vehiculoAsignado?.modelo?.toUpperCase() || 'Seleccionar'}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
+                    {/* 2. VEHÍCULO ASIGNADO - Info visual para el chofer */}
+                    <Text style={styles.sectionLabel}>VEHÍCULO ASIGNADO</Text>
+                    <View style={styles.glassCardRow}>
+                        <View style={[styles.iconCircle, { backgroundColor: 'rgba(34, 211, 238, 0.15)' }]}>
+                            <IconButton icon="truck" iconColor="#22d3ee" size={24} />
                         </View>
-                        <View style={{ flex: 1, marginLeft: 8 }}>
-                            <Text style={styles.sectionLabel}>RUTA</Text>
-                            <TouchableOpacity onPress={() => abrirSelector('ruta')} activeOpacity={0.85}>
-                                <View style={styles.glassCardColumn}>
-                                    <View style={[styles.iconCircleSmall, { backgroundColor: 'rgba(45, 212, 191, 0.1)' }]}>
-                                        <IconButton icon="map-marker-path" iconColor="#2dd4bf" size={20} />
-                                    </View>
-                                    <Text style={styles.cardValueSmall} numberOfLines={1}>
-                                        {rutaAsignada?.codigo?.toUpperCase() || '---'}
-                                    </Text>
-                                    <Text style={styles.cardSubtitle} numberOfLines={1}>
-                                        {rutaAsignada?.horaSalida || 'Seleccionar'}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.cardValue}>
+                                {vehiculoAsignado?.patente?.toUpperCase() || 'NO ASIGNADO'}
+                            </Text>
+                            <Text style={styles.cardSubtitle}>
+                                {vehiculoAsignado?.marca} {vehiculoAsignado?.modelo}
+                            </Text>
+                        </View>
+                        <View style={[styles.iconCircle, { backgroundColor: 'rgba(45, 212, 191, 0.1)', borderWidth: 0 }]}>
+                            <IconButton icon="information" iconColor="#2dd4bf" size={18} />
                         </View>
                     </View>
 
@@ -468,59 +425,7 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
 
                 </ScrollView>
 
-                {/* MODAL PARA SELECCIÓN (Theme Adjusted) */}
-                {modalVisible && (
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContainer}>
-                            <Text style={styles.modalTitle}>
-                                Seleccionar {selectorTipo === 'vehiculo' ? 'Vehículo' : 'Ruta'}
-                            </Text>
-                            <PaperInput
-                                mode="outlined"
-                                placeholder="Buscar..."
-                                value={searchQuery}
-                                onChangeText={setSearchQuery}
-                                style={styles.searchInput}
-                                outlineStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }}
-                                left={<PaperInput.Icon icon="magnify" color="#94a3b8" />}
-                            />
-                            <ScrollView style={{ maxHeight: 300 }}>
-                                {(selectorTipo === 'vehiculo' ? listaVehiculos : listaRutas)
-                                    .filter(item => {
-                                        if (!searchQuery) return true;
-                                        const texto = searchQuery.toLowerCase();
-                                        if (selectorTipo === 'vehiculo') {
-                                            return item.patente.toLowerCase().includes(texto) || item.modelo.toLowerCase().includes(texto);
-                                        } else {
-                                            return item.codigo.toLowerCase().includes(texto) || item.descripcion.toLowerCase().includes(texto);
-                                        }
-                                    })
-                                    .map((item) => (
-                                        <TouchableOpacity
-                                            key={item._id}
-                                            style={styles.modalItem}
-                                            onPress={() => seleccionarItem(item)}
-                                        >
-                                            <View style={[styles.modalItemIcon, { backgroundColor: selectorTipo === 'vehiculo' ? '#ecfeff' : '#f0fdfa' }]}>
-                                                <IconButton icon={selectorTipo === 'vehiculo' ? "truck" : "map-marker"} size={20} iconColor={selectorTipo === 'vehiculo' ? "#06b6d4" : "#14b8a6"} />
-                                            </View>
-                                            <View>
-                                                <Text style={styles.modalItemTitle}>
-                                                    {selectorTipo === 'vehiculo' ? item.patente : item.codigo}
-                                                </Text>
-                                                <Text style={styles.modalItemSubtitle}>
-                                                    {selectorTipo === 'vehiculo' ? item.modelo : item.descripcion}
-                                                </Text>
-                                            </View>
-                                        </TouchableOpacity>
-                                    ))}
-                            </ScrollView>
-                            <Button mode="text" onPress={() => setModalVisible(false)} textColor="#ef4444" style={{ marginTop: 10 }}>
-                                CANCELAR
-                            </Button>
-                        </View>
-                    </View>
-                )}
+                {/* Modal de selectores eliminado - ahora se hace desde HomeScreen */}
 
                 {/* MODAL PARA ACTUALIZAR KM */}
                 <Portal>
@@ -710,19 +615,7 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                                     </View>
                                 </View>
 
-                                <View style={styles.summaryDivider} />
-
-                                <View style={styles.summaryRow}>
-                                    <View style={styles.summaryIconBox}>
-                                        <IconButton icon="map-marker-path" size={18} iconColor="#22d3ee" />
-                                    </View>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={styles.summaryLabel}>RUTA</Text>
-                                        <Text style={styles.summaryValue}>{rutaAsignada?.codigo || 'GENERAL'}</Text>
-                                    </View>
-                                </View>
-
-                                <View style={styles.summaryDivider} />
+                                {/* Ruta eliminada - solo vehiculo + kms */}
 
                                 <View style={styles.summaryRow}>
                                     <View style={styles.summaryIconBox}>

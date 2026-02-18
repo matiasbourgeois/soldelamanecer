@@ -938,17 +938,78 @@ const buscarHojaPorRutaFecha = async (req, res) => {
             };
         });
 
-        logger.info(`✅ Hoja encontrada: ${hoja._id}, Envíos disponibles: ${enviosConRemito.length}`);
+        // 🛡️ FILTRO DE SEGURIDAD (La "Regla de Oro"): Evitar duplicados visuales
+        // Si por error de BBDD un envío dice "hojaReparto: null" pero YA está en hoja.envios, lo sacamos.
+        const idsEnHoja = hoja.envios.map(e => e._id.toString());
+        logger.info(`🔍 IDs en Hoja (${idsEnHoja.length}): ${idsEnHoja.join(', ')}`);
+
+        const enviosDisponiblesFiltrados = enviosConRemito.filter(e => {
+            const estaEnHoja = idsEnHoja.includes(e._id.toString());
+            if (estaEnHoja) {
+                logger.warn(`⚠️ Ocultando envío ${e._id} de disponibles (ya está en la hoja)`);
+            }
+            return !estaEnHoja;
+        });
+
+        logger.info(`✅ Hoja encontrada: ${hoja._id}, Disponibles (antes): ${enviosConRemito.length}, Disponibles (despues): ${enviosDisponiblesFiltrados.length}`);
 
         res.json({
             hoja,
-            enviosDisponibles: enviosConRemito,
+            enviosDisponibles: enviosDisponiblesFiltrados,
             ruta
         });
 
     } catch (error) {
         logger.error('❌ Error buscando hoja por ruta/fecha:', error);
         res.status(500).json({ error: 'Error al buscar hoja de reparto' });
+    }
+};
+
+// Reporte de Discrepancias Mensual (FASE 7)
+const reporteDiscrepancias = async (req, res) => {
+    try {
+        const { mes, anio } = req.query; // Ejemplo: mes=2, anio=2026
+
+        if (!mes || !anio) {
+            return res.status(400).json({ error: 'Debe proporcionar mes y año' });
+        }
+
+        const inicioMes = new Date(anio, mes - 1, 1);
+        const finMes = new Date(anio, mes, 0, 23, 59, 59);
+
+        const hojas = await HojaReparto.find({
+            fecha: { $gte: inicioMes, $lte: finMes },
+            estado: { $ne: 'pendiente' }
+        })
+            .populate('ruta chofer vehiculo')
+            .populate('ruta.choferAsignado ruta.vehiculoAsignado')
+            .lean();
+
+        const discrepancias = hojas.filter(h => {
+            const planChoferId = h.ruta?.choferAsignado?._id?.toString();
+            const planVehiculoId = h.ruta?.vehiculoAsignado?._id?.toString();
+            const realChoferId = h.chofer?._id?.toString();
+            const realVehiculoId = h.vehiculo?._id?.toString();
+
+            return (planChoferId && realChoferId && planChoferId !== realChoferId) ||
+                (planVehiculoId && realVehiculoId && planVehiculoId !== realVehiculoId);
+        }).map(h => ({
+            fecha: h.fecha,
+            numeroHoja: h.numeroHoja,
+            ruta: h.ruta?.codigo,
+            choferPlan: h.ruta?.choferAsignado?.usuario?.nombre,
+            choferReal: h.chofer?.usuario?.nombre,
+            vehiculoPlan: h.ruta?.vehiculoAsignado?.patente,
+            vehiculoReal: h.vehiculo?.patente,
+            historial: h.historialMovimientos
+        }));
+
+        logger.info(`📊 Reporte discrepancias ${mes}/${anio}: ${discrepancias.length} encontradas`);
+
+        res.json({ total: discrepancias.length, discrepancias });
+    } catch (error) {
+        logger.error('❌ Error generando reporte discrepancias:', error);
+        res.status(500).json({ error: 'Error al generar reporte' });
     }
 };
 
@@ -966,5 +1027,6 @@ module.exports = {
     cerrarHojaManualmente,
     generarHojasAutomaticas,
     actualizarHoja,
-    buscarHojaPorRutaFecha  // 🆕 FASE 5
+    buscarHojaPorRutaFecha,  // 🆕 FASE 5
+    reporteDiscrepancias  // 🆕 FASE 7
 };

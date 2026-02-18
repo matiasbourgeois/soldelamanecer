@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, StatusBar, RefreshControl, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, StatusBar, RefreshControl, Dimensions, TextInput } from 'react-native';
 import { Text, useTheme, IconButton, Avatar, Modal, Portal } from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,10 +16,23 @@ const HomeScreen = ({ navigation }: any) => {
     const [profileModalVisible, setProfileModalVisible] = useState(false);
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
+    // FASE 7: Selectores de ruta/vehículo
+    const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState<any>(null);
+    const [rutaSeleccionada, setRutaSeleccionada] = useState<any>(null);
+    const [listaVehiculos, setListaVehiculos] = useState<any[]>([]);
+    const [listaRutas, setListaRutas] = useState<any[]>([]);
+    const [modalSelectorVisible, setModalSelectorVisible] = useState(false);
+    const [tipoSelector, setTipoSelector] = useState<'vehiculo' | 'ruta'>('vehiculo');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [cambiosPendientes, setCambiosPendientes] = useState(false);
+
     const fetchConfig = async () => {
         try {
             const res = await api.get('/choferes/configuracion');
             setConfig(res.data);
+            // Inicializar seleccionados con los valores actuales
+            setVehiculoSeleccionado(res.data.vehiculo);
+            setRutaSeleccionada(res.data.ruta);
         } catch (error) {
             console.log('Error fetching config', error);
         } finally {
@@ -27,15 +40,59 @@ const HomeScreen = ({ navigation }: any) => {
         }
     };
 
+    const fetchSelectores = async () => {
+        try {
+            const res = await api.get('/choferes/selectores-reporte');
+            setListaVehiculos(res.data.vehiculos || []);
+            setListaRutas(res.data.rutas || []);
+        } catch (error) {
+            console.log('Error fetching selectores', error);
+        }
+    };
+
     useFocusEffect(
         useCallback(() => {
             fetchConfig();
+            fetchSelectores();
         }, [])
     );
 
     const onRefresh = () => {
         setRefreshing(true);
         fetchConfig();
+    };
+
+    // FASE 7: Funciones de cambio de ruta/vehículo
+    const abrirSelector = (tipo: 'vehiculo' | 'ruta') => {
+        setTipoSelector(tipo);
+        setSearchQuery('');
+        setModalSelectorVisible(true);
+    };
+
+    const seleccionarItem = (item: any) => {
+        if (tipoSelector === 'vehiculo') {
+            setVehiculoSeleccionado(item);
+        } else {
+            setRutaSeleccionada(item);
+        }
+        setCambiosPendientes(true);
+        setModalSelectorVisible(false);
+    };
+
+    const guardarCambios = async () => {
+        try {
+            await api.post('/choferes/actualizar-asignacion', {
+                hojaRepartoId: config.hojaRepartoId,
+                rutaId: rutaSeleccionada?._id,
+                vehiculoId: vehiculoSeleccionado?._id
+            });
+            setCambiosPendientes(false);
+            fetchConfig(); // Refrescar
+            alert('Cambios guardados exitosamente');
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Error al guardar cambios');
+            console.log('Error guardando cambios:', error);
+        }
     };
 
     const menuItems: {
@@ -121,44 +178,69 @@ const HomeScreen = ({ navigation }: any) => {
                     </View>
                 </View>
 
-                {/* STATUS CARDS (Pure Information - Glassmorphism) */}
+                {/* STATUS CARDS (Clickeable - FASE 7) */}
                 <View style={styles.statusCard}>
-                    <View style={styles.statusItem}>
+                    <TouchableOpacity
+                        style={styles.statusItem}
+                        onPress={() => abrirSelector('vehiculo')}
+                        activeOpacity={0.7}
+                    >
                         <View style={styles.statusIconBase}>
                             <IconButton icon="truck-delivery" iconColor="#38bdf8" size={24} />
                         </View>
                         <View style={styles.statusTextContainer}>
                             <Text style={styles.statusLabel}>VEHÍCULO ASIGNADO</Text>
                             <Text style={styles.statusMainValue}>
-                                {vehiculo ? vehiculo.patente?.toUpperCase() : 'NO ASIGNADO'}
+                                {vehiculoSeleccionado ? vehiculoSeleccionado.patente?.toUpperCase() : 'NO ASIGNADO'}
                             </Text>
-                            {vehiculo && (
+                            {vehiculoSeleccionado && (
                                 <Text style={styles.statusSubDetail}>
-                                    {vehiculo.marca} {vehiculo.modelo}
+                                    {vehiculoSeleccionado.marca} {vehiculoSeleccionado.modelo}
                                 </Text>
                             )}
                         </View>
-                    </View>
+                        <IconButton icon="chevron-down" iconColor="rgba(255,255,255,0.5)" size={20} />
+                    </TouchableOpacity>
 
                     <View style={styles.statusDivider} />
 
-                    <View style={styles.statusItem}>
+                    <TouchableOpacity
+                        style={styles.statusItem}
+                        onPress={() => abrirSelector('ruta')}
+                        activeOpacity={0.7}
+                    >
                         <View style={styles.statusIconBase}>
                             <IconButton icon="map-marker-distance" iconColor="#38bdf8" size={24} />
                         </View>
                         <View style={styles.statusTextContainer}>
                             <Text style={styles.statusLabel}>RUTA ACTIVA</Text>
                             <Text style={styles.statusMainValue}>
-                                {ruta ? ruta.codigo?.toUpperCase() : 'SIN RUTA'}
+                                {rutaSeleccionada ? rutaSeleccionada.codigo?.toUpperCase() : 'SIN RUTA'}
                             </Text>
-                            {ruta && (
+                            {rutaSeleccionada && (
                                 <Text style={styles.statusSubDetail}>
-                                    {ruta.horaSalida ? `Salida estimada: ${ruta.horaSalida}` : 'Horario no definido'}
+                                    {rutaSeleccionada.horaSalida ? `Salida estimada: ${rutaSeleccionada.horaSalida}` : 'Horario no definido'}
                                 </Text>
                             )}
                         </View>
-                    </View>
+                        <IconButton icon="chevron-down" iconColor="rgba(255,255,255,0.5)" size={20} />
+                    </TouchableOpacity>
                 </View>
+
+                {/* BOTÓN CONFIRMAR CAMBIOS (Solo visible si hay cambios) */}
+                {cambiosPendientes && (
+                    <TouchableOpacity style={styles.confirmButton} onPress={guardarCambios} activeOpacity={0.9}>
+                        <LinearGradient
+                            colors={['#10b981', '#059669']}
+                            style={styles.confirmGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <IconButton icon="check-circle" iconColor="white" size={24} />
+                            <Text style={styles.confirmButtonText}>Confirmar Cambios</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                )}
 
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
@@ -317,6 +399,88 @@ const HomeScreen = ({ navigation }: any) => {
                             </TouchableOpacity>
                         </View>
                     </LinearGradient>
+                </Modal>
+            </Portal>
+
+            {/* MODAL SELECTOR (Vehículo / Ruta) - FASE 7 */}
+            <Portal>
+                <Modal
+                    visible={modalSelectorVisible}
+                    onDismiss={() => setModalSelectorVisible(false)}
+                    contentContainerStyle={styles.modalContainer}
+                >
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <LinearGradient
+                                colors={['#0891b2', '#164e63']}
+                                style={styles.modalHeaderGradient}
+                            />
+                            <Text style={styles.modalName}>
+                                {tipoSelector === 'vehiculo' ? 'Seleccionar Vehículo' : 'Seleccionar Ruta'}
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.closeModalButton}
+                                onPress={() => setModalSelectorVisible(false)}
+                            >
+                                <IconButton icon="close" iconColor="white" size={20} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.modalBody}>
+                            {/* Search Input */}
+                            <View style={styles.searchContainer}>
+                                <IconButton icon="magnify" iconColor="#94a3b8" size={20} />
+                                <TextInput
+                                    style={{
+                                        flex: 1,
+                                        padding: 8,
+                                        color: '#fff',
+                                        fontSize: 14,
+                                    }}
+                                    value={searchQuery}
+                                    onChangeText={setSearchQuery}
+                                    placeholder={`Buscar ${tipoSelector === 'vehiculo' ? 'vehículo' : 'ruta'}...`}
+                                    placeholderTextColor="#64748b"
+                                />
+                            </View>
+
+                            {/* Lista */}
+                            <ScrollView style={{ maxHeight: 400 }}>
+                                {(tipoSelector === 'vehiculo' ? listaVehiculos : listaRutas)
+                                    .filter((item: any) => {
+                                        const query = searchQuery.toLowerCase();
+                                        if (tipoSelector === 'vehiculo') {
+                                            return item.patente?.toLowerCase().includes(query) ||
+                                                item.marca?.toLowerCase().includes(query) ||
+                                                item.modelo?.toLowerCase().includes(query);
+                                        } else {
+                                            return item.codigo?.toLowerCase().includes(query) ||
+                                                item.descripcion?.toLowerCase().includes(query);
+                                        }
+                                    })
+                                    .map((item: any) => (
+                                        <TouchableOpacity
+                                            key={item._id}
+                                            style={styles.selectorItem}
+                                            onPress={() => seleccionarItem(item)}
+                                        >
+                                            <View>
+                                                <Text style={styles.selectorItemTitle}>
+                                                    {tipoSelector === 'vehiculo' ? item.patente : item.codigo}
+                                                </Text>
+                                                <Text style={styles.selectorItemSubtitle}>
+                                                    {tipoSelector === 'vehiculo'
+                                                        ? `${item.marca} ${item.modelo}`
+                                                        : item.descripcion || `Salida: ${item.horaSalida}`
+                                                    }
+                                                </Text>
+                                            </View>
+                                            <IconButton icon="chevron-right" iconColor="#64748b" size={20} />
+                                        </TouchableOpacity>
+                                    ))}
+                            </ScrollView>
+                        </View>
+                    </View>
                 </Modal>
             </Portal>
         </View>
@@ -499,14 +663,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     modalContent: {
-        backgroundColor: 'white',
+        backgroundColor: '#1e293b', // Fondo oscuro
         borderRadius: 32,
         overflow: 'hidden',
         elevation: 20,
     },
     modalHeader: {
         height: 100,
-        backgroundColor: '#0891b2',
+        backgroundColor: '#0f172a', // Más oscuro para contraste
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -516,7 +680,7 @@ const styles = StyleSheet.create({
     modalAvatarContainer: {
         position: 'absolute',
         bottom: -40,
-        backgroundColor: 'white',
+        backgroundColor: '#1e293b', // Match modal background
         padding: 5,
         borderRadius: 50,
         elevation: 5,
@@ -546,7 +710,7 @@ const styles = StyleSheet.create({
     modalName: {
         fontSize: 24,
         fontWeight: '900',
-        color: '#1e293b',
+        color: '#ffffff', // Blanco para fondo oscuro
         textAlign: 'center',
     },
     modalRole: {
@@ -554,14 +718,16 @@ const styles = StyleSheet.create({
         fontWeight: '800',
         color: '#0891b2',
         letterSpacing: 2,
+        textTransform: 'uppercase',
+        textAlign: 'center',
         marginTop: 4,
-        marginBottom: 20,
+        marginBottom: 24,
     },
-    infoDivider: {
+    modalDivider: {
         width: '100%',
         height: 1,
-        backgroundColor: '#f1f5f9',
-        marginBottom: 20,
+        backgroundColor: 'rgba(255,255,255,0.1)', // Más claro para fondo oscuro
+        marginVertical: 20,
     },
     infoRow: {
         flexDirection: 'row',
@@ -674,6 +840,53 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.6)',
         lineHeight: 22,
         paddingHorizontal: 10,
+    },
+    // FASE 7: Estilos para confirmación de cambios
+    confirmButton: {
+        marginBottom: 20,
+        marginHorizontal: 20,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    confirmGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+    },
+    confirmButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '700',
+        marginLeft: 8,
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderRadius: 8,
+        marginBottom: 15,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    selectorItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.05)',
+    },
+    selectorItemTitle: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    selectorItemSubtitle: {
+        color: 'rgba(255,255,255,0.5)',
+        fontSize: 13,
+        marginTop: 2,
     },
 });
 
