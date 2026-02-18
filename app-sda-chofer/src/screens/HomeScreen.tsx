@@ -112,8 +112,8 @@ const HomeScreen = ({ navigation }: any) => {
                 requiresDependency: true
             },
             {
-                title: "Hoja de Reparto",
-                subtitle: "Mis entregas del día",
+                title: "Mis entregas del día",
+                subtitle: "Ver listado y gestionar",
                 icon: "clipboard-text-play-outline",
                 colors: ['#059669', '#10b981'], // Emerald / Green gradient
                 route: "HojaReparto",
@@ -218,9 +218,14 @@ const HomeScreen = ({ navigation }: any) => {
                                 {rutaSeleccionada ? rutaSeleccionada.codigo?.toUpperCase() : 'SIN RUTA'}
                             </Text>
                             {rutaSeleccionada && (
-                                <Text style={styles.statusSubDetail}>
-                                    {rutaSeleccionada.horaSalida ? `Salida estimada: ${rutaSeleccionada.horaSalida}` : 'Horario no definido'}
-                                </Text>
+                                <View>
+                                    <Text style={[styles.statusSubDetail, { color: '#fbbf24', fontWeight: 'bold' }]}>
+                                        {config?.hojaRepartoCodigo || 'H. PENDIENTE'}
+                                    </Text>
+                                    <Text style={[styles.statusSubDetail, { fontSize: 11, opacity: 0.7 }]}>
+                                        {rutaSeleccionada.horaSalida ? `Salida: ${rutaSeleccionada.horaSalida}` : ''}
+                                    </Text>
+                                </View>
                             )}
                         </View>
                         <IconButton icon="chevron-down" iconColor="rgba(255,255,255,0.5)" size={20} />
@@ -364,6 +369,7 @@ const HomeScreen = ({ navigation }: any) => {
                     visible={logoutModalVisible}
                     onDismiss={() => setLogoutModalVisible(false)}
                     contentContainerStyle={styles.logoutModalContainer}
+                    theme={{ colors: { backdrop: 'rgba(0, 0, 0, 0.95)' } }}
                 >
                     <LinearGradient
                         colors={['#1e1b4b', '#020617']}
@@ -408,6 +414,7 @@ const HomeScreen = ({ navigation }: any) => {
                     visible={modalSelectorVisible}
                     onDismiss={() => setModalSelectorVisible(false)}
                     contentContainerStyle={styles.modalContainer}
+                    theme={{ colors: { backdrop: 'rgba(0, 0, 0, 0.95)' } }}
                 >
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
@@ -567,7 +574,6 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         backgroundColor: 'rgba(56, 189, 248, 0.05)',
         justifyContent: 'center',
-        alignItems: 'center',
         marginRight: 16,
     },
     statusTextContainer: {
@@ -843,10 +849,15 @@ const styles = StyleSheet.create({
     },
     // FASE 7: Estilos para confirmación de cambios
     confirmButton: {
-        marginBottom: 20,
-        marginHorizontal: 20,
+        marginTop: 20,
+        marginBottom: 10,
         borderRadius: 12,
         overflow: 'hidden',
+        elevation: 4,
+        shadowColor: '#10b981',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
     },
     confirmGradient: {
         flexDirection: 'row',
@@ -857,10 +868,19 @@ const styles = StyleSheet.create({
     },
     confirmButtonText: {
         color: 'white',
-        fontSize: 16,
-        fontWeight: '700',
-        marginLeft: 8,
+        fontWeight: 'bold',
+        marginLeft: 10,
+        fontSize: 15,
+        letterSpacing: 0.5,
     },
+    infoDivider: {
+        height: 1,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        width: '100%',
+        marginVertical: 15,
+    },
+    // FIXED: Eliminar duplicado, mantener solo este
+    // (Espacio reservado para modalContainer definido arriba)
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -869,6 +889,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)',
+        paddingHorizontal: 5
     },
     selectorItem: {
         flexDirection: 'row',

@@ -50,14 +50,25 @@ const HojaRepartoScreen = ({ navigation }: any) => {
 
             if (hojas.length === 1) {
                 setHojaSeleccionada(hojas[0]);
-            } else {
+            } else if (hojas.length > 1) {
                 setHojasDisponibles(hojas);
+
+                // Priorizar hoja con envíos
+                const hojaConEnvios = hojas.find((h: any) => h.envios && h.envios.length > 0);
+
                 if (hojaSeleccionada) {
                     const hojaActualizada = hojas.find((h: any) => h._id === hojaSeleccionada._id);
                     if (hojaActualizada) {
                         setHojaSeleccionada(hojaActualizada);
+                    } else {
+                        // Si la hoja seleccionada ya no está disponible, elegir la mejor
+                        setHojaSeleccionada(hojaConEnvios || hojas[0]);
                     }
+                } else {
+                    setHojaSeleccionada(hojaConEnvios || hojas[0]);
                 }
+            } else {
+                setHojaSeleccionada(null); // No hay hojas
             }
         } catch (error: any) {
             console.log('Error fetchHojaReparto:', error?.message);
@@ -125,7 +136,7 @@ const HojaRepartoScreen = ({ navigation }: any) => {
                         }
                     }}
                 />
-                <Appbar.Content title="Hoja de Reparto" titleStyle={styles.appbarTitle} />
+                <Appbar.Content title="Mis entregas del día" titleStyle={styles.appbarTitle} />
                 <Appbar.Action icon="reload" color="white" onPress={fetchHojaReparto} />
             </Appbar.Header>
 

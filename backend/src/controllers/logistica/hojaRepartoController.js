@@ -8,22 +8,38 @@ const Chofer = require("../../models/Chofer"); // Agregar arriba si no está
 
 
 
-// Generador de número de hoja al confirmar
+// Generador de número de hoja al confirmar (Formato: HR-SDA-YYYY-MM-DD-XXX)
 const generarNumeroHoja = async () => {
-    const ultima = await HojaReparto.find({ numeroHoja: { $ne: null } })
-        .sort({ createdAt: -1 })
+    const hoy = new Date();
+    const anio = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+
+    // Prefijo base de hoy: HR-SDA-2026-02-17
+    const prefijoHoy = `HR-SDA-${anio}-${mes}-${dia}`;
+
+    // Buscar la última hoja creada HOY que tenga este prefijo
+    // Usamos regex para buscar flexiblemente cualquier secuencia final
+    const ultimaHoy = await HojaReparto.findOne({
+        numeroHoja: { $regex: new RegExp(`^${prefijoHoy}`) }
+    })
+        .sort({ numeroHoja: -1 }) // Orden descendente para obtener el número más alto
         .limit(1);
 
-    let numero = 1;
-    if (ultima.length && ultima[0].numeroHoja) {
-        const partes = ultima[0].numeroHoja.split("-");
-        const num = parseInt(partes[2]);
-        if (!isNaN(num)) {
-            numero = num + 1;
+    let secuencia = 1;
+
+    if (ultimaHoy && ultimaHoy.numeroHoja) {
+        // Extraer la parte final del número (los últimos dígitos después del último guion)
+        const partes = ultimaHoy.numeroHoja.split("-");
+        const ultimoNumero = parseInt(partes[partes.length - 1]);
+
+        if (!isNaN(ultimoNumero)) {
+            secuencia = ultimoNumero + 1;
         }
     }
 
-    return `HR-SDA-${String(numero).padStart(5, "0")}`;
+    // Retorna: HR-SDA-2026-02-17-001
+    return `${prefijoHoy}-${String(secuencia).padStart(3, "0")}`;
 };
 
 const extraerNumero = (numeroHoja) => {
@@ -175,16 +191,9 @@ const confirmarHoja = async (req, res) => {
             }
         }
 
-        // Asignar número único
-        const hojasConNumero = await HojaReparto.find({ numeroHoja: { $ne: null } });
-        let ultimoNumero = 0;
-        hojasConNumero.forEach(h => {
-            const num = parseInt(h.numeroHoja?.split("-")[2], 10);
-            if (!isNaN(num) && num > ultimoNumero) ultimoNumero = num;
-        });
-
-        const nuevoNumero = ultimoNumero + 1;
-        hoja.numeroHoja = `HR-SDA-${String(nuevoNumero).padStart(5, "0")}`;
+        // Asignar número único (Nuevo formato SDA-[RUTA]-YYYYMMDD)
+        const ruta = await Ruta.findById(hoja.ruta);
+        hoja.numeroHoja = await generarNumeroHoja(ruta.codigo);
         hoja.estado = 'en reparto';
         hoja.envios = envios;
 
@@ -489,8 +498,8 @@ const obtenerHojasPorChofer = async (req, res) => {
         // Buscar hojas de reparto asignadas al chofer para hoy
         const hojas = await HojaReparto.find({
             chofer: chofer._id,
-            fecha: { $gte: hoy, $lte: manana },
-            estado: { $ne: "pendiente" }
+            fecha: { $gte: hoy, $lte: manana }
+            // Eliminamos restricción de estado 'pendiente' para que vean sus asignaciones del dia
         })
             .populate("ruta chofer vehiculo")
             .populate({
@@ -534,6 +543,7 @@ const cerrarHojasVencidas = async (fechaReferencia) => {
                 if (envio.estado === "en reparto") {
                     console.log(`📦 Envío ${envio._id} sigue en reparto → reagendando`);
                     envio.estado = "reagendado";
+                    envio.hojaReparto = null; // Liberar envío
                     envio.historialEstados.push({
                         estado: "reagendado",
                         sucursal: "Casa Central – Córdoba",
@@ -575,6 +585,7 @@ const cerrarHojaManualmente = async (req, res) => {
         for (const envio of hoja.envios) {
             if (envio.estado === "en reparto") {
                 envio.estado = "reagendado";
+                envio.hojaReparto = null; // Liberar envío
                 envio.historialEstados.push({
                     estado: "reagendado",
                     sucursal: "Casa Central – Córdoba",

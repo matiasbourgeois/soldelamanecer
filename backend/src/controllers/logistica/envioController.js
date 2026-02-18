@@ -353,6 +353,9 @@ const marcarIntentoFallido = async (req, res) => {
     // 🚫 Caso especial: destinatario rechazó
     if (motivo === "El destinatario rechazó la mercadería") {
       nuevoEstado = "rechazado";
+    } else if (motivo === "Dirección Incorrecta / Inexistente") {
+      // Si la dirección está mal, no tiene sentido reagendar automáticamente, pasa a no entregado (requiere gestión)
+      nuevoEstado = "no entregado";
     } else {
       // Otros motivos: depende de la cantidad de intentos
       if (envio.reintentosEntrega >= 1) {
