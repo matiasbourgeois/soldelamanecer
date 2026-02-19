@@ -81,7 +81,7 @@ const DetalleHojaReparto = () => {
     );
 
     return (
-        <Container size="xl" py={40} pb={100}>
+        <Container size="xl" py={40} pb={100} w="100%">
             {/* 🔙 BACK BUTTON */}
             <Button
                 variant="subtle"
@@ -207,7 +207,7 @@ const DetalleHojaReparto = () => {
             </SimpleGrid>
 
             {/* 🔹 TABS: CONTENT SEGREGATION */}
-            <Tabs value={activeTab} onChange={setActiveTab} color="cyan" radius="md">
+            <Tabs value={activeTab} onChange={setActiveTab} color="cyan" radius="md" style={{ width: '100%' }}>
                 <Tabs.List mb="lg">
                     <Tabs.Tab value="drogueria" leftSection={<Pill size={16} />}>
                         Droguería del Sud S.A.
@@ -220,7 +220,7 @@ const DetalleHojaReparto = () => {
                     </Tabs.Tab>
                 </Tabs.List>
 
-                <Tabs.Panel value="drogueria" pt="xs">
+                <Tabs.Panel value="drogueria" pt="xs" style={{ width: '100%' }}>
                     <TabDrogueria
                         hoja={hoja}
                         onSaved={() => {
