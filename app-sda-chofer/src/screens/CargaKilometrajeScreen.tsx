@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, StatusBar, TextInput as NativeInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -5,9 +6,11 @@ import { Text, Appbar, Button, HelperText, ActivityIndicator, useTheme, Surface,
 import { api } from '../api/client';
 import { useAuth } from '../hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
+import { AppTheme } from '../theme/theme';
 
 const CargaKilometrajeScreen = ({ navigation }: any) => {
-    const theme = useTheme();
+    const theme = useTheme<AppTheme>();
+    const isDark = theme.dark;
     const { user } = useAuth();
 
     // Estados de carga e info
@@ -30,7 +33,6 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
     // State for Snackbar (Errors)
     const [snackbarVisible, setSnackbarVisible] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
-    // const [snackbarColor, setSnackbarColor] = useState(theme.colors.primary); // Deprecated for success
 
     // State for Success Modal
     const [successModalVisible, setSuccessModalVisible] = useState(false);
@@ -47,6 +49,25 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
     // State for Observations
     const [observacionesModalVisible, setObservacionesModalVisible] = useState(false);
     const [observaciones, setObservaciones] = useState('');
+
+    // --- ESTILOS DINÁMICOS ---
+    const bgGradientColors = isDark ? ['#020617', '#0f172a'] : ['#f8fafc', '#f1f5f9'];
+    const textPrimary = theme.colors.textPrimary;
+    const textSecondary = theme.colors.textSecondary;
+    const textInverse = isDark ? '#000' : '#fff'; // For filled buttons sometimes
+
+    // Glass Cards
+    const glassBg = isDark ? 'rgba(255,255,255,0.06)' : '#ffffff';
+    const glassBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
+    const cardShadow = isDark ? 'transparent' : '#cbd5e1';
+    const cardElevation = isDark ? 0 : 2;
+
+    // Secondary Accents
+    const accentColor = isDark ? '#22d3ee' : '#0891b2'; // Cyan 400 vs 600
+    const accentBg = isDark ? 'rgba(34, 211, 238, 0.15)' : 'rgba(8, 145, 178, 0.1)';
+
+    const actionText = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+    const placeholderText = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
 
     // Persistence: Load Observations Draft
     useEffect(() => {
@@ -79,15 +100,11 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
     useEffect(() => {
         const fetchConfig = async () => {
             try {
-                // 1. Configuración asignada (Defaults)
                 const resConfig = await api.get('/choferes/configuracion');
                 if (resConfig.data.vehiculo) setVehiculoAsignado(resConfig.data.vehiculo);
                 if (resConfig.data.ruta) setRutaAsignado(resConfig.data.ruta);
                 if (resConfig.data.hojaRepartoId) setHojaRepartoId(resConfig.data.hojaRepartoId);
                 if (resConfig.data.esPlanificada) setEsPlanificada(true);
-
-                // Ya no necesitamos las listas de selectores
-
             } catch (error) {
                 console.log('Error config:', error);
                 Alert.alert('Aviso', 'Error al cargar datos iniciales.');
@@ -104,8 +121,6 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
         setShowDatePicker(Platform.OS === 'ios');
         setFecha(currentDate);
     };
-
-    // Selectores eliminados - ahora se cambian desde HomeScreen
 
     const handleOpenKmModal = () => {
         setTempKmInput(kmInput || (vehiculoAsignado?.kilometrajeActual?.toString() || ''));
@@ -143,7 +158,6 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
             return;
         }
 
-        // --- NUEVA CONFIRMACIÓN PROFESIONAL (GOD TIER MODAL) ---
         setConfirmModalVisible(true);
     };
 
@@ -153,11 +167,8 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
         const kmAnterior = vehiculoAsignado.kilometrajeActual || 0;
         const kmRecorridosFinal = kmNuevo - kmAnterior;
 
-        // Validación extra de seguridad para saltos grandes de KM
         if (kmRecorridosFinal > 1500) {
             setErrorMessage(`Estás cargando un recorrido inusual (+ ${kmRecorridosFinal} KM). ¿Es correcto?`);
-            // We keep Alert here just for the "Yes/No" choice as confirmation, 
-            // or we could build a specialized confirm modal. For now, fixing the bug requested.
             Alert.alert('Advertencia', 'Estás cargando más de 1500km recorridos en un solo reporte. ¿Confirmás que es correcto?', [
                 { text: 'CANCELAR', style: 'cancel' },
                 { text: 'SÍ, ES CORRECTO', onPress: () => enviarDatos() }
@@ -181,21 +192,16 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
 
             await api.post(`/vehiculos/${vehiculoAsignado._id}/reporte-chofer`, payload);
 
-            // Clear draft on success
             const key = `observaciones_draft_${user?.id}_${vehiculoAsignado?._id || 'default'}`;
             await AsyncStorage.removeItem(key);
             setObservaciones('');
 
             setSubmitting(false);
-            // ÉXITO: MOSTRAR MODAL GRANDE
             setSuccessModalVisible(true);
-
-            // No hacemos goBack automático, dejamos que el usuario toque "Continuar"
 
         } catch (error: any) {
             console.error(error);
             const msg = error.response?.data?.error || "Error al guardar el reporte.";
-            // ERROR: USAMOS SNACKBAR ROJO
             setSnackbarMessage(msg);
             setSnackbarVisible(true);
         } finally {
@@ -208,20 +214,20 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
 
     if (loadingConfig) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#083344' }}>
-                <ActivityIndicator size="large" color="#22d3ee" />
-                <Text style={{ marginTop: 10, color: '#94a3b8' }}>Cargando configuración...</Text>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={{ marginTop: 10, color: textSecondary }}>Cargando configuración...</Text>
             </View>
         );
     }
 
     return (
         <View style={{ flex: 1 }}>
-            <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+            <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor="transparent" translucent />
 
-            {/* GLOBAL BACKGROUND GRADIENT (Darker for contrast) */}
+            {/* GLOBAL BACKGROUND GRADIENT */}
             <LinearGradient
-                colors={['#020617', '#0f172a']}
+                colors={bgGradientColors as [string, string]}
                 style={StyleSheet.absoluteFill}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -231,14 +237,14 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
 
                 {/* HEADER */}
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <IconButton icon="arrow-left" iconColor="white" size={24} />
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+                        <IconButton icon="arrow-left" iconColor={textPrimary} size={24} />
                     </TouchableOpacity>
                     <View style={{ alignItems: 'center' }}>
-                        <Text style={styles.headerTitle}>Reporte Diario</Text>
+                        <Text style={[styles.headerTitle, { color: textPrimary }]}>Reporte Diario</Text>
                         {esPlanificada && (
-                            <View style={styles.badgePlanned}>
-                                <Text style={styles.badgePlannedText}>RUTA PLANIFICADA</Text>
+                            <View style={[styles.badgePlanned, { backgroundColor: accentBg, borderColor: isDark ? 'rgba(34, 211, 238, 0.4)' : 'transparent' }]}>
+                                <Text style={[styles.badgePlannedText, { color: accentColor }]}>RUTA PLANIFICADA</Text>
                             </View>
                         )}
                     </View>
@@ -247,91 +253,119 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
 
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-                    {/* 1. FECHA (Glass Style - New Color) */}
-                    <Text style={styles.sectionLabel}>FECHA DEL REPORTE</Text>
+                    {/* 1. FECHA (Glass Style) */}
+                    <Text style={[styles.sectionLabel, { color: accentColor }]}>FECHA DEL REPORTE</Text>
                     <TouchableOpacity onPress={() => setShowDatePicker(true)} activeOpacity={0.8}>
-                        <View style={styles.glassCardRow}>
-                            <View style={[styles.iconCircle, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
-                                <IconButton icon="calendar-month" iconColor="#38bdf8" size={24} />
+                        <View style={[
+                            styles.glassCardRow,
+                            {
+                                backgroundColor: glassBg,
+                                borderColor: glassBorder,
+                                shadowColor: cardShadow,
+                                elevation: cardElevation
+                            }
+                        ]}>
+                            <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(56, 189, 248, 0.15)' : 'rgba(2, 132, 199, 0.1)' }]}>
+                                <IconButton icon="calendar-month" iconColor={isDark ? "#38bdf8" : "#0284c7"} size={24} />
                             </View>
                             <View style={{ flex: 1 }}>
-                                <Text style={styles.cardValue}>
+                                <Text style={[styles.cardValue, { color: textPrimary }]}>
                                     {fecha.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
                                 </Text>
-                                <Text style={styles.cardSubtitle}>{fecha.getFullYear()}</Text>
+                                <Text style={[styles.cardSubtitle, { color: textSecondary }]}>{fecha.getFullYear()}</Text>
                             </View>
-                            <IconButton icon="chevron-down" size={20} iconColor="rgba(255,255,255,0.5)" />
+                            <IconButton icon="chevron-down" size={20} iconColor={textSecondary} />
                         </View>
                     </TouchableOpacity>
 
-                    {/* 2. VEHÍCULO ASIGNADO - Info visual para el chofer */}
-                    <Text style={styles.sectionLabel}>VEHÍCULO ASIGNADO</Text>
-                    <View style={styles.glassCardRow}>
-                        <View style={[styles.iconCircle, { backgroundColor: 'rgba(34, 211, 238, 0.15)' }]}>
-                            <IconButton icon="truck" iconColor="#22d3ee" size={24} />
+                    {/* 2. VEHÍCULO ASIGNADO */}
+                    <Text style={[styles.sectionLabel, { color: accentColor }]}>VEHÍCULO ASIGNADO</Text>
+                    <View style={[
+                        styles.glassCardRow,
+                        {
+                            backgroundColor: glassBg,
+                            borderColor: glassBorder,
+                            shadowColor: cardShadow,
+                            elevation: cardElevation
+                        }
+                    ]}>
+                        <View style={[styles.iconCircle, { backgroundColor: accentBg }]}>
+                            <IconButton icon="truck" iconColor={accentColor} size={24} />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.cardValue}>
+                            <Text style={[styles.cardValue, { color: textPrimary }]}>
                                 {vehiculoAsignado?.patente?.toUpperCase() || 'NO ASIGNADO'}
                             </Text>
-                            <Text style={styles.cardSubtitle}>
+                            <Text style={[styles.cardSubtitle, { color: textSecondary }]}>
                                 {vehiculoAsignado?.marca} {vehiculoAsignado?.modelo}
                             </Text>
                         </View>
-                        <View style={[styles.iconCircle, { backgroundColor: 'rgba(45, 212, 191, 0.1)', borderWidth: 0 }]}>
-                            <IconButton icon="information" iconColor="#2dd4bf" size={18} />
-                        </View>
                     </View>
 
-                    {/* 3. ODÓMETRO (God Tier Redesign - Full Card Click) */}
-                    <Text style={styles.sectionLabel}>KILOMETRAJE ACTUAL</Text>
+                    {/* 3. ODÓMETRO (God Tier Redesign) */}
+                    <Text style={[styles.sectionLabel, { color: accentColor }]}>KILOMETRAJE ACTUAL</Text>
 
                     <TouchableOpacity
-                        style={styles.heroCardContainer}
+                        style={[
+                            styles.heroCardContainer,
+                            {
+                                shadowColor: isDark ? '#000' : '#bae6fd',
+                                shadowOpacity: isDark ? 0 : 0.5,
+                                elevation: isDark ? 0 : 5
+                            }
+                        ]}
                         onPress={handleOpenKmModal}
                         activeOpacity={0.9}
                     >
                         <LinearGradient
-                            colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.04)']}
-                            style={styles.heroCardGradient}
+                            colors={isDark ? ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.04)'] : ['#e0f2fe', '#f0f9ff']}
+                            style={[styles.heroCardGradient, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#bae6fd', borderWidth: 1 }]}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 0, y: 1 }}
                         >
-                            <View style={styles.lastKmBadge}>
-                                <Text style={styles.lastKmText}>ANTERIOR: {vehiculoAsignado?.kilometrajeActual?.toLocaleString('es-AR') || '0'} KM</Text>
+                            <View style={[styles.lastKmBadge, { backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.6)' }]}>
+                                <Text style={[styles.lastKmText, { color: isDark ? '#94a3b8' : '#64748b' }]}>ANTERIOR: {vehiculoAsignado?.kilometrajeActual?.toLocaleString('es-AR') || '0'} KM</Text>
                             </View>
 
                             <View style={styles.heroValueWrapper}>
-                                <Text style={styles.heroValueText}>
+                                <Text style={[styles.heroValueText, { color: isDark ? 'white' : '#0ea5e9' }]}>
                                     {kmInput || vehiculoAsignado?.kilometrajeActual?.toLocaleString('es-AR') || '0'}
                                 </Text>
-                                <Text style={styles.heroUnitTag}>KM</Text>
+                                <Text style={[styles.heroUnitTag, { color: isDark ? 'rgba(255,255,255,0.5)' : '#7dd3fc' }]}>KM</Text>
                             </View>
 
                             {kmInput !== '' && (
-                                <View style={[styles.validationBadge, { backgroundColor: isKmValid ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)' }]}>
+                                <View style={[styles.validationBadge, { backgroundColor: isKmValid ? (isDark ? 'rgba(34, 197, 94, 0.15)' : '#dcfce7') : (isDark ? 'rgba(239, 68, 68, 0.15)' : '#fee2e2') }]}>
                                     <IconButton icon={isKmValid ? "check-circle" : "alert-circle"} size={16} iconColor={isKmValid ? "#4ade80" : "#ef4444"} style={{ margin: 0, marginRight: 4 }} />
-                                    <Text style={{ color: isKmValid ? '#4ade80' : '#ef4444', fontWeight: 'bold', fontSize: 13 }}>
+                                    <Text style={{ color: isKmValid ? (isDark ? '#4ade80' : '#15803d') : (isDark ? '#ef4444' : '#b91c1c'), fontWeight: 'bold', fontSize: 13 }}>
                                         {isKmValid ? `+ ${kmRecorridos.toLocaleString()} km hoy` : 'Menor al anterior'}
                                     </Text>
                                 </View>
                             )}
 
                             <View style={styles.editHint}>
-                                <IconButton icon="pencil" size={12} iconColor="rgba(255,255,255,0.4)" />
-                                <Text style={styles.editHintText}>Toca para editar</Text>
+                                <IconButton icon="pencil" size={12} iconColor={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"} />
+                                <Text style={[styles.editHintText, { color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)" }]}>Toca para editar</Text>
                             </View>
                         </LinearGradient>
                     </TouchableOpacity>
 
 
-                    {/* 4. COMBUSTIBLE (Glass Style - Dynamic Units) */}
-                    <Text style={styles.sectionLabel}>COMBUSTIBLE (OPCIONAL)</Text>
-                    <View style={[styles.glassCardRow, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(251, 146, 60, 0.2)' }]}>
-                        <View style={[styles.iconCircle, { backgroundColor: 'rgba(251, 146, 60, 0.2)' }]}>
+                    {/* 4. COMBUSTIBLE */}
+                    <Text style={[styles.sectionLabel, { color: accentColor }]}>COMBUSTIBLE (OPCIONAL)</Text>
+                    <View style={[
+                        styles.glassCardRow,
+                        {
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#fff7ed',
+                            borderColor: isDark ? 'rgba(251, 146, 60, 0.2)' : '#ffedd5',
+                            borderWidth: 1,
+                            elevation: isDark ? 0 : 2
+                        }
+                    ]}>
+                        <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(251, 146, 60, 0.2)' : '#ffedd5' }]}>
                             <IconButton
                                 icon={vehiculoAsignado?.tipoCombustible === 'GNC' ? 'gas-cylinder' : 'gas-station'}
-                                iconColor="#fb923c"
+                                iconColor={isDark ? "#fb923c" : "#f97316"}
                                 size={24}
                             />
                         </View>
@@ -340,38 +374,44 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                             onChangeText={setLitrosInput}
                             keyboardType="numeric"
                             placeholder="0"
-                            placeholderTextColor="rgba(255,255,255,0.3)"
-                            style={styles.fuelInput}
+                            placeholderTextColor={placeholderText}
+                            style={[styles.fuelInput, { color: textPrimary }]}
                             selectionColor="#fb923c"
                             underlineColorAndroid="transparent"
                         />
-                        <Text style={styles.fuelUnit}>
+                        <Text style={[styles.fuelUnit, { color: textSecondary }]}>
                             {vehiculoAsignado?.tipoCombustible === 'GNC' ? 'M³' : 'LITROS'}
                         </Text>
                     </View>
 
-                    {/* 5. OBSERVACIONES (Glass Card Button - Nivel Dios) */}
-                    <Text style={styles.sectionLabel}>OBSERVACIONES / NOVEDADES</Text>
+                    {/* 5. OBSERVACIONES */}
+                    <Text style={[styles.sectionLabel, { color: accentColor }]}>OBSERVACIONES / NOVEDADES</Text>
                     <TouchableOpacity
                         onPress={() => setObservacionesModalVisible(true)}
                         activeOpacity={0.8}
                     >
                         <View style={[styles.glassCardRow, {
-                            backgroundColor: observaciones ? 'rgba(34, 211, 238, 0.12)' : 'rgba(255,255,255,0.05)',
-                            borderColor: observaciones ? 'rgba(34, 211, 238, 0.5)' : 'rgba(255,255,255,0.1)',
+                            backgroundColor: observaciones
+                                ? (isDark ? 'rgba(34, 211, 238, 0.12)' : '#ecfeff')
+                                : glassBg,
+                            borderColor: observaciones
+                                ? (isDark ? 'rgba(34, 211, 238, 0.5)' : '#a5f3fc')
+                                : glassBorder,
+                            elevation: cardElevation,
                             borderWidth: observaciones ? 1.5 : 1,
                             minHeight: 95,
-                            // Dynamic Padding for aesthetic balance
                             paddingVertical: observaciones ? 18 : 16
                         }]}>
                             <View style={[styles.iconCircle, {
-                                backgroundColor: observaciones ? 'rgba(34, 211, 238, 0.2)' : 'rgba(255,255,255,0.1)',
-                                borderColor: observaciones ? 'rgba(34, 211, 238, 0.3)' : 'transparent',
+                                backgroundColor: observaciones
+                                    ? (isDark ? 'rgba(34, 211, 238, 0.2)' : '#cffafe')
+                                    : (isDark ? 'rgba(255,255,255,0.1)' : '#f1f5f9'),
+                                borderColor: observaciones ? (isDark ? 'rgba(34, 211, 238, 0.3)' : 'transparent') : 'transparent',
                                 borderWidth: observaciones ? 1 : 0
                             }]}>
                                 <IconButton
                                     icon={observaciones ? "chat-processing" : "chat-processing-outline"}
-                                    iconColor={observaciones ? "#22d3ee" : "rgba(255,255,255,0.4)"}
+                                    iconColor={observaciones ? (isDark ? "#22d3ee" : "#06b6d4") : textSecondary}
                                     size={24}
                                 />
                             </View>
@@ -379,7 +419,7 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                                 <Text
                                     numberOfLines={2}
                                     style={[styles.cardValueSmall, {
-                                        color: observaciones ? 'white' : 'rgba(255,255,255,0.4)',
+                                        color: observaciones ? textPrimary : textSecondary,
                                         fontSize: observaciones ? 16 : 20,
                                         fontWeight: observaciones ? '700' : '600',
                                         lineHeight: observaciones ? 22 : 24,
@@ -391,11 +431,11 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                                         : "Sin novedades para reportar"
                                     }
                                 </Text>
-                                <Text style={styles.cardSubtitle}>
+                                <Text style={[styles.cardSubtitle, { color: textSecondary }]}>
                                     {observaciones ? "Toca para editar tu comentario" : "Toca para informar ruidos, fallas, etc."}
                                 </Text>
                             </View>
-                            <IconButton icon="chevron-right" size={20} iconColor="rgba(255,255,255,0.3)" />
+                            <IconButton icon="chevron-right" size={20} iconColor={textSecondary} />
                         </View>
                     </TouchableOpacity>
 
@@ -406,17 +446,20 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                         onPress={handleSubmit}
                         activeOpacity={0.9}
                         disabled={submitting || !kmInput || !isKmValid}
+                        style={[styles.submitButtonContainer, (!kmInput || !isKmValid) && { opacity: 0.8 }]}
                     >
                         <LinearGradient
-                            colors={(!kmInput || !isKmValid) ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['#06b6d4', '#3b82f6']}
+                            colors={(!kmInput || !isKmValid)
+                                ? (isDark ? ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'] : ['#e2e8f0', '#cbd5e1'])
+                                : ['#06b6d4', '#3b82f6']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
-                            style={styles.submitButton}
+                            style={styles.submitButtonGradient}
                         >
                             {submitting ? (
                                 <ActivityIndicator color="white" />
                             ) : (
-                                <Text style={[styles.submitText, (!kmInput || !isKmValid) && { color: 'rgba(255,255,255,0.3)' }]}>CONFIRMAR REPORTE</Text>
+                                <Text style={[styles.submitText, (!kmInput || !isKmValid) && { color: isDark ? 'rgba(255,255,255,0.3)' : '#94a3b8' }]}>CONFIRMAR REPORTE</Text>
                             )}
                         </LinearGradient>
                     </TouchableOpacity>
@@ -425,42 +468,41 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
 
                 </ScrollView>
 
-                {/* Modal de selectores eliminado - ahora se hace desde HomeScreen */}
+                {/* MODALES REFACTORIZADOS CON LÓGICA DE TEMA */}
 
-                {/* MODAL PARA ACTUALIZAR KM */}
+                {/* 1. UPDATE KM MODAL */}
                 <Portal>
-                    <Modal visible={kmModalVisible} onDismiss={() => setKmModalVisible(false)} contentContainerStyle={styles.confirmModal}>
-                        <LinearGradient colors={['#0f172a', '#020617']} style={styles.confirmModalGradient}>
-                            <View style={[styles.confirmIconRing, { borderColor: 'rgba(56, 189, 248, 0.3)', backgroundColor: 'rgba(56, 189, 248, 0.05)' }]}>
-                                <IconButton icon="counter" size={32} iconColor="#38bdf8" />
+                    <Modal visible={kmModalVisible} onDismiss={() => setKmModalVisible(false)} contentContainerStyle={[styles.confirmModal, { backgroundColor: 'transparent' }]}>
+                        <LinearGradient colors={isDark ? ['#0f172a', '#020617'] : ['#ffffff', '#f8fafc']} style={styles.confirmModalGradient}>
+                            <View style={[styles.confirmIconRing, { borderColor: isDark ? 'rgba(56, 189, 248, 0.3)' : '#bae6fd', backgroundColor: isDark ? 'rgba(56, 189, 248, 0.05)' : '#e0f2fe' }]}>
+                                <IconButton icon="counter" size={32} iconColor={isDark ? "#38bdf8" : "#0284c7"} />
                             </View>
-                            <Text style={styles.confirmTitle}>Actualizar Odómetro</Text>
-                            <Text style={styles.confirmSubtitle}>Ingresá el kilometraje actual del vehículo {vehiculoAsignado?.patente?.toUpperCase()}.</Text>
+                            <Text style={[styles.confirmTitle, { color: textPrimary }]}>Actualizar Odómetro</Text>
+                            <Text style={[styles.confirmSubtitle, { color: textSecondary }]}>Ingresá el kilometraje actual del vehículo {vehiculoAsignado?.patente?.toUpperCase()}.</Text>
 
-                            <View style={[styles.summaryContainer, { marginTop: 20, backgroundColor: 'rgba(0,0,0,0.2)' }]}>
+                            <View style={[styles.summaryContainer, { marginTop: 20, backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : '#f1f5f9' }]}>
                                 <View style={styles.kmInputWrapper}>
                                     <NativeInput
                                         value={tempKmInput}
                                         onChangeText={setTempKmInput}
                                         keyboardType="numeric"
-                                        style={styles.kmInputBig}
+                                        style={[styles.kmInputBig, { color: textPrimary }]}
                                         autoFocus
                                         selectionColor="#38bdf8"
                                         placeholder="0"
-                                        placeholderTextColor="rgba(255,255,255,0.2)"
+                                        placeholderTextColor={placeholderText}
                                     />
-                                    <Text style={styles.kmUnitBig}>KM</Text>
+                                    <Text style={[styles.kmUnitBig, { color: textSecondary }]}>KM</Text>
                                 </View>
                             </View>
 
-                            {/* FEEDBACK EN TIEMPO REAL DENTRO DEL MODAL */}
                             {tempKmInput !== '' && (() => {
                                 const diff = parseInt(tempKmInput) - (vehiculoAsignado?.kilometrajeActual || 0);
                                 const isValid = diff >= 0;
                                 return (
-                                    <View style={[styles.validationBadge, { marginTop: 0, marginBottom: 20, backgroundColor: isValid ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)' }]}>
-                                        <IconButton icon={isValid ? "check-circle" : "alert-circle"} size={16} iconColor={isValid ? "#4ade80" : "#ef4444"} style={{ margin: 0, marginRight: 4 }} />
-                                        <Text style={{ color: isValid ? '#4ade80' : '#ef4444', fontWeight: 'bold', fontSize: 13 }}>
+                                    <View style={[styles.validationBadge, { marginTop: 0, marginBottom: 20, backgroundColor: isValid ? (isDark ? 'rgba(34, 197, 94, 0.1)' : '#dcfce7') : (isDark ? 'rgba(239, 68, 68, 0.1)' : '#fee2e2') }]}>
+                                        <IconButton icon={isValid ? "check-circle" : "alert-circle"} size={16} iconColor={isValid ? (isDark ? "#4ade80" : "#16a34a") : "#ef4444"} style={{ margin: 0, marginRight: 4 }} />
+                                        <Text style={{ color: isValid ? (isDark ? '#4ade80' : '#16a34a') : '#ef4444', fontWeight: 'bold', fontSize: 13 }}>
                                             {isValid ? `+ ${diff.toLocaleString()} km hoy` : 'KILOMETRAJE MENOR AL ANTERIOR'}
                                         </Text>
                                     </View>
@@ -490,35 +532,35 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                                 </LinearGradient>
                             </TouchableOpacity>
 
-                            <Button mode="text" onPress={() => setKmModalVisible(false)} textColor="rgba(255,255,255,0.4)">
+                            <Button mode="text" onPress={() => setKmModalVisible(false)} textColor={textSecondary}>
                                 CANCELAR
                             </Button>
                         </LinearGradient>
                     </Modal>
                 </Portal>
 
-                {/* MODAL PARA OBSERVACIONES (GOD TIER) */}
+                {/* 2. OBSERVACIONES MODAL */}
                 <Portal>
                     <Modal
                         visible={observacionesModalVisible}
                         onDismiss={() => setObservacionesModalVisible(false)}
                         contentContainerStyle={styles.observationsModal}
                     >
-                        <LinearGradient colors={['#0f172a', '#020617']} style={styles.confirmModalGradient}>
+                        <LinearGradient colors={isDark ? ['#0f172a', '#020617'] : ['#ffffff', '#f8fafc']} style={styles.confirmModalGradient}>
                             <ScrollView
                                 contentContainerStyle={{ alignItems: 'center', paddingBottom: 20 }}
                                 showsVerticalScrollIndicator={false}
                                 style={{ width: '100%' }}
                             >
-                                <View style={[styles.confirmIconRing, { borderColor: 'rgba(34, 211, 238, 0.3)', backgroundColor: 'rgba(34, 211, 238, 0.05)', marginTop: 10 }]}>
-                                    <IconButton icon="chat-processing" size={32} iconColor="#22d3ee" />
+                                <View style={[styles.confirmIconRing, { borderColor: isDark ? 'rgba(34, 211, 238, 0.3)' : '#a5f3fc', backgroundColor: isDark ? 'rgba(34, 211, 238, 0.05)' : '#ecfeff', marginTop: 10 }]}>
+                                    <IconButton icon="chat-processing" size={32} iconColor={isDark ? "#22d3ee" : "#0891b2"} />
                                 </View>
-                                <Text style={styles.confirmTitle}>Novedades de la Jornada</Text>
-                                <Text style={styles.confirmSubtitle}>Reportá cualquier inconveniente con el vehículo o la ruta.</Text>
+                                <Text style={[styles.confirmTitle, { color: textPrimary }]}>Novedades de la Jornada</Text>
+                                <Text style={[styles.confirmSubtitle, { color: textSecondary }]}>Reportá cualquier inconveniente con el vehículo o la ruta.</Text>
 
                                 <View style={[styles.summaryContainer, {
                                     marginTop: 24,
-                                    backgroundColor: 'rgba(0,0,0,0.3)',
+                                    backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : '#f1f5f9',
                                     height: 180,
                                     padding: 15,
                                     marginBottom: 24
@@ -529,9 +571,9 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                                         multiline
                                         numberOfLines={8}
                                         placeholder="Escribí acá tus comentarios..."
-                                        placeholderTextColor="rgba(255,255,255,0.2)"
+                                        placeholderTextColor={placeholderText}
                                         style={{
-                                            color: 'white',
+                                            color: textPrimary,
                                             fontSize: 16,
                                             textAlignVertical: 'top',
                                             height: '100%',
@@ -560,7 +602,7 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                                 <Button
                                     mode="text"
                                     onPress={() => setObservacionesModalVisible(false)}
-                                    textColor="rgba(255,255,255,0.5)"
+                                    textColor={textSecondary}
                                     labelStyle={{ fontWeight: 'bold' }}
                                 >
                                     CERRAR
@@ -570,15 +612,15 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                     </Modal>
                 </Portal>
 
-                {/* MODAL DE ERROR (GOD TIER) */}
+                {/* 3. ERROR MODAL */}
                 <Portal>
-                    <Modal visible={errorModalVisible} onDismiss={() => setErrorModalVisible(false)} contentContainerStyle={styles.confirmModal}>
-                        <LinearGradient colors={['#1e1b4b', '#020617']} style={styles.confirmModalGradient}>
-                            <View style={[styles.confirmIconRing, { borderColor: 'rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(239, 68, 68, 0.05)' }]}>
+                    <Modal visible={errorModalVisible} onDismiss={() => setErrorModalVisible(false)} contentContainerStyle={[styles.confirmModal, { backgroundColor: 'transparent' }]}>
+                        <LinearGradient colors={isDark ? ['#1e1b4b', '#020617'] : ['#fef2f2', '#fff1f2']} style={styles.confirmModalGradient}>
+                            <View style={[styles.confirmIconRing, { borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : '#fecaca', backgroundColor: isDark ? 'rgba(239, 68, 68, 0.05)' : '#fef2f2' }]}>
                                 <IconButton icon="alert-octagon" size={32} iconColor="#ef4444" />
                             </View>
                             <Text style={[styles.confirmTitle, { color: '#ef4444' }]}>¡Atención!</Text>
-                            <Text style={styles.confirmSubtitle}>{errorMessage}</Text>
+                            <Text style={[styles.confirmSubtitle, { color: textSecondary }]}>{errorMessage}</Text>
 
                             <TouchableOpacity onPress={() => setErrorModalVisible(false)} activeOpacity={0.9} style={{ width: '100%', marginTop: 20 }}>
                                 <LinearGradient colors={['#ef4444', '#b91c1c']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.confirmButtonPrim}>
@@ -589,41 +631,39 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                     </Modal>
                 </Portal>
 
-                {/* MODAL DE CONFIRMACIÓN (GOD TIER) */}
+                {/* 4. CONFIRM MODAL */}
                 <Portal>
-                    <Modal visible={confirmModalVisible} onDismiss={() => setConfirmModalVisible(false)} contentContainerStyle={styles.confirmModal}>
+                    <Modal visible={confirmModalVisible} onDismiss={() => setConfirmModalVisible(false)} contentContainerStyle={[styles.confirmModal, { backgroundColor: 'transparent' }]}>
                         <LinearGradient
-                            colors={['#0c4a6e', '#082f49']}
+                            colors={isDark ? ['#0c4a6e', '#082f49'] : ['#f0f9ff', '#e0f2fe']}
                             style={styles.confirmModalGradient}
                         >
                             <View style={styles.confirmHeader}>
                                 <View style={styles.confirmIconRing}>
-                                    <IconButton icon="file-document-check" size={32} iconColor="#22d3ee" />
+                                    <IconButton icon="file-document-check" size={32} iconColor={isDark ? "#22d3ee" : "#0284c7"} />
                                 </View>
-                                <Text style={styles.confirmTitle}>Verificar Datos</Text>
-                                <Text style={styles.confirmSubtitle}>Asegurará de que la información coincida con tu jornada actual.</Text>
+                                <Text style={[styles.confirmTitle, { color: textPrimary }]}>Verificar Datos</Text>
+                                <Text style={[styles.confirmSubtitle, { color: textSecondary }]}>Asegurará de que la información coincida con tu jornada actual.</Text>
                             </View>
 
-                            <View style={[styles.summaryContainer, { backgroundColor: 'rgba(0,0,0,0.3)', borderColor: 'rgba(34, 211, 238, 0.2)' }]}>
+                            <View style={[styles.summaryContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.6)', borderColor: isDark ? 'rgba(34, 211, 238, 0.2)' : '#bae6fd' }]}>
                                 <View style={styles.summaryRow}>
                                     <View style={styles.summaryIconBox}>
                                         <IconButton icon="truck" size={18} iconColor="#22d3ee" />
                                     </View>
                                     <View style={{ flex: 1 }}>
-                                        <Text style={styles.summaryLabel}>VEHÍCULO</Text>
-                                        <Text style={styles.summaryValue}>{vehiculoAsignado?.patente?.toUpperCase()}</Text>
+                                        <Text style={[styles.summaryLabel, { color: textSecondary }]}>VEHÍCULO</Text>
+                                        <Text style={[styles.summaryValue, { color: textPrimary }]}>{vehiculoAsignado?.patente?.toUpperCase()}</Text>
                                     </View>
                                 </View>
-
-                                {/* Ruta eliminada - solo vehiculo + kms */}
 
                                 <View style={styles.summaryRow}>
                                     <View style={styles.summaryIconBox}>
                                         <IconButton icon="counter" size={18} iconColor="#22d3ee" />
                                     </View>
                                     <View style={{ flex: 1 }}>
-                                        <Text style={styles.summaryLabel}>KM RECORRIDOS</Text>
-                                        <Text style={styles.summaryValue}>+ {kmRecorridos.toLocaleString('es-AR')} KM</Text>
+                                        <Text style={[styles.summaryLabel, { color: textSecondary }]}>KM RECORRIDOS</Text>
+                                        <Text style={[styles.summaryValue, { color: textPrimary }]}>+ {kmRecorridos.toLocaleString('es-AR')} KM</Text>
                                     </View>
                                 </View>
                             </View>
@@ -646,7 +686,7 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                             <Button
                                 mode="text"
                                 onPress={() => setConfirmModalVisible(false)}
-                                textColor="rgba(255,255,255,0.4)"
+                                textColor={textSecondary}
                                 labelStyle={{ fontWeight: '800', letterSpacing: 1 }}
                             >
                                 REVISAR DATOS
@@ -655,15 +695,15 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                     </Modal>
                 </Portal>
 
-                {/* MODAL DE ÉXITO */}
+                {/* 5. SUCCESS MODAL */}
                 <Portal>
-                    <Modal visible={successModalVisible} onDismiss={() => { }} contentContainerStyle={styles.successModal}>
+                    <Modal visible={successModalVisible} onDismiss={() => { }} contentContainerStyle={[styles.successModal, { backgroundColor: theme.colors.surface }]}>
                         <View style={styles.successContent}>
                             <View style={styles.successIconContainer}>
                                 <IconButton icon="check-bold" size={40} iconColor="white" />
                             </View>
-                            <Text style={styles.successTitle}>¡Registro Exitoso!</Text>
-                            <Text style={styles.successSubtitle}>Los kilómetros se guardaron correctamente en el sistema.</Text>
+                            <Text style={[styles.successTitle, { color: textPrimary }]}>¡Registro Exitoso!</Text>
+                            <Text style={[styles.successSubtitle, { color: textSecondary }]}>Los kilómetros se guardaron correctamente en el sistema.</Text>
 
                             <Button
                                 mode="contained"
@@ -672,7 +712,7 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                                     navigation.goBack();
                                 }}
                                 style={styles.successButton}
-                                labelStyle={{ fontSize: 16, fontWeight: 'bold' }}
+                                labelStyle={{ fontSize: 16, fontWeight: 'bold', color: 'white' }}
                                 contentStyle={{ height: 50 }}
                                 buttonColor="#10b981"
                             >
@@ -682,7 +722,6 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                     </Modal>
                 </Portal>
 
-                {/* Error Snackbar */}
                 <Portal>
                     <Snackbar
                         visible={snackbarVisible}
@@ -694,16 +733,17 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                     </Snackbar>
                 </Portal>
 
-                {/* SELECTOR DE FECHA (3 DÍAS) */}
+                {/* SELECTOR DE FECHA */}
                 {showDatePicker && (
                     <View style={styles.modalOverlay}>
                         <LinearGradient
-                            colors={['#0c4a6e', '#082f49']}
+                            colors={isDark ? ['#0c4a6e', '#082f49'] : ['#f0f9ff', '#e0f2fe']}
                             style={styles.modalContainerGlass}
                         >
-                            <Text style={styles.modalTitleLight}>Fecha del Reporte</Text>
+                            <Text style={[styles.modalTitleLight, { color: textPrimary }]}>Fecha del Reporte</Text>
                             <View style={styles.dateGrid}>
                                 {Array.from({ length: 4 }).map((_, i) => {
+                                    // ... Date logic ...
                                     const offset = 3 - i;
                                     const d = new Date();
                                     d.setDate(d.getDate() - offset);
@@ -722,11 +762,17 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                                             }}
                                         >
                                             <LinearGradient
-                                                colors={isSelected ? ['#06b6d4', '#0891b2'] : ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.03)']}
-                                                style={[styles.miniDateCardBase, isSelected && styles.miniDateCardSelectedBorder]}
+                                                colors={isSelected
+                                                    ? ['#06b6d4', '#0891b2']
+                                                    : (isDark ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.03)'] : ['#ffffff', '#f8fafc'])}
+                                                style={[
+                                                    styles.miniDateCardBase,
+                                                    isSelected && styles.miniDateCardSelectedBorder,
+                                                    !isSelected && { borderWidth: 1, borderColor: isDark ? 'transparent' : '#e2e8f0' }
+                                                ]}
                                             >
                                                 <Text style={[styles.miniDateDayText, isSelected ? { color: 'rgba(255,255,255,0.8)' } : { color: '#22d3ee' }]}>{dayName}</Text>
-                                                <Text style={styles.miniDateNumberText}>{dayNumber}</Text>
+                                                <Text style={[styles.miniDateNumberText, !isSelected && !isDark && { color: '#1e293b' }]}>{dayNumber}</Text>
                                                 {isSelected && <View style={styles.miniDateIndicatorWhite} />}
                                             </LinearGradient>
                                         </TouchableOpacity>
@@ -737,7 +783,7 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                                 style={styles.modalCloseButton}
                                 onPress={() => setShowDatePicker(false)}
                             >
-                                <Text style={styles.modalCloseButtonText}>CANCELAR</Text>
+                                <Text style={[styles.modalCloseButtonText, { color: textSecondary }]}>CANCELAR</Text>
                             </TouchableOpacity>
                         </LinearGradient>
                     </View>
@@ -749,354 +795,143 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-    // Header
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingTop: 50, // More space for StatusBar
+        paddingTop: 50,
         paddingBottom: 20,
     },
     backButton: {
-        width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center',
+        width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center',
     },
-    headerTitle: { fontSize: 20, fontWeight: '800', color: 'white', letterSpacing: 0.5 },
+    headerTitle: { fontSize: 20, fontWeight: '800', letterSpacing: 0.5 },
     badgePlanned: {
-        backgroundColor: 'rgba(34, 211, 238, 0.2)',
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 8,
         marginTop: 4,
         borderWidth: 1,
-        borderColor: 'rgba(34, 211, 238, 0.4)'
     },
     badgePlannedText: {
         fontSize: 9,
         fontWeight: '900',
-        color: '#22d3ee',
         letterSpacing: 1
     },
 
     content: { padding: 20 },
-    sectionLabel: { fontSize: 13, fontWeight: '800', color: '#22d3ee', marginBottom: 12, letterSpacing: 1.5, textTransform: 'uppercase' },
+    sectionLabel: { fontSize: 13, fontWeight: '800', marginBottom: 12, letterSpacing: 1.5, textTransform: 'uppercase' },
 
-    // Glass Card Styles
     glassCardRow: {
         flexDirection: 'row', alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 24, padding: 16, marginBottom: 28,
-        borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+        borderRadius: 24, padding: 16, marginBottom: 28,
+        borderWidth: 1,
     },
-    glassCardColumn: {
-        backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 24, padding: 16,
-        alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', height: 160,
-    },
-
-    // Icons
     iconCircle: {
-        width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(34, 211, 238, 0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 16, overflow: 'hidden'
+        width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginRight: 16, overflow: 'hidden'
     },
-    iconCircleSmall: {
-        width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginBottom: 12
+    cardValue: {
+        fontSize: 18, fontWeight: '800', letterSpacing: 0.5, marginBottom: 2,
+    },
+    cardValueSmall: {
+        fontSize: 16, fontWeight: '700', marginBottom: 2,
+    },
+    cardSubtitle: {
+        fontSize: 13, fontWeight: '500',
     },
 
-    // Typography
-    cardValue: { fontSize: 18, fontWeight: '700', color: 'white', textTransform: 'capitalize' },
-    cardValueSmall: { fontSize: 20, fontWeight: '700', color: 'white', marginBottom: 4 },
-    cardSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.6)' },
-
-    // Selectors Layout
-    row: { flexDirection: 'row', marginBottom: 28 },
-
-    // Hero Card Redesign (Stable Glass)
+    // HERO CARD
     heroCardContainer: {
-        marginBottom: 28,
-        borderRadius: 30,
-        overflow: 'hidden',
-        borderWidth: 1.5,
-        borderColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 32, marginBottom: 32,
     },
     heroCardGradient: {
-        padding: 24,
-        alignItems: 'center',
+        padding: 24, borderRadius: 32, alignItems: 'center', justifyContent: 'center', minHeight: 180,
     },
     lastKmBadge: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
-        marginBottom: 16
+        paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 12,
     },
-    lastKmText: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: 'rgba(255,255,255,0.75)',
-        letterSpacing: 0.5
-    },
-    heroUnitTag: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#22d3ee',
-        marginLeft: 8,
-        opacity: 0.9
-    },
-    heroValueWrapper: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
-        justifyContent: 'center',
-    },
-    heroValueText: {
-        fontSize: 64,
-        fontWeight: '900',
-        color: 'white',
-        letterSpacing: -2,
+    lastKmText: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
+    heroValueWrapper: { flexDirection: 'row', alignItems: 'baseline' },
+    heroValueText: { fontSize: 42, fontWeight: '900', letterSpacing: -1 },
+    heroUnitTag: { fontSize: 16, fontWeight: '900', marginLeft: 4 },
+    validationBadge: {
+        flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, marginTop: 12,
     },
     editHint: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 12,
-        opacity: 0.6
+        marginTop: 16, flexDirection: 'row', alignItems: 'center', opacity: 0.8
     },
-    editHintText: {
-        fontSize: 11,
-        color: 'white',
-        fontWeight: '700',
-        letterSpacing: 1,
-        textTransform: 'uppercase'
-    },
+    editHintText: { fontSize: 12, fontWeight: '600' },
 
-    validationBadge: { flexDirection: 'row', alignItems: 'center', marginTop: 16, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20 },
+    fuelInput: {
+        flex: 1, fontSize: 24, fontWeight: 'bold', height: 50, textAlign: 'right', marginRight: 8, paddingHorizontal: 10
+    },
+    fuelUnit: { fontSize: 14, fontWeight: '900', },
 
-    // KM Modal Styles
-    kmInputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    kmInputBig: {
-        fontSize: 48,
-        fontWeight: '900',
-        color: 'white',
-        textAlign: 'center',
-        minWidth: 150,
-    },
-    kmUnitBig: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#38bdf8',
-        marginLeft: 8,
-    },
-
-    // Fuel
-    fuelInput: { flex: 1, backgroundColor: 'transparent', fontSize: 24, fontWeight: '700', color: 'white' },
-    fuelUnit: { fontSize: 16, fontWeight: 'bold', color: 'rgba(255,255,255,0.5)' },
-
-    // Submit
-    submitButton: {
-        height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center',
-        shadowColor: '#06b6d4', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 8
-    },
-    submitText: { fontSize: 18, fontWeight: '900', color: 'white', letterSpacing: 1.5, textTransform: 'uppercase' },
-
-    // Modal Generic
-    modalOverlay: {
-        position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 999
-    },
-    modalContainer: {
-        width: '85%', backgroundColor: 'white', borderRadius: 24, padding: 24, elevation: 10
-    },
-    modalTitle: { fontSize: 20, fontWeight: '800', textAlign: 'center', marginBottom: 16, color: '#1e293b' },
-    searchInput: { backgroundColor: 'white', marginBottom: 16, height: 50 },
-    modalItem: {
-        flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9'
-    },
-    modalItemIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-    modalItemTitle: { fontSize: 17, fontWeight: 'bold', color: '#334155' },
-    modalItemSubtitle: { fontSize: 14, color: '#94a3b8' },
-
-    // Success Modal
-    successModal: { backgroundColor: 'white', margin: 24, borderRadius: 32, padding: 40, alignItems: 'center' },
-    successContent: { width: '100%', alignItems: 'center' },
-    successIconContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center', marginBottom: 24, elevation: 10, shadowColor: '#10b981', shadowOpacity: 0.4, shadowRadius: 20 },
-    successTitle: { fontSize: 24, fontWeight: 'bold', color: '#1e293b', marginBottom: 8 },
-    successSubtitle: { fontSize: 16, color: '#64748b', textAlign: 'center', marginBottom: 32, lineHeight: 22 },
-    successButton: { width: '100%', borderRadius: 16 },
-
-    // Date Modal Redesign
-    modalContainerGlass: {
-        width: '90%',
-        borderRadius: 32,
-        padding: 24,
-        elevation: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
-        overflow: 'hidden',
-    },
-    // Confirm Modal (God Tier)
-    confirmModal: {
-        margin: 20,
-        borderRadius: 32,
-        overflow: 'hidden',
-    },
-    observationsModal: {
-        margin: 20,
-        borderRadius: 32,
-        overflow: 'hidden',
-        maxHeight: '85%', // Prevent overflow
-    },
-    confirmModalGradient: {
-        padding: 32,
-        alignItems: 'center',
-    },
-    confirmHeader: {
-        alignItems: 'center',
-        marginBottom: 32,
-    },
-    confirmIconRing: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        borderWidth: 2,
-        borderColor: 'rgba(34, 211, 238, 0.3)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 16,
-        backgroundColor: 'rgba(34, 211, 238, 0.05)',
-    },
-    confirmTitle: {
-        fontSize: 24,
-        fontWeight: '900',
-        color: 'white',
-        letterSpacing: 0.5,
-        marginBottom: 8,
-    },
-    confirmSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.6)',
-        textAlign: 'center',
-        paddingHorizontal: 20,
-        lineHeight: 20,
-    },
-    summaryContainer: {
+    submitButtonContainer: {
+        borderRadius: 20,
+        height: 56,
         width: '100%',
-        backgroundColor: 'rgba(255,255,255,0.04)',
-        borderRadius: 24,
-        padding: 20,
-        marginBottom: 40,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.08)',
+        shadowColor: '#06b6d4',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 6,
+        backgroundColor: 'transparent', // Ensure no background color conflict
     },
-    summaryRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    summaryIconBox: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255,255,255,0.04)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    summaryLabel: {
-        fontSize: 10,
-        fontWeight: '900',
-        color: '#22d3ee',
-        letterSpacing: 1.5,
-        marginBottom: 2,
-    },
-    summaryValue: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: 'white',
-    },
-    summaryDivider: {
-        height: 1,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        marginVertical: 16,
-        marginLeft: 52,
-    },
-    confirmButtonPrim: {
-        height: 60,
+    submitButtonGradient: {
+        flex: 1,
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 8,
-        shadowColor: '#2563eb',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
     },
-    confirmButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '900',
-        letterSpacing: 1,
+    submitText: { color: 'white', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
+
+    // Modals
+    confirmModal: {
+        width: '90%', alignSelf: 'center', borderRadius: 28, overflow: 'hidden', elevation: 10,
     },
-    // Progress Bar Style
-    modalTitleLight: {
-        fontSize: 22,
-        fontWeight: '900',
-        color: 'white',
-        textAlign: 'center',
-        marginBottom: 24,
-        letterSpacing: 0.5,
+    confirmModalGradient: { padding: 24, alignItems: 'center' },
+    confirmHeader: { width: '100%', alignItems: 'center', marginBottom: 20 },
+    confirmIconRing: { width: 64, height: 64, borderRadius: 32, borderWidth: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+    confirmTitle: { fontSize: 22, fontWeight: '800', marginBottom: 8, textAlign: 'center' },
+    confirmSubtitle: { fontSize: 15, textAlign: 'center', lineHeight: 22, paddingHorizontal: 10 },
+    summaryContainer: { width: '100%', borderRadius: 20, borderWidth: 1, padding: 20, marginTop: 24, marginBottom: 24 },
+    kmInputWrapper: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', paddingVertical: 10 },
+    kmInputBig: { fontSize: 48, fontWeight: '900', color: 'white', width: 150, textAlign: 'center' },
+    kmUnitBig: { fontSize: 20, fontWeight: '900', color: '#64748b' },
+    confirmButtonPrim: { width: '100%', height: 54, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+    confirmButtonText: { color: 'white', fontSize: 15, fontWeight: '800', letterSpacing: 0.5 },
+    observationsModal: {
+        width: '90%', alignSelf: 'center', borderRadius: 28, overflow: 'hidden', elevation: 10, maxHeight: '80%'
     },
-    dateGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        gap: 12,
+    successModal: {
+        width: '85%', alignSelf: 'center', borderRadius: 28, overflow: 'hidden', backgroundColor: 'white', elevation: 20,
     },
-    miniDateWrapper: {
-        width: '47%',
-        aspectRatio: 1,
-        marginBottom: 12,
-    },
-    miniDateCardBase: {
-        flex: 1,
-        borderRadius: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
-    },
-    miniDateCardSelectedBorder: {
-        borderColor: '#22d3ee',
-        borderWidth: 2,
-    },
-    miniDateDayText: {
-        fontSize: 14,
-        fontWeight: '800',
-        marginBottom: 4,
-        letterSpacing: 1,
-    },
-    miniDateNumberText: {
-        fontSize: 42,
-        fontWeight: '900',
-    },
-    miniDateIndicatorWhite: {
-        position: 'absolute',
-        top: 12,
-        right: 12,
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: 'white',
-    },
-    modalCloseButton: {
-        marginTop: 12,
-        paddingVertical: 16,
-        alignItems: 'center',
-    },
-    modalCloseButtonText: {
-        color: 'rgba(255,255,255,0.5)',
-        fontWeight: '800',
-        fontSize: 14,
-        letterSpacing: 1,
-    }
+    successContent: { padding: 30, alignItems: 'center' },
+    successIconContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center', marginBottom: 20, elevation: 5 },
+    successTitle: { fontSize: 24, fontWeight: '900', marginBottom: 10, textAlign: 'center' },
+    successSubtitle: { fontSize: 16, textAlign: 'center', marginBottom: 30, lineHeight: 24 },
+    successButton: { width: '100%', borderRadius: 12 },
+
+    // Date Picker Modal (Mini)
+    modalOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20, zIndex: 999 },
+    modalContainerGlass: { width: '100%', borderRadius: 24, padding: 20, alignItems: 'center' },
+    modalTitleLight: { fontSize: 18, fontWeight: 'bold', marginBottom: 20 },
+    dateGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center', width: '100%', marginBottom: 20 },
+    miniDateWrapper: { width: '47%', aspectRatio: 1.5 },
+    miniDateCardBase: { flex: 1, borderRadius: 12, justifyContent: 'center', alignItems: 'center', padding: 4 },
+    miniDateCardSelectedBorder: { borderColor: '#22d3ee', borderWidth: 1 },
+    miniDateDayText: { fontSize: 10, fontWeight: '900', marginBottom: 4 },
+    miniDateNumberText: { fontSize: 20, fontWeight: 'bold', color: 'white' },
+    miniDateIndicatorWhite: { width: 4, height: 4, borderRadius: 2, backgroundColor: 'white', marginTop: 6 },
+    modalCloseButton: { width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center' },
+    modalCloseButtonText: { fontWeight: 'bold', fontSize: 14 },
+    summaryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+    summaryIconBox: { width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(34, 211, 238, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+    summaryLabel: { fontSize: 10, fontWeight: '900', marginBottom: 2, letterSpacing: 0.5 },
+    summaryValue: { fontSize: 16, fontWeight: 'bold' }
+
 });
 
 export default CargaKilometrajeScreen;

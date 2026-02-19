@@ -6,6 +6,7 @@ import { View, Platform, ScrollView, TouchableOpacity, StyleSheet, Dimensions, K
 import { Modal, Portal, Text, Button, TextInput, IconButton, Avatar, Divider, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
+import { AppTheme } from '../../theme/theme';
 import CustomAlert from '../common/CustomAlert';
 
 const { width, height } = Dimensions.get('window');
@@ -25,7 +26,7 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
     onEntregar,
     onDevolver
 }) => {
-    const theme = useTheme();
+    const theme = useTheme<AppTheme>();
     const [modoEntrega, setModoEntrega] = useState(false);
     const [nombreReceptor, setNombreReceptor] = useState('');
     const [dniReceptor, setDniReceptor] = useState('');
@@ -123,32 +124,32 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
     // --- UI RENDERERS ---
 
     const renderHeader = () => (
-        <View style={styles.headerContainer}>
+        <View style={[styles.headerContainer, { borderBottomColor: theme.colors.outline }]}>
             <View style={{ flex: 1 }}>
-                <Text style={styles.headerTitle}>Gestionar Envío</Text>
-                <Text style={styles.headerSubtitle}>#{envio.remitoNumero?.slice(-8) || '---'}</Text>
+                <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>Gestionar Envío</Text>
+                <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>#{envio.remitoNumero?.slice(-8) || '---'}</Text>
 
                 {/* Contexto del Envío para el Chofer */}
-                <View style={styles.shipmentContext}>
+                <View style={[styles.shipmentContext, { backgroundColor: theme.colors.surfaceVariant }]}>
                     <View style={styles.contextRow}>
-                        <IconButton icon="account" size={16} iconColor="#94a3b8" style={{ margin: 0, width: 20, height: 20 }} />
-                        <Text style={styles.contextText}>{envio.destinatario?.nombre || 'Sin Nombre'}</Text>
+                        <IconButton icon="account" size={16} iconColor={theme.colors.textSecondary} style={{ margin: 0, width: 20, height: 20 }} />
+                        <Text style={[styles.contextText, { color: theme.colors.textPrimary }]}>{envio.destinatario?.nombre || 'Sin Nombre'}</Text>
                     </View>
                     <View style={styles.contextRow}>
-                        <IconButton icon="map-marker" size={16} iconColor="#94a3b8" style={{ margin: 0, width: 20, height: 20 }} />
-                        <Text style={styles.contextText} numberOfLines={2}>
+                        <IconButton icon="map-marker" size={16} iconColor={theme.colors.textSecondary} style={{ margin: 0, width: 20, height: 20 }} />
+                        <Text style={[styles.contextText, { color: theme.colors.textPrimary }]} numberOfLines={2}>
                             {envio.destinatario?.direccion}, {envio.localidadDestino?.nombre}
                         </Text>
                     </View>
                     <View style={styles.contextRow}>
-                        <IconButton icon="package-variant" size={16} iconColor="#94a3b8" style={{ margin: 0, width: 20, height: 20 }} />
-                        <Text style={styles.contextText}>{envio.encomienda?.bultos || envio.encomienda?.cantidad || 1} Bulto(s)</Text>
+                        <IconButton icon="package-variant" size={16} iconColor={theme.colors.textSecondary} style={{ margin: 0, width: 20, height: 20 }} />
+                        <Text style={[styles.contextText, { color: theme.colors.textPrimary }]}>{envio.encomienda?.bultos || envio.encomienda?.cantidad || 1} Bulto(s)</Text>
                     </View>
                 </View>
 
             </View>
-            <TouchableOpacity onPress={resetState} style={styles.closeButton}>
-                <IconButton icon="close" iconColor="white" size={24} />
+            <TouchableOpacity onPress={resetState} style={[styles.closeButton, { backgroundColor: theme.colors.surfaceVariant }]}>
+                <IconButton icon="close" iconColor={theme.colors.textPrimary} size={24} />
             </TouchableOpacity>
         </View>
     );
@@ -197,24 +198,24 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
 
     const renderDeliveryForm = () => (
         <View style={styles.formContainer}>
-            <Text style={styles.sectionTitle}>Datos del Receptor</Text>
-            <Text style={styles.sectionSubtitle}>¿Quién recibe el paquete?</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Datos del Receptor</Text>
+            <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary }]}>¿Quién recibe el paquete?</Text>
 
-            <View style={styles.inputWrapper}>
+            <View style={[styles.inputWrapper, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
                 <TextInput
                     mode="flat"
                     label="Nombre y Apellido"
                     value={nombreReceptor}
                     onChangeText={setNombreReceptor}
                     style={styles.inputDark}
-                    textColor="white"
-                    placeholderTextColor="#94a3b8"
-                    theme={{ colors: { primary: '#34d399', onSurfaceVariant: '#94a3b8' } }}
-                    left={<TextInput.Icon icon="account" color="#34d399" />}
+                    textColor={theme.colors.textPrimary}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    theme={{ colors: { primary: theme.colors.primary, onSurfaceVariant: theme.colors.textSecondary } }}
+                    left={<TextInput.Icon icon="account" color={theme.colors.primary} />}
                 />
             </View>
 
-            <View style={styles.inputWrapper}>
+            <View style={[styles.inputWrapper, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
                 <TextInput
                     mode="flat"
                     label="DNI / Documento"
@@ -222,9 +223,9 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
                     onChangeText={setDniReceptor}
                     keyboardType="numeric"
                     style={styles.inputDark}
-                    textColor="white"
-                    theme={{ colors: { primary: '#34d399', onSurfaceVariant: '#94a3b8' } }}
-                    left={<TextInput.Icon icon="card-account-details" color="#34d399" />}
+                    textColor={theme.colors.textPrimary}
+                    theme={{ colors: { primary: theme.colors.primary, onSurfaceVariant: theme.colors.textSecondary } }}
+                    left={<TextInput.Icon icon="card-account-details" color={theme.colors.primary} />}
                 />
             </View>
 
@@ -239,15 +240,15 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setModoEntrega(false)} style={styles.cancelButton}>
-                <Text style={styles.cancelText}>VOLVER ATRÁS</Text>
+                <Text style={[styles.cancelText, { color: theme.colors.textSecondary }]}>VOLVER ATRÁS</Text>
             </TouchableOpacity>
         </View>
     );
 
     const renderRejectionForm = () => (
         <View style={styles.formContainer}>
-            <Text style={[styles.sectionTitle, { color: '#fca5a5' }]}>Reportar Incidente</Text>
-            <Text style={styles.sectionSubtitle}>Seleccioná el motivo del fallo</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.error }]}>Reportar Incidente</Text>
+            <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary }]}>Seleccioná el motivo del fallo</Text>
 
             <View style={styles.optionsList}>
                 {MOTIVOS_COMMON.map((motivo) => {
@@ -258,13 +259,18 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
                             onPress={() => { setMotivoDevolucion(motivo); setOtrosCheck(false); }}
                             style={[
                                 styles.optionRow,
+                                { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline },
                                 isSelected && { backgroundColor: 'rgba(244, 63, 94, 0.2)', borderColor: '#f43f5e' }
                             ]}
                         >
-                            <Text style={[styles.optionText, isSelected && { color: '#fecdd3', fontWeight: 'bold' }]}>
+                            <Text style={[
+                                styles.optionText,
+                                { color: theme.colors.textPrimary },
+                                isSelected && { color: theme.dark ? '#fecdd3' : '#be123c', fontWeight: 'bold' }
+                            ]}>
                                 {motivo}
                             </Text>
-                            {isSelected && <IconButton icon="check" iconColor="#fecdd3" size={20} />}
+                            {isSelected && <IconButton icon="check" iconColor={theme.dark ? "#fecdd3" : "#be123c"} size={20} />}
                         </TouchableOpacity>
                     );
                 })}
@@ -273,13 +279,18 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
                     onPress={() => { setOtrosCheck(true); setMotivoDevolucion(''); }}
                     style={[
                         styles.optionRow,
+                        { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline },
                         otrosCheck && { backgroundColor: 'rgba(244, 63, 94, 0.2)', borderColor: '#f43f5e' }
                     ]}
                 >
-                    <Text style={[styles.optionText, otrosCheck && { color: '#fecdd3', fontWeight: 'bold' }]}>
+                    <Text style={[
+                        styles.optionText,
+                        { color: theme.colors.textPrimary },
+                        otrosCheck && { color: theme.dark ? '#fecdd3' : '#be123c', fontWeight: 'bold' }
+                    ]}>
                         Otro motivo...
                     </Text>
-                    {otrosCheck && <IconButton icon="check" iconColor="#fecdd3" size={20} />}
+                    {otrosCheck && <IconButton icon="check" iconColor={theme.dark ? "#fecdd3" : "#be123c"} size={20} />}
                 </TouchableOpacity>
             </View>
 
@@ -290,8 +301,8 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
                     value={motivoDevolucion}
                     onChangeText={setMotivoDevolucion}
                     style={[styles.inputDark, { marginTop: 10 }]}
-                    textColor="white"
-                    theme={{ colors: { primary: '#f43f5e', onSurfaceVariant: '#94a3b8' } }}
+                    textColor={theme.colors.textPrimary}
+                    theme={{ colors: { primary: theme.colors.error, onSurfaceVariant: theme.colors.textSecondary } }}
                     autoFocus
                 />
             )}
@@ -307,7 +318,7 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setModoDevolucion(false)} style={styles.cancelButton}>
-                <Text style={styles.cancelText}>VOLVER ATRÁS</Text>
+                <Text style={[styles.cancelText, { color: theme.colors.textSecondary }]}>VOLVER ATRÁS</Text>
             </TouchableOpacity>
         </View>
     );
@@ -332,23 +343,23 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
                     {isEntregado ? '¡ENTREGADO!' : 'NO ENTREGADO'}
                 </Text>
 
-                <View style={styles.finishedCard}>
+                <View style={[styles.finishedCard, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
                     {isEntregado ? (
                         <>
                             <View style={styles.detailRow}>
-                                <Text style={styles.labelDark}>Recibió:</Text>
-                                <Text style={styles.valueDark}>{envio.nombreReceptor || envio.receptorNombre || '---'}</Text>
+                                <Text style={[styles.labelDark, { color: theme.colors.textSecondary }]}>Recibió:</Text>
+                                <Text style={[styles.valueDark, { color: theme.colors.textPrimary }]}>{envio.nombreReceptor || envio.receptorNombre || '---'}</Text>
                             </View>
-                            <Divider style={styles.dividerDark} />
+                            <Divider style={[styles.dividerDark, { backgroundColor: theme.colors.outline }]} />
                             <View style={styles.detailRow}>
-                                <Text style={styles.labelDark}>DNI:</Text>
-                                <Text style={styles.valueDark}>{envio.dniReceptor || envio.receptorDni || '---'}</Text>
+                                <Text style={[styles.labelDark, { color: theme.colors.textSecondary }]}>DNI:</Text>
+                                <Text style={[styles.valueDark, { color: theme.colors.textPrimary }]}>{envio.dniReceptor || envio.receptorDni || '---'}</Text>
                             </View>
                         </>
                     ) : (
                         <View>
-                            <Text style={[styles.labelDark, { color: '#fca5a5', marginBottom: 5 }]}>Motivo del rechazo:</Text>
-                            <Text style={[styles.valueDark, { fontSize: 16 }]}>{envio.motivoNoEntrega || '---'}</Text>
+                            <Text style={[styles.labelDark, { color: theme.colors.error, marginBottom: 5 }]}>Motivo del rechazo:</Text>
+                            <Text style={[styles.valueDark, { fontSize: 16, color: theme.colors.textPrimary }]}>{envio.motivoNoEntrega || '---'}</Text>
                         </View>
                     )}
                 </View>
@@ -358,23 +369,36 @@ const ModalAccionesEnvio: React.FC<ModalAccionesEnvioProps> = ({
 
     return (
         <Portal>
-            <Modal visible={visible} onDismiss={resetState} contentContainerStyle={styles.modalOverlay}>
+            <Modal
+                visible={visible}
+                onDismiss={resetState}
+                contentContainerStyle={[
+                    styles.modalOverlay,
+                    { backgroundColor: theme.dark ? 'rgba(0, 0, 0, 0.85)' : 'rgba(0, 0, 0, 0.4)' } // Less opacity in light mode
+                ]}
+            >
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'center' }}>
-                    <View style={styles.modalContent}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
                         <LinearGradient
-                            colors={['#1e293b', '#0f172a']} // Slate 800 -> 900 base
+                            colors={[theme.colors.surface, theme.colors.background]} // Slate 800 -> 900 base
                             style={styles.mainGradient}
                         >
                             {renderHeader()}
 
-                            <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120, flexGrow: 1 }}>
-                                {envio.estado !== 'en reparto' && envio.estado !== 'pendiente'
-                                    ? renderDetalleTerminado()
-                                    : (!modoEntrega && !modoDevolucion)
-                                        ? renderActionButtons()
-                                        : modoEntrega ? renderDeliveryForm() : renderRejectionForm()
-                                }
-                            </ScrollView>
+                            <View style={{ flex: 1 }}>
+                                <ScrollView
+                                    contentContainerStyle={{ padding: 20, paddingBottom: 40, flexGrow: 1 }}
+                                    keyboardShouldPersistTaps="handled"
+                                    showsVerticalScrollIndicator={false}
+                                >
+                                    {envio.estado !== 'en reparto' && envio.estado !== 'pendiente'
+                                        ? renderDetalleTerminado()
+                                        : (!modoEntrega && !modoDevolucion)
+                                            ? renderActionButtons()
+                                            : modoEntrega ? renderDeliveryForm() : renderRejectionForm()
+                                    }
+                                </ScrollView>
+                            </View>
                         </LinearGradient>
                     </View>
                 </KeyboardAvoidingView>
@@ -399,18 +423,19 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-end', // Bottom sheet style or center
         margin: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)', // Strong dimming
+        backgroundColor: 'rgba(0,0,0,0.5)', // Base color, overridden inline
     },
     modalContent: {
-        height: '90%', // Fixed height to ensure layout
+        height: '85%', // Go back to fixed height but slightly smaller to satisfy "too tall" complaint
         width: '100%',
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
         overflow: 'hidden',
-        backgroundColor: '#0f172a',
+        // backgroundColor handled dynamically
     },
     mainGradient: {
-        flex: 1, // Full height of modalContent
+        width: '100%',
+        flex: 1, // Restore flex 1 to ensure it takes height
     },
     headerContainer: {
         flexDirection: 'row',
@@ -419,22 +444,22 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingTop: 25, // More top padding
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
+        // borderBottomColor handled dynamically
     },
     headerTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#f8fafc',
+        // color handled dynamically
         width: '90%', // Prevent overlap with close button
     },
     headerSubtitle: {
-        color: '#94a3b8',
+        // color handled dynamically
         fontSize: 14,
         letterSpacing: 1,
         marginBottom: 10,
     },
     shipmentContext: {
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        // backgroundColor handled dynamically
         padding: 10,
         borderRadius: 12,
         gap: 4,
@@ -447,12 +472,12 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     contextText: {
-        color: '#e2e8f0', // Slate 200
+        // color handled dynamically
         fontSize: 13,
         flex: 1,
     },
     closeButton: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        // backgroundColor handled dynamically
         borderRadius: 20,
         marginTop: 0, // Ensure it's at the top
     },
@@ -500,19 +525,19 @@ const styles = StyleSheet.create({
 
     // Forms
     formContainer: {
-        flex: 1,
-        justifyContent: 'center',
+        width: '100%',
+        // Removed flex: 1 and justifyContent: center to allow natural scroll
     },
     sectionTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#34d399',
+        // color handled dynamically
         textAlign: 'center',
         marginBottom: 5,
     },
     sectionSubtitle: {
         fontSize: 15,
-        color: '#94a3b8',
+        // color handled dynamically
         textAlign: 'center',
         marginBottom: 30,
     },
@@ -520,9 +545,9 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         borderRadius: 12,
         overflow: 'hidden',
-        backgroundColor: 'rgba(30, 41, 59, 0.5)', // Slate 800 transparent
+        // backgroundColor handled dynamically
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
+        // borderColor handled dynamically
     },
     inputDark: {
         backgroundColor: 'transparent',
@@ -555,7 +580,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     cancelText: {
-        color: '#64748b',
+        // color handled dynamically
         fontWeight: '600',
     },
 
@@ -565,16 +590,16 @@ const styles = StyleSheet.create({
     },
     optionRow: {
         padding: 16,
-        backgroundColor: 'rgba(30, 41, 59, 1)',
+        // backgroundColor handled dynamically
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
+        // borderColor handled dynamically
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
     optionText: {
-        color: '#cbd5e1',
+        // color handled dynamically
         fontSize: 15,
     },
 
@@ -600,11 +625,11 @@ const styles = StyleSheet.create({
     },
     finishedCard: {
         width: '100%',
-        backgroundColor: 'rgba(30, 41, 59, 0.6)',
+        // backgroundColor handled dynamically
         borderRadius: 20,
         padding: 20,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
+        // borderColor handled dynamically
     },
     detailRow: {
         flexDirection: 'row',
@@ -613,16 +638,16 @@ const styles = StyleSheet.create({
         marginVertical: 8,
     },
     labelDark: {
-        color: '#94a3b8',
+        // color handled dynamically
         fontSize: 15,
     },
     valueDark: {
-        color: 'white',
+        // color handled dynamically
         fontSize: 18,
         fontWeight: '600',
     },
     dividerDark: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        // backgroundColor handled dynamically
         marginVertical: 8,
     }
 });

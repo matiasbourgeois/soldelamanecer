@@ -1,16 +1,19 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, StatusBar, RefreshControl, Dimensions, TextInput } from 'react-native';
-import { Text, useTheme, IconButton, Avatar, Modal, Portal } from 'react-native-paper';
+import { Text, useTheme, IconButton, Avatar, Modal, Portal, Switch } from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
+import { usePreferences } from '../context/PreferencesContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../api/client';
+import { AppTheme } from '../theme/theme';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }: any) => {
-    const theme = useTheme();
+    const theme = useTheme<AppTheme>();
     const { user, logout } = useAuth();
+    const { toggleTheme, isThemeDark } = usePreferences();
     const [config, setConfig] = useState<any>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [profileModalVisible, setProfileModalVisible] = useState(false);
@@ -133,11 +136,15 @@ const HomeScreen = ({ navigation }: any) => {
     const initial = user?.nombre ? user.nombre.charAt(0).toUpperCase() : 'C';
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar
+                barStyle={isThemeDark ? "light-content" : "dark-content"}
+                translucent
+                backgroundColor="transparent"
+            />
 
             <LinearGradient
-                colors={['#020617', '#0f172a']} // Deep Navy / Pure Black
+                colors={[theme.colors.gradientStart, theme.colors.gradientEnd]} // Dynamic Gradient
                 style={StyleSheet.absoluteFill}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -152,20 +159,25 @@ const HomeScreen = ({ navigation }: any) => {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor="white"
-                        colors={['#22d3ee']}
+                        tintColor={theme.colors.primary}
+                        colors={[theme.colors.primary]}
                     />
                 }
             >
                 {/* HEADER */}
                 <View style={styles.header}>
                     <View style={styles.headerInfo}>
-                        <Text style={styles.greetingTitle}>Hola, {user?.nombre?.split(' ')[0] || 'chofer'}</Text>
+                        <Text style={[styles.greetingTitle, { color: theme.colors.textPrimary }]}>
+                            Hola, {user?.nombre?.split(' ')[0] || 'chofer'}
+                        </Text>
                         <Text style={styles.headerSubtitle}>Panel de Operaciones</Text>
                     </View>
                     <View style={styles.headerActions}>
-                        <TouchableOpacity onPress={() => setLogoutModalVisible(true)} style={styles.logoutIcon}>
-                            <IconButton icon="logout-variant" iconColor="#ef4444" size={24} />
+                        <TouchableOpacity
+                            onPress={() => setLogoutModalVisible(true)}
+                            style={[styles.logoutIcon, { backgroundColor: isThemeDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }]}
+                        >
+                            <IconButton icon="logout-variant" iconColor={theme.colors.error} size={24} />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => setProfileModalVisible(true)} activeOpacity={0.7}>
                             <Avatar.Text
@@ -179,56 +191,59 @@ const HomeScreen = ({ navigation }: any) => {
                 </View>
 
                 {/* STATUS CARDS (Clickeable - FASE 7) */}
-                <View style={styles.statusCard}>
+                <View style={[styles.statusCard, {
+                    backgroundColor: theme.colors.surfaceVariant,
+                    borderColor: theme.colors.outline
+                }]}>
                     <TouchableOpacity
                         style={styles.statusItem}
                         onPress={() => abrirSelector('vehiculo')}
                         activeOpacity={0.7}
                     >
-                        <View style={styles.statusIconBase}>
-                            <IconButton icon="truck-delivery" iconColor="#38bdf8" size={24} />
+                        <View style={[styles.statusIconBase, { backgroundColor: isThemeDark ? 'rgba(56, 189, 248, 0.05)' : 'rgba(8, 145, 178, 0.1)' }]}>
+                            <IconButton icon="truck-delivery" iconColor={theme.colors.primary} size={24} style={{ margin: 0 }} />
                         </View>
                         <View style={styles.statusTextContainer}>
                             <Text style={styles.statusLabel}>VEHÍCULO ASIGNADO</Text>
-                            <Text style={styles.statusMainValue}>
+                            <Text style={[styles.statusMainValue, { color: theme.colors.textPrimary }]}>
                                 {vehiculoSeleccionado ? vehiculoSeleccionado.patente?.toUpperCase() : 'NO ASIGNADO'}
                             </Text>
                             {vehiculoSeleccionado && (
-                                <Text style={styles.statusSubDetail}>
+                                <Text style={[styles.statusSubDetail, { color: theme.colors.textSecondary }]}>
                                     {vehiculoSeleccionado.marca} {vehiculoSeleccionado.modelo}
                                 </Text>
                             )}
                         </View>
-                        <IconButton icon="chevron-down" iconColor="rgba(255,255,255,0.5)" size={20} />
+                        <IconButton icon="chevron-down" iconColor={theme.colors.outline} size={20} />
                     </TouchableOpacity>
 
-                    <View style={styles.statusDivider} />
+                    <View style={[styles.statusDivider, { backgroundColor: theme.colors.outline }]} />
 
                     <TouchableOpacity
                         style={styles.statusItem}
                         onPress={() => abrirSelector('ruta')}
                         activeOpacity={0.7}
                     >
-                        <View style={styles.statusIconBase}>
-                            <IconButton icon="map-marker-distance" iconColor="#38bdf8" size={24} />
+                        <View style={[styles.statusIconBase, { backgroundColor: isThemeDark ? 'rgba(56, 189, 248, 0.05)' : 'rgba(8, 145, 178, 0.1)' }]}>
+                            <IconButton icon="map-marker-distance" iconColor={theme.colors.primary} size={24} style={{ margin: 0 }} />
                         </View>
                         <View style={styles.statusTextContainer}>
                             <Text style={styles.statusLabel}>RUTA ACTIVA</Text>
-                            <Text style={styles.statusMainValue}>
+                            <Text style={[styles.statusMainValue, { color: theme.colors.textPrimary }]}>
                                 {rutaSeleccionada ? rutaSeleccionada.codigo?.toUpperCase() : 'SIN RUTA'}
                             </Text>
                             {rutaSeleccionada && (
                                 <View>
-                                    <Text style={[styles.statusSubDetail, { color: '#fbbf24', fontWeight: 'bold' }]}>
+                                    <Text style={[styles.statusSubDetail, { color: theme.colors.tertiary, fontWeight: 'bold' }]}>
                                         {config?.hojaRepartoCodigo || 'H. PENDIENTE'}
                                     </Text>
-                                    <Text style={[styles.statusSubDetail, { fontSize: 11, opacity: 0.7 }]}>
+                                    <Text style={[styles.statusSubDetail, { fontSize: 11, opacity: 0.7, color: theme.colors.textSecondary }]}>
                                         {rutaSeleccionada.horaSalida ? `Salida: ${rutaSeleccionada.horaSalida}` : ''}
                                     </Text>
                                 </View>
                             )}
                         </View>
-                        <IconButton icon="chevron-down" iconColor="rgba(255,255,255,0.5)" size={20} />
+                        <IconButton icon="chevron-down" iconColor={theme.colors.outline} size={20} />
                     </TouchableOpacity>
                 </View>
 
@@ -248,8 +263,8 @@ const HomeScreen = ({ navigation }: any) => {
                 )}
 
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-                    <View style={styles.accentLine} />
+                    <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Acciones Rápidas</Text>
+                    <View style={[styles.accentLine, { backgroundColor: theme.colors.outline }]} />
                 </View>
 
                 {/* ACTION CARDS */}
@@ -288,14 +303,14 @@ const HomeScreen = ({ navigation }: any) => {
                     onDismiss={() => setProfileModalVisible(false)}
                     contentContainerStyle={styles.modalContainer}
                 >
-                    <View style={styles.modalContent}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
                         {/* Header with Background Accent */}
-                        <View style={styles.modalHeader}>
+                        <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface }]}>
                             <LinearGradient
-                                colors={['#0891b2', '#164e63']}
+                                colors={[theme.colors.primary, theme.colors.secondary]} // Dynamic Gradient
                                 style={styles.modalHeaderGradient}
                             />
-                            <View style={styles.modalAvatarContainer}>
+                            <View style={[styles.modalAvatarContainer, { backgroundColor: theme.colors.surface }]}>
                                 <Avatar.Text
                                     size={80}
                                     label={initial}
@@ -312,52 +327,70 @@ const HomeScreen = ({ navigation }: any) => {
                         </View>
 
                         <View style={styles.modalBody}>
-                            <Text style={styles.modalName}>{user?.nombre || 'Usuario'}</Text>
-                            <Text style={styles.modalRole}>
+                            <Text style={[styles.modalName, { color: theme.colors.textPrimary }]}>{user?.nombre || 'Usuario'}</Text>
+                            <Text style={[styles.modalRole, { color: theme.colors.primary }]}>
                                 {user?.rol?.toUpperCase() || 'CHOFER'}
                             </Text>
 
-                            <View style={styles.infoDivider} />
+                            <View style={[styles.infoDivider, { backgroundColor: theme.colors.outline }]} />
 
                             {/* Info Rows */}
                             <View style={styles.infoRow}>
-                                <View style={styles.infoIconBox}>
-                                    <IconButton icon="email-outline" iconColor="#0891b2" size={20} />
+                                <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(8, 145, 178, 0.1)' : '#ecfeff' }]}>
+                                    <IconButton icon="email-outline" iconColor={theme.colors.primary} size={20} />
                                 </View>
                                 <View>
-                                    <Text style={styles.infoLabel}>EMAIL</Text>
-                                    <Text style={styles.infoValue}>{user?.email || 'N/A'}</Text>
+                                    <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>EMAIL</Text>
+                                    <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>{user?.email || 'N/A'}</Text>
                                 </View>
                             </View>
 
                             <View style={styles.infoRow}>
-                                <View style={styles.infoIconBox}>
-                                    <IconButton icon="file-document-outline" iconColor="#0891b2" size={20} />
+                                <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(8, 145, 178, 0.1)' : '#ecfeff' }]}>
+                                    <IconButton icon="file-document-outline" iconColor={theme.colors.primary} size={20} />
                                 </View>
                                 <View>
-                                    <Text style={styles.infoLabel}>CONTRATO</Text>
-                                    <Text style={styles.infoValue}>
+                                    <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>CONTRATO</Text>
+                                    <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>
                                         {user?.tipoContrato === 'relacionDependencia' ? 'Relación Dependencia' : 'Externo / Monotributo'}
                                     </Text>
                                 </View>
                             </View>
 
                             <View style={styles.infoRow}>
-                                <View style={styles.infoIconBox}>
-                                    <IconButton icon="shield-check-outline" iconColor="#0891b2" size={20} />
+                                <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(8, 145, 178, 0.1)' : '#ecfeff' }]}>
+                                    <IconButton icon="shield-check-outline" iconColor={theme.colors.primary} size={20} />
                                 </View>
                                 <View>
-                                    <Text style={styles.infoLabel}>ID DE EMPLEADO</Text>
-                                    <Text style={styles.infoValue}>#{user?.id?.substring(0, 8).toUpperCase() || '---'}</Text>
+                                    <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>ID DE EMPLEADO</Text>
+                                    <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>#{user?.id?.substring(0, 8).toUpperCase() || '---'}</Text>
                                 </View>
                             </View>
+
+                            {/* THEME SWITCHER (GOD TIER ADDITION) */}
+                            <View style={[styles.infoDivider, { backgroundColor: theme.colors.outline }]} />
+                            <View style={[styles.infoRow, { justifyContent: 'space-between', paddingRight: 10 }]}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9' }]}>
+                                        <IconButton icon="theme-light-dark" iconColor={theme.colors.tertiary} size={20} />
+                                    </View>
+                                    <View>
+                                        <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>TEMA</Text>
+                                        <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>
+                                            {isThemeDark ? 'Modo Oscuro' : 'Modo Claro'}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <Switch value={isThemeDark} onValueChange={toggleTheme} color={theme.colors.primary} />
+                            </View>
+
                         </View>
 
                         <TouchableOpacity
                             style={styles.modalCloseFooter}
                             onPress={() => setProfileModalVisible(false)}
                         >
-                            <Text style={styles.modalCloseText}>Cerrar Perfil</Text>
+                            <Text style={[styles.modalCloseText, { color: theme.colors.textSecondary }]}>Cerrar Perfil</Text>
                         </TouchableOpacity>
                     </View>
                 </Modal>
@@ -369,24 +402,23 @@ const HomeScreen = ({ navigation }: any) => {
                     visible={logoutModalVisible}
                     onDismiss={() => setLogoutModalVisible(false)}
                     contentContainerStyle={styles.logoutModalContainer}
-                    theme={{ colors: { backdrop: 'rgba(0, 0, 0, 0.95)' } }}
+                    theme={{ colors: { backdrop: theme.colors.backdrop } }}
                 >
-                    <LinearGradient
-                        colors={['#1e1b4b', '#020617']}
-                        style={styles.logoutModalContent}
-                    >
+                    <View style={[styles.logoutModalContent, { backgroundColor: theme.colors.surface }]}>
                         <View style={[styles.logoutIconRing, { borderColor: 'rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(239, 68, 68, 0.05)' }]}>
                             <IconButton icon="logout-variant" size={32} iconColor="#ef4444" />
                         </View>
-                        <Text style={styles.confirmTitle}>¿Cerrar Sesión?</Text>
-                        <Text style={styles.confirmSubtitle}>Tu jornada se guardará, pero tendrás que volver a ingresar tus credenciales.</Text>
+                        <Text style={[styles.confirmTitle, { color: theme.colors.textPrimary }]}>¿Cerrar Sesión?</Text>
+                        <Text style={[styles.confirmSubtitle, { color: theme.colors.textSecondary }]}>
+                            Tu jornada se guardará, pero tendrás que volver a ingresar tus credenciales.
+                        </Text>
 
                         <View style={styles.logoutActionRow}>
                             <TouchableOpacity
                                 onPress={() => setLogoutModalVisible(false)}
-                                style={[styles.logoutBtn, styles.logoutBtnCancel]}
+                                style={[styles.logoutBtn, styles.logoutBtnCancel, { borderColor: theme.colors.outline }]}
                             >
-                                <Text style={styles.logoutBtnTextCancel}>CANCELAR</Text>
+                                <Text style={[styles.logoutBtnTextCancel, { color: theme.colors.textSecondary }]}>CANCELAR</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -404,7 +436,7 @@ const HomeScreen = ({ navigation }: any) => {
                                 </LinearGradient>
                             </TouchableOpacity>
                         </View>
-                    </LinearGradient>
+                    </View>
                 </Modal>
             </Portal>
 
@@ -414,40 +446,40 @@ const HomeScreen = ({ navigation }: any) => {
                     visible={modalSelectorVisible}
                     onDismiss={() => setModalSelectorVisible(false)}
                     contentContainerStyle={styles.modalContainer}
-                    theme={{ colors: { backdrop: 'rgba(0, 0, 0, 0.95)' } }}
+                    theme={{ colors: { backdrop: isThemeDark ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.5)' } }}
                 >
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
+                        <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface }]}>
                             <LinearGradient
-                                colors={['#0891b2', '#164e63']}
+                                colors={[theme.colors.primary, theme.colors.secondary]}
                                 style={styles.modalHeaderGradient}
                             />
-                            <Text style={styles.modalName}>
+                            <Text style={[styles.modalName, { color: theme.colors.textPrimary }]}>
                                 {tipoSelector === 'vehiculo' ? 'Seleccionar Vehículo' : 'Seleccionar Ruta'}
                             </Text>
                             <TouchableOpacity
-                                style={styles.closeModalButton}
+                                style={[styles.closeModalButton, { backgroundColor: theme.colors.surfaceVariant }]}
                                 onPress={() => setModalSelectorVisible(false)}
                             >
-                                <IconButton icon="close" iconColor="white" size={20} />
+                                <IconButton icon="close" iconColor={theme.colors.onSurfaceVariant} size={20} />
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.modalBody}>
                             {/* Search Input */}
-                            <View style={styles.searchContainer}>
-                                <IconButton icon="magnify" iconColor="#94a3b8" size={20} />
+                            <View style={[styles.searchContainer, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
+                                <IconButton icon="magnify" iconColor={theme.colors.textSecondary} size={20} />
                                 <TextInput
                                     style={{
                                         flex: 1,
                                         padding: 8,
-                                        color: '#fff',
+                                        color: theme.colors.textPrimary,
                                         fontSize: 14,
                                     }}
                                     value={searchQuery}
                                     onChangeText={setSearchQuery}
                                     placeholder={`Buscar ${tipoSelector === 'vehiculo' ? 'vehículo' : 'ruta'}...`}
-                                    placeholderTextColor="#64748b"
+                                    placeholderTextColor={theme.colors.textSecondary}
                                 />
                             </View>
 
@@ -468,21 +500,21 @@ const HomeScreen = ({ navigation }: any) => {
                                     .map((item: any) => (
                                         <TouchableOpacity
                                             key={item._id}
-                                            style={styles.selectorItem}
+                                            style={[styles.selectorItem, { borderBottomColor: theme.colors.outline }]}
                                             onPress={() => seleccionarItem(item)}
                                         >
                                             <View>
-                                                <Text style={styles.selectorItemTitle}>
+                                                <Text style={[styles.selectorItemTitle, { color: theme.colors.textPrimary }]}>
                                                     {tipoSelector === 'vehiculo' ? item.patente : item.codigo}
                                                 </Text>
-                                                <Text style={styles.selectorItemSubtitle}>
+                                                <Text style={[styles.selectorItemSubtitle, { color: theme.colors.textSecondary }]}>
                                                     {tipoSelector === 'vehiculo'
                                                         ? `${item.marca} ${item.modelo}`
                                                         : item.descripcion || `Salida: ${item.horaSalida}`
                                                     }
                                                 </Text>
                                             </View>
-                                            <IconButton icon="chevron-right" iconColor="#64748b" size={20} />
+                                            <IconButton icon="chevron-right" iconColor={theme.colors.textSecondary} size={20} />
                                         </TouchableOpacity>
                                     ))}
                             </ScrollView>
@@ -574,6 +606,7 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         backgroundColor: 'rgba(56, 189, 248, 0.05)',
         justifyContent: 'center',
+        alignItems: 'center',
         marginRight: 16,
     },
     statusTextContainer: {

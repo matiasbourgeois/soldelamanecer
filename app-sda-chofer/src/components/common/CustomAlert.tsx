@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Dialog, Portal, Text, Button, IconButton, useTheme } from 'react-native-paper';
+import { AppTheme } from '../../theme/theme';
 
 interface CustomAlertProps {
     visible: boolean;
@@ -24,7 +25,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
     confirmText = 'ACEPTAR',
     cancelText = 'CANCELAR'
 }) => {
-    const theme = useTheme();
+    const theme = useTheme<AppTheme>();
 
     const getIcon = () => {
         switch (type) {
@@ -48,14 +49,14 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
 
     return (
         <Portal>
-            <Dialog visible={visible} onDismiss={onClose} style={styles.dialog}>
+            <Dialog visible={visible} onDismiss={onClose} style={[styles.dialog, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}>
                 <Dialog.Content style={styles.content}>
                     <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
                         <IconButton icon={getIcon()} iconColor={color} size={40} />
                     </View>
 
-                    <Text style={[styles.title, { color: '#343a40' }]}>{title}</Text>
-                    <Text style={styles.message}>{message}</Text>
+                    <Text style={[styles.title, { color: theme.colors.textPrimary }]}>{title}</Text>
+                    <Text style={[styles.message, { color: theme.colors.textSecondary }]}>{message}</Text>
                 </Dialog.Content>
 
                 <Dialog.Actions style={styles.actions}>
@@ -63,7 +64,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                         <Button
                             mode="text"
                             onPress={onClose}
-                            textColor="#868e96"
+                            textColor={theme.colors.textSecondary}
                             style={{ flex: 1, borderRadius: 12 }}
                             labelStyle={{ fontWeight: '600' }}
                         >
@@ -78,7 +79,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                         }}
                         buttonColor={color}
                         style={styles.confirmButton}
-                        labelStyle={{ fontWeight: 'bold' }}
+                        labelStyle={{ fontWeight: 'bold', color: '#fff' }}
                     >
                         {confirmText}
                     </Button>
@@ -91,7 +92,6 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
 const styles = StyleSheet.create({
     dialog: {
         borderRadius: 28,
-        backgroundColor: 'white',
         alignSelf: 'center',
         width: '85%',
         maxWidth: 340,
@@ -101,7 +101,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.15,
         shadowRadius: 24,
         borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.08)',
     },
     content: {
         alignItems: 'center',
@@ -126,7 +125,6 @@ const styles = StyleSheet.create({
     },
     message: {
         fontSize: 16,
-        color: '#495057',
         textAlign: 'center',
         marginBottom: 10,
         lineHeight: 24,

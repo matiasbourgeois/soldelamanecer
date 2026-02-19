@@ -18,9 +18,11 @@ import { useAuth } from '../hooks/useAuth';
 import EnvioCard from '../components/hojaReparto/EnvioCard';
 import ModalAccionesEnvio from '../components/hojaReparto/ModalAccionesEnvio';
 import SelectorHojasScreen from '../components/hojaReparto/SelectorHojasScreen';
+import { AppTheme } from '../theme/theme';
 
 const HojaRepartoScreen = ({ navigation }: any) => {
-    const theme = useTheme();
+    const theme = useTheme<AppTheme>();
+    const isDark = theme.dark;
     const { user } = useAuth();
 
     const [hojaSeleccionada, setHojaSeleccionada] = useState<any>(null);
@@ -33,6 +35,12 @@ const HojaRepartoScreen = ({ navigation }: any) => {
 
     // Animación simple
     const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    // Estilos dinámicos
+    const bgGradient = isDark ? ['#020617', '#0f172a'] : ['#f8fafc', '#f1f5f9'];
+    const textPrimary = theme.colors.textPrimary;
+    const textSecondary = theme.colors.textSecondary;
+    const accentColor = isDark ? '#38bdf8' : '#0284c7'; // Sky 400 vs 600
 
     useEffect(() => {
         Animated.timing(fadeAnim, {
@@ -115,10 +123,10 @@ const HojaRepartoScreen = ({ navigation }: any) => {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+            <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor="transparent" translucent />
 
             <LinearGradient
-                colors={['#020617', '#0f172a']} // Deep Navy / Pure Black
+                colors={bgGradient as [string, string]}
                 style={StyleSheet.absoluteFill}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -127,7 +135,7 @@ const HojaRepartoScreen = ({ navigation }: any) => {
             {/* Header Limpio */}
             <Appbar.Header style={styles.appbar} elevated={false}>
                 <Appbar.BackAction
-                    color="white"
+                    color={textPrimary}
                     onPress={() => {
                         if (hojasDisponibles.length > 1 && hojaSeleccionada) {
                             setHojaSeleccionada(null); // Volver a lista interna
@@ -136,8 +144,8 @@ const HojaRepartoScreen = ({ navigation }: any) => {
                         }
                     }}
                 />
-                <Appbar.Content title="Mis entregas del día" titleStyle={styles.appbarTitle} />
-                <Appbar.Action icon="reload" color="white" onPress={fetchHojaReparto} />
+                <Appbar.Content title="Mis entregas del día" titleStyle={[styles.appbarTitle, { color: textPrimary }]} />
+                <Appbar.Action icon="reload" color={textPrimary} onPress={fetchHojaReparto} />
             </Appbar.Header>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -146,42 +154,55 @@ const HojaRepartoScreen = ({ navigation }: any) => {
                     {hojaSeleccionada ? (
                         <>
                             {/* 📄 RESUMEN SIMPLE Y VISIBLE */}
-                            <View style={styles.summaryCard}>
+                            <View style={[
+                                styles.summaryCard,
+                                {
+                                    borderColor: theme.colors.outline,
+                                    backgroundColor: isDark ? 'transparent' : 'white',
+                                    elevation: isDark ? 0 : 2,
+                                    shadowColor: '#64748b',
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.1,
+                                    shadowRadius: 4
+                                }
+                            ]}>
                                 <LinearGradient
-                                    colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)']}
+                                    colors={isDark
+                                        ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)']
+                                        : ['#ffffff', '#f8fafc']}
                                     style={styles.summaryGradient}
                                 >
                                     <View style={styles.summaryRow}>
                                         <View>
-                                            <Text style={styles.sheetTitle}>
+                                            <Text style={[styles.sheetTitle, { color: textPrimary }]}>
                                                 Hoja #{hojaSeleccionada.numeroHoja?.split('-').pop()}
                                             </Text>
-                                            <Text style={styles.dateLabel}>
+                                            <Text style={[styles.dateLabel, { color: textSecondary }]}>
                                                 {new Date(hojaSeleccionada.fecha).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
                                             </Text>
                                         </View>
-                                        <View style={styles.countBadge}>
-                                            <Text style={styles.countText}>{hojaSeleccionada.envios?.length}</Text>
-                                            <Text style={styles.countLabel}>Envíos</Text>
+                                        <View style={[styles.countBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9' }]}>
+                                            <Text style={[styles.countText, { color: textPrimary }]}>{hojaSeleccionada.envios?.length}</Text>
+                                            <Text style={[styles.countLabel, { color: accentColor }]}>Envíos</Text>
                                         </View>
                                     </View>
 
-                                    <View style={styles.divider} />
+                                    <View style={[styles.divider, { backgroundColor: theme.colors.outline }]} />
 
                                     <View style={styles.detailsRow}>
                                         <View style={styles.detailItem}>
-                                            <IconButton icon="map-marker-path" size={18} iconColor="#38bdf8" style={styles.detailIcon} />
-                                            <Text style={styles.detailText}>{hojaSeleccionada.ruta?.codigo || 'Ruta General'}</Text>
+                                            <IconButton icon="map-marker-path" size={18} iconColor={accentColor} style={styles.detailIcon} />
+                                            <Text style={[styles.detailText, { color: textSecondary }]}>{hojaSeleccionada.ruta?.codigo || 'Ruta General'}</Text>
                                         </View>
                                         <View style={styles.detailItem}>
-                                            <IconButton icon="truck-outline" size={18} iconColor="#38bdf8" style={styles.detailIcon} />
-                                            <Text style={styles.detailText}>{hojaSeleccionada.vehiculo?.patente || '---'}</Text>
+                                            <IconButton icon="truck-outline" size={18} iconColor={accentColor} style={styles.detailIcon} />
+                                            <Text style={[styles.detailText, { color: textSecondary }]}>{hojaSeleccionada.vehiculo?.patente || '---'}</Text>
                                         </View>
                                     </View>
                                 </LinearGradient>
                             </View>
 
-                            <Text style={styles.sectionTitle}>LISTADO DE ENVÍOS</Text>
+                            <Text style={[styles.sectionTitle, { color: accentColor }]}>LISTADO DE ENVÍOS</Text>
 
                             {/* 📦 LISTA DE ENVÍOS */}
                             {hojaSeleccionada.envios?.map((envio: any, index: number) => (
@@ -199,7 +220,7 @@ const HojaRepartoScreen = ({ navigation }: any) => {
                         </>
                     ) : (
                         <View style={styles.emptyStateContainer}>
-                            <Text style={styles.emptyTitle}>Sin Ruta Asignada</Text>
+                            <Text style={[styles.emptyTitle, { color: textSecondary }]}>Sin Ruta Asignada</Text>
                             <Button mode="contained" onPress={fetchHojaReparto} style={{ marginTop: 20 }}>
                                 Actualizar
                             </Button>
@@ -229,7 +250,6 @@ const HojaRepartoScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#020617',
     },
     loadingContainer: {
         flex: 1,
@@ -247,7 +267,6 @@ const styles = StyleSheet.create({
     },
     appbarTitle: {
         fontWeight: '900',
-        color: 'white',
         fontSize: 20,
         letterSpacing: 0.5,
     },
@@ -259,11 +278,9 @@ const styles = StyleSheet.create({
     // --- SUMMARY CARD SIMPLE ---
     summaryCard: {
         borderRadius: 24,
-        backgroundColor: 'transparent',
         marginBottom: 24,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
     },
     summaryGradient: {
         padding: 24,
@@ -276,19 +293,16 @@ const styles = StyleSheet.create({
     sheetTitle: {
         fontSize: 26,
         fontWeight: '900',
-        color: 'white',
         letterSpacing: -1,
         marginBottom: 4,
     },
     dateLabel: {
         fontSize: 14,
-        color: 'rgba(255,255,255,0.5)',
         textTransform: 'capitalize',
         fontWeight: '600',
     },
     countBadge: {
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.05)',
         paddingVertical: 10,
         paddingHorizontal: 16,
         borderRadius: 16,
@@ -296,19 +310,16 @@ const styles = StyleSheet.create({
     countText: {
         fontSize: 20,
         fontWeight: '900',
-        color: 'white',
     },
     countLabel: {
         fontSize: 9,
         fontWeight: '900',
-        color: '#38bdf8',
         textTransform: 'uppercase',
         letterSpacing: 1,
     },
     divider: {
         marginVertical: 20,
         height: 1,
-        backgroundColor: 'rgba(255,255,255,0.05)'
     },
     detailsRow: {
         flexDirection: 'row',
@@ -327,7 +338,6 @@ const styles = StyleSheet.create({
         marginRight: 6,
     },
     detailText: {
-        color: 'rgba(255,255,255,0.7)',
         fontSize: 14,
         fontWeight: '700',
     },
@@ -336,7 +346,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 11,
         fontWeight: '900',
-        color: '#38bdf8',
         marginBottom: 16,
         marginLeft: 4,
         letterSpacing: 2,
@@ -350,7 +359,6 @@ const styles = StyleSheet.create({
     },
     emptyTitle: {
         fontSize: 18,
-        color: '#adb5bd',
         fontWeight: 'bold',
     },
 });

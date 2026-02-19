@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { PaperProvider } from 'react-native-paper';
 import { AuthProvider } from './src/context/AuthContext';
+import { PreferencesProvider, usePreferences } from './src/context/PreferencesContext';
 import Navigation from './src/navigation/Navigation';
 import SplashScreen from './src/screens/SplashScreen';
-import { theme } from './src/theme/theme';
+import { LightTheme, DarkTheme } from './src/theme/theme';
 import { enGB, registerTranslation } from 'react-native-paper-dates';
+import { StatusBar } from 'react-native';
 
 registerTranslation('es', {
   save: 'Guardar',
@@ -27,18 +29,34 @@ registerTranslation('es', {
   hour: 'Hora',
 });
 
-export default function App() {
+// Componente interno para consumir el contexto de preferencias
+const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
+  const { theme: userTheme, isThemeDark } = usePreferences();
+
+  const activeTheme = isThemeDark ? DarkTheme : LightTheme;
 
   return (
+    <PaperProvider theme={activeTheme}>
+      <StatusBar
+        barStyle={isThemeDark ? 'light-content' : 'dark-content'}
+        backgroundColor={activeTheme.colors.background}
+      />
+      {showSplash ? (
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      ) : (
+        <Navigation />
+      )}
+    </PaperProvider>
+  );
+};
+
+export default function App() {
+  return (
     <AuthProvider>
-      <PaperProvider theme={theme}>
-        {showSplash ? (
-          <SplashScreen onFinish={() => setShowSplash(false)} />
-        ) : (
-          <Navigation />
-        )}
-      </PaperProvider>
+      <PreferencesProvider>
+        <AppContent />
+      </PreferencesProvider>
     </AuthProvider>
   );
 }

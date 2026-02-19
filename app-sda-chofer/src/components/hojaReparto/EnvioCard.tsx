@@ -11,58 +11,76 @@ interface EnvioCardProps {
 
 const EnvioCard: React.FC<EnvioCardProps> = ({ envio, onPress }) => {
   const theme = useTheme();
+  const isDark = theme.dark;
   const estado = envio.estado?.toLowerCase() || 'pendiente';
 
-  // Configuración de Colores "God Tier"
-  let statusColor = '#94a3b8'; // Slate 400
-  let gradientColors = ['#1e293b', '#0f172a']; // Slate 800 -> 900
-  let iconName = 'package-variant-closed';
-  let badgeBg = 'rgba(148, 163, 184, 0.1)';
+  // Configuración de Colores "God Tier" Adaptable
+
+  // Default (Pendiente / Otros)
+  let statusColor = isDark ? '#fbbf24' : '#d97706'; // Amber 400 (Dark) / Amber 600 (Light)
+  let gradientColors = isDark ? ['#1e293b', '#0f172a'] : ['#ffffff', '#f8f9fa']; // Slate Dark / White Light
+  let iconName = 'clock-outline';
+  let badgeBg = isDark ? 'rgba(251, 191, 36, 0.15)' : 'rgba(217, 119, 6, 0.1)';
+  let borderColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
 
   switch (estado) {
     case 'entregado':
-      statusColor = '#34d399'; // Emerald 400 (Vibrante)
-      gradientColors = ['rgba(6, 78, 59, 0.4)', 'rgba(2, 44, 34, 0.6)']; // Emerald dark transparent
+      statusColor = isDark ? '#34d399' : '#059669'; // Emerald 400 / Emerald 600
+      gradientColors = isDark
+        ? ['rgba(6, 78, 59, 0.4)', 'rgba(2, 44, 34, 0.6)']
+        : ['#ecfdf5', '#d1fae5']; // Emerald 50/100 for Light
       iconName = 'check-circle';
-      badgeBg = 'rgba(52, 211, 153, 0.15)';
+      badgeBg = isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(5, 150, 105, 0.1)';
+      borderColor = isDark ? 'transparent' : 'rgba(5, 150, 105, 0.2)';
       break;
     case 'en reparto':
-      statusColor = '#38bdf8'; // Sky 400
-      gradientColors = ['rgba(12, 74, 110, 0.5)', 'rgba(8, 47, 73, 0.7)']; // Sky dark
+      statusColor = isDark ? '#38bdf8' : '#0284c7'; // Sky 400 / Sky 600
+      gradientColors = isDark
+        ? ['rgba(12, 74, 110, 0.5)', 'rgba(8, 47, 73, 0.7)']
+        : ['#f0f9ff', '#e0f2fe']; // Sky 50/100
       iconName = 'truck-fast';
-      badgeBg = 'rgba(56, 189, 248, 0.15)';
+      badgeBg = isDark ? 'rgba(56, 189, 248, 0.15)' : 'rgba(2, 132, 199, 0.1)';
+      borderColor = isDark ? 'transparent' : 'rgba(2, 132, 199, 0.2)';
       break;
     case 'pendiente':
-      statusColor = '#fbbf24'; // Amber 400
-      gradientColors = ['#1e293b', '#0f172a']; // Default Dark
-      iconName = 'clock-outline';
-      badgeBg = 'rgba(251, 191, 36, 0.15)';
+      // Ya definido en defaults, pero podemos ajustar si es especifico
       break;
     case 'rechazado':
     case 'no entregado':
-      statusColor = '#f87171'; // Red 400
-      gradientColors = ['rgba(127, 29, 29, 0.3)', 'rgba(69, 10, 10, 0.5)']; // Red dark
+      statusColor = isDark ? '#f87171' : '#dc2626'; // Red 400 / Red 600
+      gradientColors = isDark
+        ? ['rgba(127, 29, 29, 0.3)', 'rgba(69, 10, 10, 0.5)']
+        : ['#fef2f2', '#fee2e2']; // Red 50/100
       iconName = 'alert-octagon';
-      badgeBg = 'rgba(248, 113, 113, 0.15)';
+      badgeBg = isDark ? 'rgba(248, 113, 113, 0.15)' : 'rgba(220, 38, 38, 0.1)';
+      borderColor = isDark ? 'transparent' : 'rgba(220, 38, 38, 0.2)';
       break;
   }
 
-  // Estilo base general para tarjetas no-entregadas (Dark Glass)
-  if (estado !== 'entregado' && estado !== 'rechazado' && estado !== 'en reparto') {
+  // Estilo base general para tarjetas no-entregadas (Dark Glass) y su contraparte Light
+  if (isDark && (estado !== 'entregado' && estado !== 'rechazado' && estado !== 'en reparto')) {
     gradientColors = ['#1e293b', '#020617'];
   }
+
+  // Text Colors adaptables
+  const textPrimary = isDark ? '#f8fafc' : '#1e293b'; // Slate 50 / Slate 800
+  const textSecondary = isDark ? '#94a3b8' : '#64748b'; // Slate 400 / Slate 500
+  const labelColor = isDark ? '#64748b' : '#94a3b8'; // Label stays subtle
 
   return (
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={() => onPress(envio)}
-      style={styles.cardContainer}
+      style={[styles.cardContainer, {
+        shadowColor: isDark ? '#000' : '#64748b',
+        shadowOpacity: isDark ? 0.3 : 0.1
+      }]}
     >
       <LinearGradient
         colors={gradientColors as [string, string]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.cardGradient}
+        style={[styles.cardGradient, { borderColor: borderColor }]}
       >
         {/* Barra lateral de estado */}
         <View style={[styles.statusStrip, { backgroundColor: statusColor }]} />
@@ -70,39 +88,39 @@ const EnvioCard: React.FC<EnvioCardProps> = ({ envio, onPress }) => {
         <View style={styles.contentContainer}>
           {/* Header: Estado y Remito */}
           <View style={styles.header}>
-            <View style={[styles.statusBadge, { backgroundColor: badgeBg, borderColor: statusColor }]}>
+            <View style={[styles.statusBadge, { backgroundColor: badgeBg, borderColor: isDark ? statusColor : 'transparent' }]}>
               <IconButton icon={iconName} iconColor={statusColor} size={14} style={{ margin: 0, height: 14, width: 14, marginRight: 6 }} />
               <Text style={[styles.statusText, { color: statusColor }]}>
                 {estado.toUpperCase().replace('_', ' ')}
               </Text>
             </View>
-            <Text style={styles.remito}>#{envio.remitoNumero?.slice(-8) || '---'}</Text>
+            <Text style={[styles.remito, { color: textSecondary }]}>#{envio.remitoNumero?.slice(-8) || '---'}</Text>
           </View>
 
           {/* Dirección Principal */}
           <View style={styles.addressSection}>
-            <Text style={styles.labelV2}>DIRECCIÓN</Text>
-            <Text style={styles.addressText} numberOfLines={2}>
+            <Text style={[styles.labelV2, { color: labelColor }]}>DIRECCIÓN</Text>
+            <Text style={[styles.addressText, { color: textPrimary }]} numberOfLines={2}>
               {envio.destinatario?.direccion || "Dirección desconocida"}
             </Text>
 
-            <Text style={styles.labelV2}>LOCALIDAD</Text>
-            <Text style={styles.localityText}>
+            <Text style={[styles.labelV2, { color: labelColor }]}>LOCALIDAD</Text>
+            <Text style={[styles.localityText, { color: textSecondary }]}>
               {envio.localidadDestino?.nombre || "Localidad no especificada"}
             </Text>
           </View>
 
           {/* Separador sutil */}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]} />
 
           {/* Footer Info */}
           <View style={styles.footer}>
             <View style={styles.footerItem}>
               <View>
-                <Text style={styles.labelV2}>CLIENTE</Text>
+                <Text style={[styles.labelV2, { color: labelColor }]}>CLIENTE</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <IconButton icon="account" iconColor="#94a3b8" size={14} style={styles.miniIcon} />
-                  <Text style={styles.footerLabel} numberOfLines={1}>
+                  <IconButton icon="account" iconColor={textSecondary} size={14} style={styles.miniIcon} />
+                  <Text style={[styles.footerLabel, { color: textSecondary }]} numberOfLines={1}>
                     {envio.destinatario?.nombre || "Sin Nombre"}
                   </Text>
                 </View>
@@ -110,16 +128,16 @@ const EnvioCard: React.FC<EnvioCardProps> = ({ envio, onPress }) => {
             </View>
 
             <View style={styles.footerItemRight}>
-              <IconButton icon="package-variant" iconColor="#94a3b8" size={16} style={styles.miniIcon} />
-              <Text style={styles.footerValue}>
+              <IconButton icon="package-variant" iconColor={textSecondary} size={16} style={styles.miniIcon} />
+              <Text style={[styles.footerValue, { color: textPrimary }]}>
                 {envio.encomienda?.bultos || envio.encomienda?.cantidad || 1}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Decoración de fondo (Brillo sutil) */}
-        <View style={[styles.glowEffect, { shadowColor: statusColor }]} />
+        {/* Decoración de fondo (Brillo sutil) solo en dark o statuses especiales */}
+        {isDark && <View style={[styles.glowEffect, { shadowColor: statusColor }]} />}
 
       </LinearGradient>
     </TouchableOpacity>
@@ -131,9 +149,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 16,
     elevation: 4, // Sombra sutil en Android
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
     shadowRadius: 8,
   },
   cardGradient: {
@@ -141,7 +157,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)', // Borde glassmorphism
   },
   statusStrip: {
     width: 4,
@@ -163,7 +178,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1, // Optional border
   },
   statusText: {
     fontSize: 10,
@@ -171,7 +186,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   remito: {
-    color: '#64748b', // Slate 500
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 1,
@@ -180,7 +194,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addressText: {
-    color: '#f8fafc', // Slate 50
     fontSize: 17, // Ligeramente más grande
     fontWeight: '800',
     lineHeight: 24,
@@ -188,13 +201,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   localityText: {
-    color: '#94a3b8', // Slate 400
     fontSize: 14,
     fontWeight: '500',
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     marginBottom: 12,
   },
   footer: {
@@ -218,17 +229,14 @@ const styles = StyleSheet.create({
     height: 16
   },
   footerLabel: {
-    color: '#cbd5e1', // Slate 300
     fontSize: 13,
     fontWeight: '600',
   },
   footerValue: {
-    color: '#f8fafc',
     fontSize: 14,
     fontWeight: 'bold',
   },
   labelV2: {
-    color: '#64748b', // Slate 500
     fontSize: 10,
     fontWeight: 'bold',
     letterSpacing: 0.5,

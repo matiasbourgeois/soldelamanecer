@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Alert, Animated, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,10 +14,13 @@ import {
   Portal
 } from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
+import { AppTheme } from '../theme/theme';
 
 const LoginScreen = ({ navigation }: any) => {
   const { login } = useAuth();
-  const theme = useTheme();
+  const theme = useTheme<AppTheme>();
+  const isDark = theme.dark;
+
   const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,6 +31,18 @@ const LoginScreen = ({ navigation }: any) => {
   const [errorMsg, setErrorMsg] = useState('');
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Estilos adaptables
+  const bgColors = isDark
+    ? ['#0f172a', '#1e293b']  // Dark Slate
+    : ['#1098ad', '#0b7285']; // Brand Teal (Light Mode)
+
+  const cardBg = isDark ? '#1e293b' : '#ffffff';
+  const textPrimary = theme.colors.textPrimary;
+  const textSecondary = theme.colors.textSecondary;
+  const inputBg = isDark ? '#0f172a' : '#ffffff';
+  const inputTextColor = textPrimary;
+  const brandTitleColor = 'white'; // Always white on gradient
 
   // Animación de entrada
   useEffect(() => {
@@ -59,8 +75,10 @@ const LoginScreen = ({ navigation }: any) => {
 
   return (
     <LinearGradient
-      colors={['#1098ad', '#0b7285']}
+      colors={bgColors as [string, string]}
       style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -69,14 +87,14 @@ const LoginScreen = ({ navigation }: any) => {
         <Animated.View style={{ opacity: fadeAnim, width: '100%', alignItems: 'center' }}>
 
           {/* ☀️ Título / Logo */}
-          <Text variant="headlineMedium" style={styles.brandTitle}>
+          <Text variant="headlineMedium" style={[styles.brandTitle, { color: brandTitleColor }]}>
             Sol del Amanecer
           </Text>
 
-          {/* ⬜ Card Blanca de Login */}
-          <Surface style={styles.card} elevation={4}>
-            <Title style={styles.cardTitle}>Bienvenido</Title>
-            <Text style={styles.cardSubtitle}>Ingresá tus credenciales para comenzar.</Text>
+          {/* ⬜ Card de Login */}
+          <Surface style={[styles.card, { backgroundColor: cardBg }]} elevation={4}>
+            <Title style={[styles.cardTitle, { color: textPrimary }]}>Bienvenido</Title>
+            <Text style={[styles.cardSubtitle, { color: textSecondary }]}>Ingresá tus credenciales para comenzar.</Text>
 
             <TextInput
               label="Email"
@@ -85,13 +103,13 @@ const LoginScreen = ({ navigation }: any) => {
               mode="outlined"
               keyboardType="email-address"
               autoCapitalize="none"
-              style={[styles.input, { backgroundColor: '#ffffff' }]}
-              contentStyle={{ backgroundColor: '#ffffff' }}
-              textColor="#212529"
-              outlineColor="#dee2e6"
+              style={[styles.input, { backgroundColor: inputBg }]}
+              contentStyle={{ color: inputTextColor }}
+              textColor={inputTextColor}
+              outlineColor={isDark ? 'rgba(255,255,255,0.2)' : '#dee2e6'}
               activeOutlineColor="#1098ad"
-              theme={{ colors: { background: '#ffffff', surface: '#ffffff' } }}
-              left={<TextInput.Icon icon="email" />}
+              theme={{ colors: { background: inputBg, onSurfaceVariant: textSecondary } }}
+              left={<TextInput.Icon icon="email" color={textSecondary} />}
               // @ts-ignore
               autoComplete="off"
             />
@@ -102,16 +120,17 @@ const LoginScreen = ({ navigation }: any) => {
               onChangeText={setContrasena}
               mode="outlined"
               secureTextEntry={!showPassword}
-              style={[styles.input, { backgroundColor: '#ffffff' }]}
-              contentStyle={{ backgroundColor: '#ffffff' }}
-              textColor="#212529"
-              outlineColor="#dee2e6"
+              style={[styles.input, { backgroundColor: inputBg }]}
+              contentStyle={{ color: inputTextColor }}
+              textColor={inputTextColor}
+              outlineColor={isDark ? 'rgba(255,255,255,0.2)' : '#dee2e6'}
               activeOutlineColor="#1098ad"
-              theme={{ colors: { background: '#ffffff', surface: '#ffffff' } }}
-              left={<TextInput.Icon icon="lock" />}
+              theme={{ colors: { background: inputBg, onSurfaceVariant: textSecondary } }}
+              left={<TextInput.Icon icon="lock" color={textSecondary} />}
               right={
                 <TextInput.Icon
                   icon={showPassword ? "eye-off" : "eye"}
+                  color={textSecondary}
                   onPress={() => setShowPassword(!showPassword)}
                 />
               }
@@ -131,8 +150,8 @@ const LoginScreen = ({ navigation }: any) => {
               INGRESAR AL SISTEMA
             </Button>
 
-            <HelperText type="info" style={{ marginTop: 20, textAlign: 'center' }}>
-              Versión 2.0.1 (Redesign)
+            <HelperText type="info" style={{ marginTop: 20, textAlign: 'center', color: textSecondary }}>
+              Versión 2.0.2 (God Tier)
             </HelperText>
           </Surface>
 
@@ -172,7 +191,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   brandTitle: {
-    color: 'white',
     fontWeight: '900',
     fontSize: 32,
     marginBottom: 5,
@@ -181,27 +199,18 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
-  brandSubtitle: {
-    color: 'rgba(255,255,255,0.8)',
-    letterSpacing: 4,
-    marginBottom: 40,
-    fontWeight: 'bold',
-  },
   card: {
     width: '100%',
     padding: 24,
     borderRadius: 16,
-    backgroundColor: 'white',
     alignItems: 'center',
   },
   cardTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#343a40',
     marginBottom: 5,
   },
   cardSubtitle: {
-    color: '#868e96',
     textAlign: 'center',
     marginBottom: 24,
     fontSize: 14,
@@ -209,7 +218,6 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     marginBottom: 16,
-    backgroundColor: 'white',
   },
   button: {
     width: '100%',

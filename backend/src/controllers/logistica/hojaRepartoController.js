@@ -205,6 +205,12 @@ const confirmarHoja = async (req, res) => {
                 continue;
             }
 
+            // 🛡️ HOTFIX: Evitar reseteo de estados si el envío ya pertenece a esta hoja
+            if (envio.hojaReparto && envio.hojaReparto.toString() === hojaId.toString()) {
+                logger.info(`ℹ️ Envío ${envioId} ya asignado a esta hoja. Saltando actualización de estado.`);
+                continue;
+            }
+
             // 🆕 CRÍTICO: Asignar el envío a esta hoja
             envio.hojaReparto = hojaId;
             envio.estado = "en reparto";
