@@ -626,7 +626,7 @@ const consultarHojasPaginado = async (req, res) => {
         const pagina = parseInt(req.query.pagina) || 0;
         const limite = parseInt(req.query.limite) || 10;
         const busqueda = req.query.busqueda || "";
-        const { desde, hasta, estado, proveedorId } = req.query; // New filters
+        const { desde, hasta, estado, choferId } = req.query;
 
         // Filtrar SOLO hojas confirmadas o cerradas (no pendientes) por defecto, pero permitir override
         const filtro = {};
@@ -636,13 +636,24 @@ const consultarHojasPaginado = async (req, res) => {
             filtro.estado = { $ne: "pendiente" };
         }
 
-        if (busqueda) {
-            filtro.numeroHoja = { $regex: busqueda, $options: "i" };
+        // Filtro por Chofer (reemplaza proveedorId deprecado)
+        if (choferId) {
+            filtro.chofer = choferId;
         }
 
-        // Filtro por Proveedor (Snapshot)
-        if (proveedorId) {
-            filtro.proveedor = proveedorId;
+        // Búsqueda por número de hoja OR código de ruta
+        if (busqueda) {
+            // Ruta ya está importado al top del archivo
+            const rutasMatch = await Ruta.find(
+                { codigo: { $regex: busqueda, $options: 'i' } },
+                { _id: 1 }
+            ).lean();
+            const rutaIds = rutasMatch.map(r => r._id);
+
+            filtro.$or = [
+                { numeroHoja: { $regex: busqueda, $options: 'i' } },
+                ...(rutaIds.length > 0 ? [{ ruta: { $in: rutaIds } }] : [])
+            ];
         }
 
         // Filtro de Fechas
@@ -828,46 +839,78 @@ const actualizarHoja = async (req, res) => {
 
         if (!hojaOriginal) return res.status(404).json({ error: "Hoja no encontrada" });
 
-        // Si la hoja está cerrada, registrar auditoría
-        if (hojaOriginal.estado === 'cerrada') {
+        // ─── CAMBIO DE CHOFER → Auditoría + Admin Supremacy ──────────────────
+        const choferAnteriorId = hojaOriginal.chofer?._id?.toString() || hojaOriginal.chofer?.toString();
+        const choferNuevoId = chofer?.toString();
+        const choferCambio = chofer && choferNuevoId !== choferAnteriorId;
+
+        if (choferCambio) {
             const Usuario = require("../../models/Usuario");
-            const Chofer = require("../../models/Chofer");
-            const Vehiculo = require("../../models/Vehiculo");
 
-            const usuario = await Usuario.findById(req.usuario.id);
-            const cambios = [];
+            // Nombres para historial
+            const choferAnteriorDoc = choferAnteriorId
+                ? await Chofer.findById(choferAnteriorId).populate("usuario")
+                : null;
+            const choferNuevoDoc = choferNuevoId
+                ? await Chofer.findById(choferNuevoId).populate("usuario")
+                : null;
 
-            // Detectar cambio de chofer
-            if (chofer && chofer !== (hojaOriginal.chofer?._id?.toString() || hojaOriginal.chofer?.toString())) {
-                const choferAnterior = hojaOriginal.chofer
-                    ? await Chofer.findById(hojaOriginal.chofer).populate("usuario")
-                    : null;
-                const choferNuevo = await Chofer.findById(chofer).populate("usuario");
+            const nombreAnterior = choferAnteriorDoc?.usuario?.nombre || choferAnteriorDoc?.dni || "Sin asignar";
+            const nombreNuevo = choferNuevoDoc?.usuario?.nombre || choferNuevoDoc?.dni || "Sin asignar";
 
-                const nombreAnterior = choferAnterior?.usuario?.nombre || "Sin asignar";
-                const nombreNuevo = choferNuevo?.usuario?.nombre || "Desconocido";
+            // Registrar en historial (aplica para CUALQUIER estado, no solo cerrada)
+            const usuarioAdmin = req.usuario?.id
+                ? await Usuario.findById(req.usuario.id).lean()
+                : null;
+            hojaOriginal.historialMovimientos.push({
+                usuario: req.usuario?.id || null,
+                accion: `[WEB] Chofer reasignado por ${usuarioAdmin?.nombre || 'Administrativo'}: "${nombreAnterior}" → "${nombreNuevo}"`
+            });
 
-                cambios.push(`chofer cambiado de "${nombreAnterior}" a "${nombreNuevo}"`);
+            // ── ADMIN SUPREMACY: limpiar la hoja del día del chofer removido ──
+            // Si había un chofer anterior asignado, buscamos su hoja activa de HOY
+            // y le quitamos la asignación para que la app le muestre pantalla vacía.
+            if (choferAnteriorId && hojaOriginal.estado !== 'cerrada') {
+                const hoy = new Date();
+                const inicioDia = new Date(hoy).setHours(0, 0, 0, 0);
+                const finDia = new Date(hoy).setHours(23, 59, 59, 999);
+
+                // Buscamos otras hojas del día donde el chofer removido siga asignado
+                // (puede ser esta misma u otras si fue reasignado antes)
+                const otrasHojasDelChofer = await HojaReparto.find({
+                    _id: { $ne: hojaOriginal._id }, // distinta a la que estamos editando
+                    chofer: choferAnteriorId,
+                    fecha: { $gte: inicioDia, $lte: finDia },
+                    estado: { $ne: 'cerrada' }
+                });
+
+                for (const otraHoja of otrasHojasDelChofer) {
+                    otraHoja.chofer = null;
+                    otraHoja.historialMovimientos.push({
+                        usuario: req.usuario?.id || null,
+                        accion: `[WEB - Admin Supremacy] Chofer "${nombreAnterior}" removido automáticamente por reasignación administrativa`
+                    });
+                    await otraHoja.save();
+                }
             }
+        }
 
-            // Detectar cambio de vehículo
-            if (vehiculo && vehiculo !== (hojaOriginal.vehiculo?._id?.toString() || hojaOriginal.vehiculo?.toString())) {
-                const vehiculoAnterior = hojaOriginal.vehiculo
-                    ? await Vehiculo.findById(hojaOriginal.vehiculo)
-                    : null;
-                const vehiculoNuevo = await Vehiculo.findById(vehiculo);
+        // ─── CAMBIO DE VEHÍCULO → Auditoría (solo para hojas cerradas, mantiene lógica original) ──
+        if (hojaOriginal.estado === 'cerrada') {
+            const vehiculoAnteriorId = hojaOriginal.vehiculo?._id?.toString() || hojaOriginal.vehiculo?.toString();
+            const vehiculoNuevoId = vehiculo?.toString();
+            const vehiculoCambio = vehiculo && vehiculoNuevoId !== vehiculoAnteriorId;
 
-                const patenteAnterior = vehiculoAnterior?.patente || "Sin asignar";
-                const patenteNueva = vehiculoNuevo?.patente || "Desconocido";
+            if (vehiculoCambio) {
+                const Vehiculo = require("../../models/Vehiculo");
+                const vehiculoAnterior = vehiculoAnteriorId ? await Vehiculo.findById(vehiculoAnteriorId) : null;
+                const vehiculoNuevo = vehiculoNuevoId ? await Vehiculo.findById(vehiculoNuevoId) : null;
+                const Usuario = require("../../models/Usuario");
+                const usuarioAdmin = req.usuario?.id ? await Usuario.findById(req.usuario.id).lean() : null;
 
-                cambios.push(`vehículo cambiado de "${patenteAnterior}" a "${patenteNueva}"`);
-            }
-
-            // Registrar en historial si hubo cambios
-            if (cambios.length > 0) {
                 hojaOriginal.historialMovimientos.push({
-                    usuario: req.usuario.id,
-                    accion: `Edición post-cierre por ${usuario.nombre}: ${cambios.join(", ")}`
+                    usuario: req.usuario?.id || null,
+                    accion: `[WEB] Vehículo cambiado por ${usuarioAdmin?.nombre || 'Administrativo'}: "${vehiculoAnterior?.patente || 'Sin asignar'}" → "${vehiculoNuevo?.patente || 'Sin asignar'}"`
                 });
             }
         }

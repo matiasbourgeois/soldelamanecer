@@ -237,10 +237,33 @@ const obtenerMiConfiguracion = async (req, res) => {
       });
     }
 
-    // 2. Si no hay hoja, buscar configuración por defecto de la Ruta (Legacy fallback)
+    // 2. Si no hay hoja directamente asignada al chofer:
+    //    Verificar si el admin lo removió de la hoja de su ruta base hoy (Admin Supremacy)
     const Ruta = require("../../models/Ruta");
     const rutaAsignada = await Ruta.findOne({ choferAsignado: chofer._id }).populate("vehiculoAsignado");
 
+    if (rutaAsignada) {
+      // Buscar la hoja de esta ruta para hoy
+      const hojaDeRutaHoy = await HojaReparto.findOne({
+        ruta: rutaAsignada._id,
+        fecha: { $gte: inicioDia, $lte: finDia },
+        estado: { $ne: "cerrada" }
+      });
+
+      // Si existe una hoja para la ruta pero este chofer NO es el asignado →
+      // el admin lo removió → supremacía admin → no mostrar nada en la app
+      if (hojaDeRutaHoy && hojaDeRutaHoy.chofer?.toString() !== chofer._id.toString()) {
+        return res.json({
+          vehiculo: null,
+          ruta: null,
+          hojaRepartoId: null,
+          esPlanificada: false,
+          removidoPorAdmin: true  // flag para que la app pueda mostrar un mensaje claro
+        });
+      }
+    }
+
+    // 3. Fallback legacy: no hay hoja del día activa para su ruta → mostrar config de la ruta
     const vehiculoFinal = (rutaAsignada && rutaAsignada.vehiculoAsignado)
       ? rutaAsignada.vehiculoAsignado
       : chofer.vehiculoAsignado;

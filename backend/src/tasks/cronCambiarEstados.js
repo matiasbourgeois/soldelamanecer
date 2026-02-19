@@ -9,7 +9,16 @@ const logger = require("../utils/logger");
 const cambiarEstadosSegunHora = async () => {
     try {
         const ahora = new Date();
-        const horaActual = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
+        // ⚠️ IMPORTANTE: usar toLocaleTimeString con TZ Argentina.
+        // getHours() devuelve hora UTC del servidor, no hora Argentina (UTC-3).
+        // Eso causaba que hojas pasaran a 'en reparto' 3 horas antes de su horaSalida.
+        const horaActual = ahora.toLocaleTimeString('es-AR', {
+            timeZone: 'America/Argentina/Buenos_Aires',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+
 
         logger.info(`⏰ Verificando hojas pendientes (hora actual: ${horaActual})...`);
 

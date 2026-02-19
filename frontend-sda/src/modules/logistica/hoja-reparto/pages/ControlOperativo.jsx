@@ -20,12 +20,11 @@ import 'dayjs/locale/es';
 const ControlOperativo = () => {
     const [hojas, setHojas] = useState([]);
     const [cargando, setCargando] = useState(true);
-    const [proveedores, setProveedores] = useState([]);
     const navigate = useNavigate();
 
-    // Filtros
     const [filtroNumero, setFiltroNumero] = useState("");
-    const [filtroProveedor, setFiltroProveedor] = useState(null);
+    const [filtroChofer, setFiltroChofer] = useState(null);
+    const [filtroChoferOpciones, setFiltroChoferOpciones] = useState([]);
 
     // Sistema de Tabs "Nivel Dios"
     const [tabTemporal, setTabTemporal] = useState('hoy'); // 'ayer' | 'hoy' | 'custom'
@@ -78,23 +77,23 @@ const ControlOperativo = () => {
 
     const obtenerRecursos = async () => {
         try {
-            const [resChoferes, resVehiculos, resProveedores] = await Promise.all([
+            const [resChoferes, resVehiculos] = await Promise.all([
                 clienteAxios.get("/choferes/solo-nombres"),
-                clienteAxios.get("/vehiculos"),
-                clienteAxios.get("/proveedores")
+                clienteAxios.get("/vehiculos")
             ]);
 
-            setChoferesList((resChoferes.data || []).map(c => ({
+            const opcionesChofer = (resChoferes.data || []).map(c => ({
                 value: c._id,
                 label: c.usuario?.nombre || `DNI: ${c.dni || '?'}`
-            })));
+            }));
+
+            setChoferesList(opcionesChofer);
+            setFiltroChoferOpciones(opcionesChofer);
 
             setVehiculosList((resVehiculos.data || []).map(v => ({
                 value: v._id,
                 label: `${v.patente} (${v.marca} ${v.modelo})`
             })));
-
-            setProveedores(resProveedores.data.map(p => ({ value: p._id, label: p.razonSocial })));
         } catch (error) {
             console.error("Error al obtener recursos:", error);
         }
@@ -149,20 +148,12 @@ const ControlOperativo = () => {
             }
 
             if (filtroNumero) params.append("busqueda", filtroNumero);
-            if (filtroProveedor) params.append("proveedorId", filtroProveedor);
+            if (filtroChofer) params.append("choferId", filtroChofer);
 
             const res = await clienteAxios.get(`/hojas-reparto/paginado?${params.toString()}`);
 
-            // Filtrar también por código de ruta en cliente
-            let hojasFiltradas = res.data.hojas || [];
-            if (filtroNumero && filtroNumero.trim()) {
-                const busqueda = filtroNumero.toLowerCase().trim();
-                hojasFiltradas = hojasFiltradas.filter(h => {
-                    const numeroMatch = h.numeroHoja?.toLowerCase().includes(busqueda);
-                    const rutaMatch = h.ruta?.codigo?.toLowerCase().includes(busqueda);
-                    return numeroMatch || rutaMatch;
-                });
-            }
+            // El backend ya filtra por número de hoja Y código de ruta — no hay filtrado en cliente
+            const hojasFiltradas = res.data.hojas || [];
 
             setHojas(hojasFiltradas);
             setTotalPaginas(Math.ceil(res.data.total / limite)); // Usar total del servidor
@@ -232,10 +223,14 @@ const ControlOperativo = () => {
 
     const limpiarFiltros = () => {
         setFiltroNumero("");
-        setFiltroProveedor(null);
-        setFiltroDesde(null);
-        setFiltroHasta(null);
-        setAuditMode(false);
+        setFiltroChofer(null);
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const hoyFin = new Date();
+        hoyFin.setHours(23, 59, 59, 999);
+        setFiltroDesde(hoy);
+        setFiltroHasta(hoyFin);
+        setTabTemporal('hoy');
         setPaginaActual(1);
     };
 
@@ -305,7 +300,7 @@ const ControlOperativo = () => {
     useEffect(() => {
         obtenerHojas();
         obtenerRecursos();
-    }, [paginaActual, filtroNumero, filtroProveedor, filtroDesde, filtroHasta]);
+    }, [paginaActual, filtroNumero, filtroChofer, filtroDesde, filtroHasta]);
 
     const renderAuditStatus = (hoja) => {
         const hoy = new Date();
@@ -474,11 +469,11 @@ const ControlOperativo = () => {
                             w={180}
                         />
                         <Select
-                            label="Proveedor"
-                            placeholder="Seleccionar..."
-                            data={proveedores}
-                            value={filtroProveedor}
-                            onChange={setFiltroProveedor}
+                            label="Chofer / Contratado"
+                            placeholder="Todos los choferes..."
+                            data={filtroChoferOpciones}
+                            value={filtroChofer}
+                            onChange={setFiltroChofer}
                             clearable
                             w={220}
                             radius="md"
@@ -510,7 +505,7 @@ const ControlOperativo = () => {
                                 />
                             </>
                         )}
-                        {(filtroNumero || filtroProveedor) && (
+                        {(filtroNumero || filtroChofer) && (
                             <ActionIcon variant="light" color="red" onClick={limpiarFiltros} size="lg" radius="md">
                                 <FilterX size={20} />
                             </ActionIcon>
