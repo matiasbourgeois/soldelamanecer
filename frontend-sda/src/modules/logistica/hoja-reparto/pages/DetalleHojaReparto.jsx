@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-    Container, Paper, Title, Text, Group, Grid, LoadingOverlay,
+    Box, Paper, Title, Text, Group, Grid, LoadingOverlay,
     ThemeIcon, Table, Badge, Stack, Card, Button, Divider, Tabs, rem, SimpleGrid, ActionIcon
 } from "@mantine/core";
 import {
@@ -81,7 +81,7 @@ const DetalleHojaReparto = () => {
     );
 
     return (
-        <Container size="xl" py={40} pb={100} w="100%">
+        <Box py={40} pb={100} w="100%">
             {/* 🔙 BACK BUTTON */}
             <Button
                 variant="subtle"
@@ -207,7 +207,7 @@ const DetalleHojaReparto = () => {
             </SimpleGrid>
 
             {/* 🔹 TABS: CONTENT SEGREGATION */}
-            <Tabs value={activeTab} onChange={setActiveTab} color="cyan" radius="md" style={{ width: '100%' }}>
+            <Tabs value={activeTab} onChange={setActiveTab} color="cyan" radius="md" w="100%">
                 <Tabs.List mb="lg">
                     <Tabs.Tab value="drogueria" leftSection={<Pill size={16} />}>
                         Droguería del Sud S.A.
@@ -220,7 +220,7 @@ const DetalleHojaReparto = () => {
                     </Tabs.Tab>
                 </Tabs.List>
 
-                <Tabs.Panel value="drogueria" pt="xs" style={{ width: '100%' }}>
+                <Tabs.Panel value="drogueria" pt="xs">
                     <TabDrogueria
                         hoja={hoja}
                         onSaved={() => {
@@ -231,8 +231,8 @@ const DetalleHojaReparto = () => {
                     />
                 </Tabs.Panel>
 
-                <Tabs.Panel value="lista">
-                    <Paper shadow="sm" radius="lg" withBorder>
+                <Tabs.Panel value="lista" w="100%">
+                    <Paper shadow="sm" radius="lg" withBorder w="100%">
                         <Table.ScrollContainer minWidth={800}>
                             <Table verticalSpacing="sm" withTableBorder={false}>
                                 <Table.Thead bg="gray.1">
@@ -302,7 +302,8 @@ const DetalleHojaReparto = () => {
                 </Tabs.Panel>
             </Tabs>
 
-        </Container>
+        </Box>
+
     );
 };
 

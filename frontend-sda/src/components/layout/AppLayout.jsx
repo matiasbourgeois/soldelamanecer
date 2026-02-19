@@ -450,7 +450,7 @@ export function AppLayout({ children, auth, handleLogout }) {
                 <Box
                     style={location.pathname === '/admin/juegos'
                         ? { maxWidth: 'none', margin: '0', width: '100%', height: '100%' }
-                        : { maxWidth: 1600, margin: '0 auto' }
+                        : { maxWidth: 1600, margin: '0 auto', width: '100%' }
                     }
                 >
                     {children}
