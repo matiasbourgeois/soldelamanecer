@@ -57,6 +57,7 @@ const hojaRepartoSchema = new mongoose.Schema({
   // --- DATOS DROGUERÍA (Ingreso Diario de Rutas) ---
   // Registrado por el administrativo al otro día con info de los contratados
   datosDrogueria: {
+    horaSalidaReal: { type: String, default: '' },    // hora real de salida (puede diferir de ruta.horaSalida)
     horaEnlaces: { type: [String], default: [] },  // ["05:30", "08:45"] — puede ser múltiple
     horaInicioDistribucion: { type: String, default: '' },    // hora primera farmacia
     horaFinDistribucion: { type: String, default: '' },    // hora última farmacia
