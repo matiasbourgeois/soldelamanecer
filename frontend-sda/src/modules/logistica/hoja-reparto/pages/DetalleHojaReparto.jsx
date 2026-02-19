@@ -6,33 +6,35 @@ import {
 } from "@mantine/core";
 import {
     Calendar, User, Truck, FileText, ArrowLeft,
-    MapPin, Package, ClipboardList, CheckCircle, XCircle
+    MapPin, Package, ClipboardList, CheckCircle, XCircle, Pill
 } from "lucide-react";
 import clienteAxios from "../../../../core/api/clienteAxios";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
 import MapaEntregas from "./MapaEntregas";
+import TabDrogueria from "./TabDrogueria";
 
 const DetalleHojaReparto = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [hoja, setHoja] = useState(null);
+    const [hojaSeleccionada, setHoja] = useState(null);
     const [cargando, setCargando] = useState(true);
-    const [activeTab, setActiveTab] = useState("lista");
+    const [activeTab, setActiveTab] = useState("drogueria");
 
-    useEffect(() => {
-        const obtenerDetalle = async () => {
-            try {
-                const res = await clienteAxios.get(`/hojas-reparto/${id}`);
-                setHoja(res.data);
-            } catch (error) {
-                console.error("Error al obtener hoja:", error);
-                mostrarAlerta("Error al cargar detalle", "error");
-            } finally {
-                setCargando(false);
-            }
-        };
-        obtenerDetalle();
-    }, [id]);
+    const obtenerDetalle = async () => {
+        try {
+            const res = await clienteAxios.get(`/hojas-reparto/${id}`);
+            setHoja(res.data);
+        } catch (error) {
+            console.error("Error al obtener hoja:", error);
+            mostrarAlerta("Error al cargar detalle", "error");
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    useEffect(() => { obtenerDetalle(); }, [id]);
+
+    const hoja = hojaSeleccionada;
 
     const exportarHoja = async (hojaId, numeroHoja) => {
         try {
@@ -207,6 +209,9 @@ const DetalleHojaReparto = () => {
             {/* 🔹 TABS: CONTENT SEGREGATION */}
             <Tabs value={activeTab} onChange={setActiveTab} color="cyan" radius="md">
                 <Tabs.List mb="lg">
+                    <Tabs.Tab value="drogueria" leftSection={<Pill size={16} />}>
+                        Droguería del Sud S.A.
+                    </Tabs.Tab>
                     <Tabs.Tab value="lista" leftSection={<Package size={16} />}>
                         Listado de Remitos
                     </Tabs.Tab>
@@ -214,6 +219,17 @@ const DetalleHojaReparto = () => {
                         Mapa de Ruta
                     </Tabs.Tab>
                 </Tabs.List>
+
+                <Tabs.Panel value="drogueria" pt="xs">
+                    <TabDrogueria
+                        hoja={hoja}
+                        onSaved={() => {
+                            clienteAxios.get(`/hojas-reparto/${id}`)
+                                .then(res => setHoja(res.data))
+                                .catch(() => { });
+                        }}
+                    />
+                </Tabs.Panel>
 
                 <Tabs.Panel value="lista">
                     <Paper shadow="sm" radius="lg" withBorder>

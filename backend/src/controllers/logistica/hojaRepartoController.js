@@ -915,6 +915,14 @@ const actualizarHoja = async (req, res) => {
             }
         }
 
+        // ─── DATOS DROGUERÍA → Auditoría ──────────────────────────────────────
+        if (req.body.datosDrogueria) {
+            hojaOriginal.historialMovimientos.push({
+                usuario: req.usuario?.id || null,
+                accion: `[WEB] Datos droguería actualizados${req.body.datosDrogueria.kmExtra ? ` | KM extra: ${req.body.datosDrogueria.kmExtra}` : ''}`
+            });
+        }
+
         // Actualizar hoja
         Object.assign(hojaOriginal, req.body);
         await hojaOriginal.save();

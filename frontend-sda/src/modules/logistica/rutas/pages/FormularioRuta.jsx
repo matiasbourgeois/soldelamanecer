@@ -24,6 +24,8 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
     localidades: [], // IDs array
     choferAsignado: "",
     vehiculoAsignado: "",
+    kilometrosEstimados: 0,
+    precioKm: 0,
   });
 
   const [localidadesDisponibles, setLocalidadesDisponibles] = useState([]);
@@ -290,15 +292,36 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
           </Group>
 
           <Paper withBorder p="md" bg="gray.0">
-            <TextInput
-              label="Precio por KM ($)"
-              placeholder="Ej: 150.50"
-              name="precioKm"
-              value={formData.precioKm}
-              onChange={handleChange}
-              disabled={!isAdmin}
-              description={!isAdmin ? "Solo lectura (Solo Admin puede modificar tarifas)" : "Tarifa base para liquidaciones"}
-            />
+            <Stack gap="sm">
+              <Text fw={600} size="sm">Tarifas y distancia</Text>
+              <Group grow>
+                <TextInput
+                  label="KM Base de la ruta"
+                  placeholder="Ej: 450"
+                  name="kilometrosEstimados"
+                  type="number"
+                  value={formData.kilometrosEstimados ?? ''}
+                  onChange={handleChange}
+                  disabled={!isAdmin}
+                  description={!isAdmin ? "Solo Admin puede modificar" : "KM base para liquidación de contratados"}
+                />
+                <TextInput
+                  label="Precio por KM ($)"
+                  placeholder="Ej: 150.50"
+                  name="precioKm"
+                  type="number"
+                  value={formData.precioKm ?? ''}
+                  onChange={handleChange}
+                  disabled={!isAdmin}
+                  description={!isAdmin ? "Solo Admin puede modificar" : "Tarifa base para liquidaciones"}
+                />
+              </Group>
+              {isAdmin && (
+                <Text size="xs" c="dimmed">
+                  Pago diario contratado = (KM Base + KM Extra del día) × Precio/KM
+                </Text>
+              )}
+            </Stack>
           </Paper>
 
           <Group justify="flex-end" mt="lg">

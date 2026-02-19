@@ -54,6 +54,18 @@ const hojaRepartoSchema = new mongoose.Schema({
   precioKm: { type: Number, default: 0 },
   proveedor: { type: mongoose.Schema.Types.ObjectId, ref: 'Proveedor', default: null },
 
+  // --- DATOS DROGUERÍA (Ingreso Diario de Rutas) ---
+  // Registrado por el administrativo al otro día con info de los contratados
+  datosDrogueria: {
+    horaEnlaces: { type: [String], default: [] },  // ["05:30", "08:45"] — puede ser múltiple
+    horaInicioDistribucion: { type: String, default: '' },    // hora primera farmacia
+    horaFinDistribucion: { type: String, default: '' },    // hora última farmacia
+    cubetasSalida: { type: Number, default: 0 },
+    cubetasRetorno: { type: Number, default: 0 },
+    kmExtra: { type: Number, default: 0 },     // ⚠️ puede ser NEGATIVO (chofer reemplazado a mitad de camino)
+  },
+  // observaciones ya existe en root del schema — se reutiliza en el tab droguería
+
   historialMovimientos: [historialMovimientoSchema],
 }, { timestamps: true });
 
