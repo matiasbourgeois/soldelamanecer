@@ -2,13 +2,29 @@ import React, { useEffect, useState } from "react";
 import TablaVehiculos from "./TablaVehiculos";
 import FormularioVehiculo from "./FormularioVehiculo";
 import { apiSistema } from "../../../../core/api/apiSistema";
-import { Container, Paper, Title, Group, Button, TextInput, Stack, Text } from "@mantine/core";
+import { Container, Paper, Title, Group, Button, TextInput, Stack, Text, Badge } from "@mantine/core";
 import { Plus, Search } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const VehiculosAdmin = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [vehiculos, setVehiculos] = useState([]);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [vehiculoEditando, setVehiculoEditando] = useState(null);
+  // tipoPropiedad pre-seteado cuando se viene desde el formulario de Contratados
+  const [tipoPropiedadDefault, setTipoPropiedadDefault] = useState(null);
+
+  // Detectar state de navegación (venimos de Contratados → abrir modal nuevo externo)
+  useEffect(() => {
+    if (location.state?.abrirNuevo) {
+      setTipoPropiedadDefault(location.state.tipoPropiedad || null);
+      setVehiculoEditando(null);
+      setMostrarModal(true);
+      // Limpiar el state para que no se re-abra si recarga
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, []);
   const [paginaActual, setPaginaActual] = useState(1); // Mantine 1-based
   const [limite] = useState(10);
   const [totalVehiculos, setTotalVehiculos] = useState(0);
@@ -44,12 +60,14 @@ const VehiculosAdmin = () => {
   }, [paginaActual, busqueda]);
 
   const abrirModal = (vehiculo = null) => {
+    setTipoPropiedadDefault(null); // Al abrir manualmente no hay default forzado
     setVehiculoEditando(vehiculo);
     setMostrarModal(true);
   };
 
   const cerrarModal = () => {
     setVehiculoEditando(null);
+    setTipoPropiedadDefault(null);
     setMostrarModal(false);
   };
 
@@ -103,6 +121,7 @@ const VehiculosAdmin = () => {
           onClose={cerrarModal}
           vehiculo={vehiculoEditando}
           recargar={() => fetchVehiculos(paginaActual, busqueda)}
+          tipoPropiedadDefault={tipoPropiedadDefault}
         />
       )}
     </Container>

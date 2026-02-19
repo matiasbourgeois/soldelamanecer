@@ -30,7 +30,7 @@ import DashboardAdmin from "./modules/admin/pages/DashboardAdmin";
 const AdminArcade = lazy(() => import("./modules/admin/pages/AdminArcade"));
 import ChoferesAdmin from "./modules/admin/pages/ChoferesAdmin";
 import Reportes from "./modules/admin/pages/reportes/Reportes"; // Assuming subfolder moved
-import ProveedoresAdmin from "./modules/admin/pages/proveedores/ProveedoresAdmin";
+import ContratadosAdmin from "./modules/admin/pages/contratados/ContratadosAdmin";
 
 // Pages - Logistica (Envios)
 import GestionEnvios from "./modules/logistica/envios/pages/GestionEnvios";
@@ -135,10 +135,10 @@ function App() {
               }
             />
             <Route
-              path="/admin/proveedores"
+              path="/admin/contratados"
               element={
                 <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
-                  <ProveedoresAdmin />
+                  <ContratadosAdmin />
                 </ProtectedByRole>
               }
             />

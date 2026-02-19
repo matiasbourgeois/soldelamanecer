@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 
 const auth = require("../middlewares/verificarToken");
+const uploadVehiculo = require("../middlewares/uploadVehiculo");
+
 
 const {
   crearChofer,
@@ -12,7 +14,11 @@ const {
   eliminarChofer,
   obtenerMiConfiguracion,
   obtenerSelectoresReporte,
-  actualizarAsignacion
+  actualizarAsignacion,
+  // Contratados
+  obtenerContratados,
+  editarContratado,
+  subirDocumentoContratado
 } = require("../controllers/logistica/choferController");
 
 // Ruta base: /api/choferes
@@ -20,25 +26,29 @@ const {
 // Crear chofer
 router.post("/", crearChofer);
 
-// Ruta para que el chofer obtenga sus defaults
+// Ruta para que el chofer obtenga sus defaults (app móvil)
 router.get("/configuracion", auth, obtenerMiConfiguracion);
 router.get("/selectores-reporte", auth, obtenerSelectoresReporte);
 
 // Actualizar asignación de ruta/vehículo desde app móvil
 router.post("/actualizar-asignacion", auth, actualizarAsignacion);
 
-// Obtener todos los choferes
-router.get("/", obtenerChoferes);
+// ─── RUTAS DE CONTRATADOS ─────────────────────────────────────────────────────
+// GET  /api/choferes/contratados              → lista filtrada de contratados
+// PATCH /api/choferes/:id/contratado          → editar legajo del contratado
+// POST  /api/choferes/:id/documentos-contratado → subir documento al legajo
+router.get("/contratados", obtenerContratados);
+router.patch("/:id/contratado", editarContratado);
+router.post("/:id/documentos-contratado", uploadVehiculo.single("archivo"), subirDocumentoContratado);
+// ─────────────────────────────────────────────────────────────────────────────
 
+// Obtener todos los choferes (empleados + contratados)
+router.get("/", obtenerChoferes);
 router.get("/solo-nombres", obtenerChoferesMinimos);
 
-// Obtener un chofer
+// CRUD individual
 router.get("/:id", obtenerChofer);
-
-// Editar chofer
 router.put("/:id", editarChofer);
-
-// Eliminar chofer
 router.delete("/:id", eliminarChofer);
 
 module.exports = router;

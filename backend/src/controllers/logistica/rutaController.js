@@ -63,7 +63,7 @@ const obtenerRutas = async (req, res) => {
           select: "nombre apellido"
         }
       })
-      .populate("vehiculoAsignado", "patente") // solo patente si es lo que usás
+      .populate("vehiculoAsignado", "patente marca modelo tipoPropiedad estado")
 
       .lean();
 

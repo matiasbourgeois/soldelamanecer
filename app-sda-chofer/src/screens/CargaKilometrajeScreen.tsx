@@ -318,8 +318,8 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                         activeOpacity={0.9}
                     >
                         <LinearGradient
-                            colors={isDark ? ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.04)'] : ['#e0f2fe', '#f0f9ff']}
-                            style={[styles.heroCardGradient, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#bae6fd', borderWidth: 1 }]}
+                            colors={isDark ? ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.04)'] : ['#ffffff', '#f8fafc']}
+                            style={[styles.heroCardGradient, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0', borderWidth: 1 }]}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 0, y: 1 }}
                         >
@@ -328,10 +328,10 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                             </View>
 
                             <View style={styles.heroValueWrapper}>
-                                <Text style={[styles.heroValueText, { color: isDark ? 'white' : '#0ea5e9' }]}>
+                                <Text style={[styles.heroValueText, { color: isDark ? 'white' : '#1e293b' }]}>
                                     {kmInput || vehiculoAsignado?.kilometrajeActual?.toLocaleString('es-AR') || '0'}
                                 </Text>
-                                <Text style={[styles.heroUnitTag, { color: isDark ? 'rgba(255,255,255,0.5)' : '#7dd3fc' }]}>KM</Text>
+                                <Text style={[styles.heroUnitTag, { color: isDark ? 'rgba(255,255,255,0.5)' : '#94a3b8' }]}>KM</Text>
                             </View>
 
                             {kmInput !== '' && (
@@ -356,13 +356,13 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
                     <View style={[
                         styles.glassCardRow,
                         {
-                            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#fff7ed',
-                            borderColor: isDark ? 'rgba(251, 146, 60, 0.2)' : '#ffedd5',
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : theme.colors.surface,
+                            borderColor: isDark ? 'rgba(251, 146, 60, 0.2)' : '#e2e8f0',
                             borderWidth: 1,
                             elevation: isDark ? 0 : 2
                         }
                     ]}>
-                        <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(251, 146, 60, 0.2)' : '#ffedd5' }]}>
+                        <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(251, 146, 60, 0.2)' : '#fafafa' }]}>
                             <IconButton
                                 icon={vehiculoAsignado?.tipoCombustible === 'GNC' ? 'gas-cylinder' : 'gas-station'}
                                 iconColor={isDark ? "#fb923c" : "#f97316"}

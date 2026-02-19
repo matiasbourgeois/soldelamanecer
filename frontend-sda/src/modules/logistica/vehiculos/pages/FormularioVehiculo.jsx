@@ -8,7 +8,7 @@ import { IconUpload, IconTrash, IconCheck, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import axios from "axios";
 
-const FormularioVehiculo = ({ onClose, vehiculo, recargar }) => {
+const FormularioVehiculo = ({ onClose, vehiculo, recargar, tipoPropiedadDefault }) => {
   const [activeTab, setActiveTab] = useState('general');
   const [loadingDoc, setLoadingDoc] = useState(false);
   const [formData, setFormData] = useState({
@@ -17,7 +17,8 @@ const FormularioVehiculo = ({ onClose, vehiculo, recargar }) => {
     modelo: "",
     capacidadKg: "",
     estado: "disponible",
-    tipoPropiedad: "externo",
+    // Si viene un default forzado (ej: "externo" desde contratados), lo usamos
+    tipoPropiedad: tipoPropiedadDefault || "externo",
     añoModelo: null,
     numeroChasis: "",
     tipoCombustible: "Diesel",

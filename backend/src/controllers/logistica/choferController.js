@@ -370,6 +370,140 @@ const actualizarAsignacion = async (req, res) => {
   }
 };
 
+// ─── CONTRATADOS ─────────────────────────────────────────────────────────────
+
+// Obtener solo choferes con tipoVinculo === 'contratado' (para la sección de Contratados)
+const obtenerContratados = async (req, res) => {
+  try {
+    const busqueda = req.query.busqueda?.trim() || "";
+    const regex = new RegExp(busqueda, "i");
+
+    // Buscar usuarios que matcheen la búsqueda para filtro por nombre
+    let idsUsuarios = null;
+    if (busqueda) {
+      const usuariosFiltrados = await UsuarioSistema.find({
+        $or: [{ nombre: regex }, { email: regex }]
+      }).select("_id").lean();
+      idsUsuarios = usuariosFiltrados.map((u) => u._id);
+    }
+
+    // Construir query: solo contratados
+    const query = { tipoVinculo: "contratado" };
+    if (idsUsuarios) {
+      query.$or = [
+        { usuario: { $in: idsUsuarios } },
+        { "datosContratado.razonSocial": regex },
+        { "datosContratado.cuit": regex }
+      ];
+      delete query.tipoVinculo; // necesitamos $and para combinar
+      // Reconstruir como $and
+      const queryFinal = {
+        tipoVinculo: "contratado",
+        $or: [
+          { usuario: { $in: idsUsuarios } },
+          { "datosContratado.razonSocial": regex },
+          { "datosContratado.cuit": regex }
+        ]
+      };
+      const contratados = await Chofer.find(queryFinal)
+        .populate("usuario", "nombre email activo")
+        .populate("datosContratado.vehiculoDefault", "patente marca modelo")
+        .populate("datosContratado.rutaDefault", "codigo descripcion precioKm kilometrosEstimados")
+        .lean();
+      return res.json(contratados);
+    }
+
+    const contratados = await Chofer.find(query)
+      .populate("usuario", "nombre email activo")
+      .populate("datosContratado.vehiculoDefault", "patente marca modelo")
+      .populate("datosContratado.rutaDefault", "codigo descripcion precioKm kilometrosEstimados")
+      .lean();
+
+    res.json(contratados);
+  } catch (error) {
+    console.error("Error al obtener contratados:", error);
+    res.status(500).json({ msg: "Error al obtener contratados." });
+  }
+};
+
+// Editar los datos de contratado (datosContratado) de un chofer
+const editarContratado = async (req, res) => {
+  try {
+    const chofer = await Chofer.findById(req.params.id);
+    if (!chofer) return res.status(404).json({ msg: "Chofer no encontrado." });
+    if (chofer.tipoVinculo !== "contratado") {
+      return res.status(400).json({ msg: "Este chofer no es de tipo contratado." });
+    }
+
+    const { razonSocial, cuit, email, fechaIngreso, fechaEgreso, vehiculoDefault, rutaDefault, activo } = req.body;
+
+    // Actualizar campos de datosContratado
+    if (razonSocial !== undefined) chofer.datosContratado.razonSocial = razonSocial;
+    if (cuit !== undefined) chofer.datosContratado.cuit = cuit;
+    if (email !== undefined) chofer.datosContratado.email = email;
+    if (fechaIngreso !== undefined) chofer.datosContratado.fechaIngreso = fechaIngreso;
+    if (fechaEgreso !== undefined) chofer.datosContratado.fechaEgreso = fechaEgreso;
+    if (vehiculoDefault !== undefined) chofer.datosContratado.vehiculoDefault = vehiculoDefault || null;
+    if (rutaDefault !== undefined) chofer.datosContratado.rutaDefault = rutaDefault || null;
+    if (activo !== undefined) chofer.activo = activo;
+
+    await chofer.save();
+
+    const choferActualizado = await Chofer.findById(chofer._id)
+      .populate("usuario", "nombre email activo")
+      .populate("datosContratado.vehiculoDefault", "patente marca modelo")
+      .populate("datosContratado.rutaDefault", "codigo descripcion precioKm kilometrosEstimados");
+
+    res.json(choferActualizado);
+  } catch (error) {
+    console.error("Error al editar contratado:", error);
+    res.status(500).json({ msg: "Error al editar contratado." });
+  }
+};
+
+// Subir un documento al legajo digital de un contratado
+const subirDocumentoContratado = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tipoDoc } = req.body; // dni | carnetConducir | constanciaARCA | contrato | antecedentesPenales
+
+    if (!req.file) return res.status(400).json({ error: "No se subió ningún archivo." });
+
+    const tiposValidos = ["dni", "carnetConducir", "constanciaARCA", "contrato", "antecedentesPenales"];
+    if (!tiposValidos.includes(tipoDoc)) {
+      return res.status(400).json({ error: "Tipo de documento inválido." });
+    }
+
+    const chofer = await Chofer.findById(id);
+    if (!chofer) return res.status(404).json({ error: "Chofer no encontrado." });
+    if (chofer.tipoVinculo !== "contratado") {
+      return res.status(400).json({ error: "Este chofer no es de tipo contratado." });
+    }
+
+    const path = require("path");
+    const fs = require("fs");
+
+    // Eliminar archivo anterior si existe
+    const pathAnterior = chofer.datosContratado?.documentos?.[tipoDoc]?.path;
+    if (pathAnterior) {
+      const oldPath = path.join(process.cwd(), pathAnterior);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    // Guardar nuevo archivo
+    chofer.datosContratado.documentos[tipoDoc] = {
+      path: `uploads/vehiculos/${req.file.filename}`,
+      fechaSubida: new Date()
+    };
+
+    await chofer.save();
+    res.json({ mensaje: "Documento subido con éxito.", chofer });
+  } catch (error) {
+    console.error("Error al subir documento de contratado:", error);
+    res.status(500).json({ error: "Error interno al subir documento." });
+  }
+};
+
 module.exports = {
   crearChofer,
   obtenerChoferes,
@@ -379,5 +513,9 @@ module.exports = {
   obtenerChoferesMinimos,
   obtenerMiConfiguracion,
   obtenerSelectoresReporte,
-  actualizarAsignacion
+  actualizarAsignacion,
+  // Contratados
+  obtenerContratados,
+  editarContratado,
+  subirDocumentoContratado
 };

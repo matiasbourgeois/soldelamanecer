@@ -42,11 +42,7 @@ const RutaSchema = new mongoose.Schema({
     default: null
   },
 
-  proveedorAsignado: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Proveedor",
-    default: null
-  },
+  // proveedorAsignado: DEPRECADO — reemplazado por choferAsignado (tipoVinculo: 'contratado')
 
   // --- STANDARD RATES & DISTANCE ---
   kilometrosEstimados: { type: Number, default: 0 },

@@ -37,6 +37,7 @@ import {
     Wrench as IconTool,
     Bell as IconBell,
     AlertTriangle as IconAlertTriangle,
+    UserCheck as IconUserCheck,
     Gamepad2
 } from 'lucide-react';
 import { apiSistema, apiUsuarios, apiEstaticos } from '../../core/api/apiSistema';
@@ -221,12 +222,12 @@ export function AppLayout({ children, auth, handleLogout }) {
                             />
                         </NavLink>
 
-                        {/* Grupo Proveedores (NUEVO) */}
+                        {/* Contratados Externos */}
                         <NavLink
-                            label="Proveedores"
-                            leftSection={<IconUsers size={20} stroke={1.5} />}
-                            rightSection={isActive('/admin/proveedores') && <IconChevronRight size={14} />}
-                            {...getLinkProps('/admin/proveedores')}
+                            label="Contratados"
+                            leftSection={<IconUserCheck size={20} stroke={1.5} />}
+                            rightSection={isActive('/admin/contratados') && <IconChevronRight size={14} />}
+                            {...getLinkProps('/admin/contratados')}
                         />
 
                         {/* Reportes */}

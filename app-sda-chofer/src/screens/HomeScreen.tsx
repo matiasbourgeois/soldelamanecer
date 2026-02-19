@@ -1,6 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, StatusBar, RefreshControl, Dimensions, TextInput } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, StatusBar, RefreshControl, Dimensions, TextInput, Animated } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, useTheme, IconButton, Avatar, Modal, Portal, Switch } from 'react-native-paper';
+import CustomAlert from '../components/common/CustomAlert';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../context/PreferencesContext';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,6 +30,38 @@ const HomeScreen = ({ navigation }: any) => {
     const [tipoSelector, setTipoSelector] = useState<'vehiculo' | 'ruta'>('vehiculo');
     const [searchQuery, setSearchQuery] = useState('');
     const [cambiosPendientes, setCambiosPendientes] = useState(false);
+    const [showAlertConfirm, setShowAlertConfirm] = useState(false);
+    const [alertConfig, setAlertConfig] = useState<{
+        visible: boolean;
+        title: string;
+        message: string;
+        type: 'success' | 'error' | 'warning' | 'info';
+        onConfirm?: () => void;
+    }>({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
+
+    // Animación de botón
+    const scaleValue = useRef(new Animated.Value(1)).current;
+
+    const onPressIn = () => {
+        Animated.spring(scaleValue, {
+            toValue: 0.95,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const onPressOut = () => {
+        Animated.spring(scaleValue, {
+            toValue: 1,
+            friction: 3,
+            tension: 40,
+            useNativeDriver: true,
+        }).start();
+    };
 
     const fetchConfig = async () => {
         try {
@@ -91,9 +125,19 @@ const HomeScreen = ({ navigation }: any) => {
             });
             setCambiosPendientes(false);
             fetchConfig(); // Refrescar
-            alert('Cambios guardados exitosamente');
+            setAlertConfig({
+                visible: true,
+                title: '¡Éxito!',
+                message: 'La asignación se ha guardado correctamente.',
+                type: 'success'
+            });
         } catch (error: any) {
-            alert(error.response?.data?.error || 'Error al guardar cambios');
+            setAlertConfig({
+                visible: true,
+                title: 'Error',
+                message: error.response?.data?.error || 'No se pudieron guardar los cambios.',
+                type: 'error'
+            });
             console.log('Error guardando cambios:', error);
         }
     };
@@ -152,377 +196,424 @@ const HomeScreen = ({ navigation }: any) => {
 
             {/* NO MORE DECORATIVE CIRCLES AS REQUESTED */}
 
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={styles.scrollContent}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        tintColor={theme.colors.primary}
-                        colors={[theme.colors.primary]}
-                    />
-                }
-            >
-                {/* HEADER */}
-                <View style={styles.header}>
-                    <View style={styles.headerInfo}>
-                        <Text style={[styles.greetingTitle, { color: theme.colors.textPrimary }]}>
-                            Hola, {user?.nombre?.split(' ')[0] || 'chofer'}
-                        </Text>
-                        <Text style={styles.headerSubtitle}>Panel de Operaciones</Text>
-                    </View>
-                    <View style={styles.headerActions}>
-                        <TouchableOpacity
-                            onPress={() => setLogoutModalVisible(true)}
-                            style={[styles.logoutIcon, { backgroundColor: isThemeDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }]}
-                        >
-                            <IconButton icon="logout-variant" iconColor={theme.colors.error} size={24} />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setProfileModalVisible(true)} activeOpacity={0.7}>
-                            <Avatar.Text
-                                size={44}
-                                label={initial}
-                                style={styles.avatar}
-                                labelStyle={styles.avatarLabel}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                {/* STATUS CARDS (Clickeable - FASE 7) */}
-                <View style={[styles.statusCard, {
-                    backgroundColor: theme.colors.surfaceVariant,
-                    borderColor: theme.colors.outline
-                }]}>
-                    <TouchableOpacity
-                        style={styles.statusItem}
-                        onPress={() => abrirSelector('vehiculo')}
-                        activeOpacity={0.7}
-                    >
-                        <View style={[styles.statusIconBase, { backgroundColor: isThemeDark ? 'rgba(56, 189, 248, 0.05)' : 'rgba(8, 145, 178, 0.1)' }]}>
-                            <IconButton icon="truck-delivery" iconColor={theme.colors.primary} size={24} style={{ margin: 0 }} />
-                        </View>
-                        <View style={styles.statusTextContainer}>
-                            <Text style={styles.statusLabel}>VEHÍCULO ASIGNADO</Text>
-                            <Text style={[styles.statusMainValue, { color: theme.colors.textPrimary }]}>
-                                {vehiculoSeleccionado ? vehiculoSeleccionado.patente?.toUpperCase() : 'NO ASIGNADO'}
-                            </Text>
-                            {vehiculoSeleccionado && (
-                                <Text style={[styles.statusSubDetail, { color: theme.colors.textSecondary }]}>
-                                    {vehiculoSeleccionado.marca} {vehiculoSeleccionado.modelo}
-                                </Text>
-                            )}
-                        </View>
-                        <IconButton icon="chevron-down" iconColor={theme.colors.outline} size={20} />
-                    </TouchableOpacity>
-
-                    <View style={[styles.statusDivider, { backgroundColor: theme.colors.outline }]} />
-
-                    <TouchableOpacity
-                        style={styles.statusItem}
-                        onPress={() => abrirSelector('ruta')}
-                        activeOpacity={0.7}
-                    >
-                        <View style={[styles.statusIconBase, { backgroundColor: isThemeDark ? 'rgba(56, 189, 248, 0.05)' : 'rgba(8, 145, 178, 0.1)' }]}>
-                            <IconButton icon="map-marker-distance" iconColor={theme.colors.primary} size={24} style={{ margin: 0 }} />
-                        </View>
-                        <View style={styles.statusTextContainer}>
-                            <Text style={styles.statusLabel}>RUTA ACTIVA</Text>
-                            <Text style={[styles.statusMainValue, { color: theme.colors.textPrimary }]}>
-                                {rutaSeleccionada ? rutaSeleccionada.codigo?.toUpperCase() : 'SIN RUTA'}
-                            </Text>
-                            {rutaSeleccionada && (
-                                <View>
-                                    <Text style={[styles.statusSubDetail, { color: theme.colors.tertiary, fontWeight: 'bold' }]}>
-                                        {config?.hojaRepartoCodigo || 'H. PENDIENTE'}
-                                    </Text>
-                                    <Text style={[styles.statusSubDetail, { fontSize: 11, opacity: 0.7, color: theme.colors.textSecondary }]}>
-                                        {rutaSeleccionada.horaSalida ? `Salida: ${rutaSeleccionada.horaSalida}` : ''}
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-                        <IconButton icon="chevron-down" iconColor={theme.colors.outline} size={20} />
-                    </TouchableOpacity>
-                </View>
-
-                {/* BOTÓN CONFIRMAR CAMBIOS (Solo visible si hay cambios) */}
-                {cambiosPendientes && (
-                    <TouchableOpacity style={styles.confirmButton} onPress={guardarCambios} activeOpacity={0.9}>
-                        <LinearGradient
-                            colors={['#10b981', '#059669']}
-                            style={styles.confirmGradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                        >
-                            <IconButton icon="check-circle" iconColor="white" size={24} />
-                            <Text style={styles.confirmButtonText}>Confirmar Cambios</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                )}
-
-                <View style={styles.sectionHeader}>
-                    <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Acciones Rápidas</Text>
-                    <View style={[styles.accentLine, { backgroundColor: theme.colors.outline }]} />
-                </View>
-
-                {/* ACTION CARDS */}
-                {filteredItems.map((item, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        activeOpacity={0.85}
-                        onPress={() => navigation.navigate(item.route)}
-                        style={styles.actionCardWrapper}
-                    >
-                        <LinearGradient
-                            colors={item.colors}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0.5 }}
-                            style={styles.actionGradient}
-                        >
-                            <View style={styles.actionContent}>
-                                <View style={styles.actionIconContainer}>
-                                    <IconButton icon={item.icon} iconColor="white" size={32} />
-                                </View>
-                                <View style={styles.actionTextContent}>
-                                    <Text style={styles.actionItemTitle}>{item.title}</Text>
-                                    <Text style={styles.actionItemSubtitle}>{item.subtitle}</Text>
-                                </View>
-                                <IconButton icon="chevron-right" iconColor="rgba(255,255,255,0.7)" size={24} />
-                            </View>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
-
-            {/* PROFILE MODAL (GOD TIER) */}
-            <Portal>
-                <Modal
-                    visible={profileModalVisible}
-                    onDismiss={() => setProfileModalVisible(false)}
-                    contentContainerStyle={styles.modalContainer}
+            <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={styles.scrollContent}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor={theme.colors.primary}
+                            colors={[theme.colors.primary]}
+                        />
+                    }
                 >
-                    <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
-                        {/* Header with Background Accent */}
-                        <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface }]}>
-                            <LinearGradient
-                                colors={[theme.colors.primary, theme.colors.secondary]} // Dynamic Gradient
-                                style={styles.modalHeaderGradient}
-                            />
-                            <View style={[styles.modalAvatarContainer, { backgroundColor: theme.colors.surface }]}>
-                                <Avatar.Text
-                                    size={80}
-                                    label={initial}
-                                    style={styles.largeAvatar}
-                                    labelStyle={styles.largeAvatarLabel}
-                                />
-                            </View>
+                    {/* HEADER */}
+                    <View style={styles.header}>
+                        <View style={styles.headerInfo}>
+                            <Text style={[
+                                styles.greetingTitle,
+                                { color: theme.colors.textPrimary },
+                                !isThemeDark && { textShadowColor: 'transparent' }
+                            ]}>
+                                Hola, {user?.nombre?.split(' ')[0] || 'chofer'}
+                            </Text>
+                            <Text style={styles.headerSubtitle}>Panel de Operaciones</Text>
+                        </View>
+                        <View style={styles.headerActions}>
                             <TouchableOpacity
-                                style={styles.closeModalButton}
-                                onPress={() => setProfileModalVisible(false)}
+                                onPress={() => setLogoutModalVisible(true)}
+                                style={[styles.logoutIcon, { backgroundColor: isThemeDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }]}
                             >
-                                <IconButton icon="close" iconColor="white" size={20} />
+                                <IconButton icon="logout-variant" iconColor={theme.colors.error} size={24} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setProfileModalVisible(true)} activeOpacity={0.7}>
+                                <Avatar.Text
+                                    size={44}
+                                    label={initial}
+                                    style={styles.avatar}
+                                    labelStyle={styles.avatarLabel}
+                                />
                             </TouchableOpacity>
                         </View>
+                    </View>
 
-                        <View style={styles.modalBody}>
-                            <Text style={[styles.modalName, { color: theme.colors.textPrimary }]}>{user?.nombre || 'Usuario'}</Text>
-                            <Text style={[styles.modalRole, { color: theme.colors.primary }]}>
-                                {user?.rol?.toUpperCase() || 'CHOFER'}
-                            </Text>
-
-                            <View style={[styles.infoDivider, { backgroundColor: theme.colors.outline }]} />
-
-                            {/* Info Rows */}
-                            <View style={styles.infoRow}>
-                                <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(8, 145, 178, 0.1)' : '#ecfeff' }]}>
-                                    <IconButton icon="email-outline" iconColor={theme.colors.primary} size={20} />
-                                </View>
-                                <View>
-                                    <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>EMAIL</Text>
-                                    <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>{user?.email || 'N/A'}</Text>
-                                </View>
+                    {/* STATUS CARDS (Clickeable - FASE 7) */}
+                    <View style={[styles.statusCard, {
+                        backgroundColor: theme.dark ? theme.colors.surfaceVariant : theme.colors.surface,
+                        borderColor: theme.dark ? theme.colors.outline : '#f1f5f9', // Slate 100 en Light Mode
+                        ...(!theme.dark && {
+                            elevation: 3,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 4,
+                        })
+                    }]}>
+                        <TouchableOpacity
+                            style={styles.statusItem}
+                            onPress={() => abrirSelector('vehiculo')}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[styles.statusIconBase, { backgroundColor: isThemeDark ? 'rgba(56, 189, 248, 0.05)' : 'rgba(0, 188, 212, 0.08)' }]}>
+                                <IconButton icon="truck-delivery" iconColor={theme.colors.primary} size={24} style={{ margin: 0 }} />
                             </View>
-
-                            <View style={styles.infoRow}>
-                                <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(8, 145, 178, 0.1)' : '#ecfeff' }]}>
-                                    <IconButton icon="file-document-outline" iconColor={theme.colors.primary} size={20} />
-                                </View>
-                                <View>
-                                    <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>CONTRATO</Text>
-                                    <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>
-                                        {user?.tipoContrato === 'relacionDependencia' ? 'Relación Dependencia' : 'Externo / Monotributo'}
+                            <View style={styles.statusTextContainer}>
+                                <Text style={styles.statusLabel}>VEHÍCULO ASIGNADO</Text>
+                                <Text style={[styles.statusMainValue, { color: theme.colors.textPrimary }]}>
+                                    {vehiculoSeleccionado ? vehiculoSeleccionado.patente?.toUpperCase() : 'NO ASIGNADO'}
+                                </Text>
+                                {vehiculoSeleccionado && (
+                                    <Text style={[styles.statusSubDetail, { color: theme.colors.textSecondary }]}>
+                                        {vehiculoSeleccionado.marca} {vehiculoSeleccionado.modelo}
                                     </Text>
-                                </View>
+                                )}
                             </View>
+                            <IconButton icon="chevron-down" iconColor={theme.colors.outline} size={20} />
+                        </TouchableOpacity>
 
-                            <View style={styles.infoRow}>
-                                <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(8, 145, 178, 0.1)' : '#ecfeff' }]}>
-                                    <IconButton icon="shield-check-outline" iconColor={theme.colors.primary} size={20} />
-                                </View>
-                                <View>
-                                    <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>ID DE EMPLEADO</Text>
-                                    <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>#{user?.id?.substring(0, 8).toUpperCase() || '---'}</Text>
-                                </View>
+                        <View style={[styles.statusDivider, { backgroundColor: theme.colors.outline }]} />
+
+                        <TouchableOpacity
+                            style={styles.statusItem}
+                            onPress={() => abrirSelector('ruta')}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[styles.statusIconBase, { backgroundColor: isThemeDark ? 'rgba(56, 189, 248, 0.05)' : 'rgba(0, 188, 212, 0.08)' }]}>
+                                <IconButton icon="map-marker-distance" iconColor={theme.colors.primary} size={24} style={{ margin: 0 }} />
                             </View>
-
-                            {/* THEME SWITCHER (GOD TIER ADDITION) */}
-                            <View style={[styles.infoDivider, { backgroundColor: theme.colors.outline }]} />
-                            <View style={[styles.infoRow, { justifyContent: 'space-between', paddingRight: 10 }]}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9' }]}>
-                                        <IconButton icon="theme-light-dark" iconColor={theme.colors.tertiary} size={20} />
-                                    </View>
+                            <View style={styles.statusTextContainer}>
+                                <Text style={styles.statusLabel}>RUTA ACTIVA</Text>
+                                <Text style={[styles.statusMainValue, { color: theme.colors.textPrimary }]}>
+                                    {rutaSeleccionada ? rutaSeleccionada.codigo?.toUpperCase() : 'SIN RUTA'}
+                                </Text>
+                                {rutaSeleccionada && (
                                     <View>
-                                        <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>TEMA</Text>
-                                        <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>
-                                            {isThemeDark ? 'Modo Oscuro' : 'Modo Claro'}
+                                        <Text style={[styles.statusSubDetail, { color: theme.colors.tertiary, fontWeight: 'bold' }]}>
+                                            {config?.hojaRepartoCodigo || 'H. PENDIENTE'}
+                                        </Text>
+                                        <Text style={[styles.statusSubDetail, { fontSize: 11, opacity: 0.7, color: theme.colors.textSecondary }]}>
+                                            {rutaSeleccionada.horaSalida ? `Salida: ${rutaSeleccionada.horaSalida}` : ''}
                                         </Text>
                                     </View>
-                                </View>
-                                <Switch value={isThemeDark} onValueChange={toggleTheme} color={theme.colors.primary} />
+                                )}
                             </View>
-
-                        </View>
-
-                        <TouchableOpacity
-                            style={styles.modalCloseFooter}
-                            onPress={() => setProfileModalVisible(false)}
-                        >
-                            <Text style={[styles.modalCloseText, { color: theme.colors.textSecondary }]}>Cerrar Perfil</Text>
+                            <IconButton icon="chevron-down" iconColor={theme.colors.outline} size={20} />
                         </TouchableOpacity>
-                    </View>
-                </Modal>
-            </Portal>
 
-            {/* LOGOUT CONFIRMATION MODAL (GOD TIER) */}
-            <Portal>
-                <Modal
-                    visible={logoutModalVisible}
-                    onDismiss={() => setLogoutModalVisible(false)}
-                    contentContainerStyle={styles.logoutModalContainer}
-                    theme={{ colors: { backdrop: theme.colors.backdrop } }}
-                >
-                    <View style={[styles.logoutModalContent, { backgroundColor: theme.colors.surface }]}>
-                        <View style={[styles.logoutIconRing, { borderColor: 'rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(239, 68, 68, 0.05)' }]}>
-                            <IconButton icon="logout-variant" size={32} iconColor="#ef4444" />
-                        </View>
-                        <Text style={[styles.confirmTitle, { color: theme.colors.textPrimary }]}>¿Cerrar Sesión?</Text>
-                        <Text style={[styles.confirmSubtitle, { color: theme.colors.textSecondary }]}>
-                            Tu jornada se guardará, pero tendrás que volver a ingresar tus credenciales.
-                        </Text>
-
-                        <View style={styles.logoutActionRow}>
-                            <TouchableOpacity
-                                onPress={() => setLogoutModalVisible(false)}
-                                style={[styles.logoutBtn, styles.logoutBtnCancel, { borderColor: theme.colors.outline }]}
-                            >
-                                <Text style={[styles.logoutBtnTextCancel, { color: theme.colors.textSecondary }]}>CANCELAR</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={logout}
-                                activeOpacity={0.9}
-                                style={styles.logoutBtn}
-                            >
-                                <LinearGradient
-                                    colors={['#ef4444', '#b91c1c']}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 0 }}
-                                    style={styles.logoutBtnGradient}
-                                >
-                                    <Text style={styles.logoutBtnTextConfirm}>SALIR</Text>
-                                </LinearGradient>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
-            </Portal>
-
-            {/* MODAL SELECTOR (Vehículo / Ruta) - FASE 7 */}
-            <Portal>
-                <Modal
-                    visible={modalSelectorVisible}
-                    onDismiss={() => setModalSelectorVisible(false)}
-                    contentContainerStyle={styles.modalContainer}
-                    theme={{ colors: { backdrop: isThemeDark ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.5)' } }}
-                >
-                    <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
-                        <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface }]}>
-                            <LinearGradient
-                                colors={[theme.colors.primary, theme.colors.secondary]}
-                                style={styles.modalHeaderGradient}
-                            />
-                            <Text style={[styles.modalName, { color: theme.colors.textPrimary }]}>
-                                {tipoSelector === 'vehiculo' ? 'Seleccionar Vehículo' : 'Seleccionar Ruta'}
-                            </Text>
-                            <TouchableOpacity
-                                style={[styles.closeModalButton, { backgroundColor: theme.colors.surfaceVariant }]}
-                                onPress={() => setModalSelectorVisible(false)}
-                            >
-                                <IconButton icon="close" iconColor={theme.colors.onSurfaceVariant} size={20} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.modalBody}>
-                            {/* Search Input */}
-                            <View style={[styles.searchContainer, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
-                                <IconButton icon="magnify" iconColor={theme.colors.textSecondary} size={20} />
-                                <TextInput
-                                    style={{
-                                        flex: 1,
-                                        padding: 8,
-                                        color: theme.colors.textPrimary,
-                                        fontSize: 14,
-                                    }}
-                                    value={searchQuery}
-                                    onChangeText={setSearchQuery}
-                                    placeholder={`Buscar ${tipoSelector === 'vehiculo' ? 'vehículo' : 'ruta'}...`}
-                                    placeholderTextColor={theme.colors.textSecondary}
-                                />
-                            </View>
-
-                            {/* Lista */}
-                            <ScrollView style={{ maxHeight: 400 }}>
-                                {(tipoSelector === 'vehiculo' ? listaVehiculos : listaRutas)
-                                    .filter((item: any) => {
-                                        const query = searchQuery.toLowerCase();
-                                        if (tipoSelector === 'vehiculo') {
-                                            return item.patente?.toLowerCase().includes(query) ||
-                                                item.marca?.toLowerCase().includes(query) ||
-                                                item.modelo?.toLowerCase().includes(query);
-                                        } else {
-                                            return item.codigo?.toLowerCase().includes(query) ||
-                                                item.descripcion?.toLowerCase().includes(query);
-                                        }
-                                    })
-                                    .map((item: any) => (
-                                        <TouchableOpacity
-                                            key={item._id}
-                                            style={[styles.selectorItem, { borderBottomColor: theme.colors.outline }]}
-                                            onPress={() => seleccionarItem(item)}
+                        {/* BOTÓN CONFIRMAR CAMBIOS (Dentro de la card) */}
+                        {cambiosPendientes && (
+                            <>
+                                <View style={[styles.statusDivider, { backgroundColor: theme.colors.outline, marginVertical: 12 }]} />
+                                <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
+                                    <TouchableOpacity
+                                        style={styles.confirmButton}
+                                        onPress={() => setShowAlertConfirm(true)}
+                                        onPressIn={onPressIn}
+                                        onPressOut={onPressOut}
+                                        activeOpacity={1}
+                                    >
+                                        <LinearGradient
+                                            colors={['#10b981', '#059669']}
+                                            style={styles.confirmGradient}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 1 }}
                                         >
+                                            <IconButton icon="check-all" iconColor="white" size={24} style={{ margin: 0, marginRight: 8 }} />
+                                            <Text style={styles.confirmButtonText}>GUARDAR ASIGNACIÓN</Text>
+                                        </LinearGradient>
+                                    </TouchableOpacity>
+                                </Animated.View>
+                            </>
+                        )}
+                    </View>
+
+
+
+                    <View style={styles.sectionHeader}>
+                        <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Acciones Rápidas</Text>
+                        <View style={[styles.accentLine, { backgroundColor: theme.colors.outline }]} />
+                    </View>
+
+                    {/* ACTION CARDS */}
+                    {filteredItems.map((item, index) => (
+                        <TouchableOpacity
+                            key={index}
+                            activeOpacity={0.85}
+                            onPress={() => navigation.navigate(item.route)}
+                            style={styles.actionCardWrapper}
+                        >
+                            <LinearGradient
+                                colors={item.colors}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0.5 }}
+                                style={styles.actionGradient}
+                            >
+                                <View style={styles.actionContent}>
+                                    <View style={styles.actionIconContainer}>
+                                        <IconButton icon={item.icon} iconColor="white" size={32} />
+                                    </View>
+                                    <View style={styles.actionTextContent}>
+                                        <Text style={styles.actionItemTitle}>{item.title}</Text>
+                                        <Text style={styles.actionItemSubtitle}>{item.subtitle}</Text>
+                                    </View>
+                                    <IconButton icon="chevron-right" iconColor="rgba(255,255,255,0.7)" size={24} />
+                                </View>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    ))}
+
+                    {/* PROFILE MODAL (GOD TIER) */}
+                    <Portal>
+                        <Modal
+                            visible={profileModalVisible}
+                            onDismiss={() => setProfileModalVisible(false)}
+                            contentContainerStyle={styles.modalContainer}
+                        >
+                            <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
+                                {/* Header with Background Accent */}
+                                <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface }]}>
+                                    <LinearGradient
+                                        colors={[theme.colors.primary, theme.colors.secondary]} // Dynamic Gradient
+                                        style={styles.modalHeaderGradient}
+                                    />
+                                    <View style={[styles.modalAvatarContainer, { backgroundColor: theme.colors.surface }]}>
+                                        <Avatar.Text
+                                            size={80}
+                                            label={initial}
+                                            style={styles.largeAvatar}
+                                            labelStyle={styles.largeAvatarLabel}
+                                        />
+                                    </View>
+                                    <TouchableOpacity
+                                        style={styles.closeModalButton}
+                                        onPress={() => setProfileModalVisible(false)}
+                                    >
+                                        <IconButton icon="close" iconColor="white" size={20} />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View style={styles.modalBody}>
+                                    <Text style={[styles.modalName, { color: theme.colors.textPrimary }]}>{user?.nombre || 'Usuario'}</Text>
+                                    <Text style={[styles.modalRole, { color: theme.colors.primary }]}>
+                                        {user?.rol?.toUpperCase() || 'CHOFER'}
+                                    </Text>
+
+                                    <View style={[styles.infoDivider, { backgroundColor: theme.colors.outline }]} />
+
+                                    {/* Info Rows */}
+                                    <View style={styles.infoRow}>
+                                        <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(8, 145, 178, 0.1)' : '#ecfeff' }]}>
+                                            <IconButton icon="email-outline" iconColor={theme.colors.primary} size={20} />
+                                        </View>
+                                        <View>
+                                            <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>EMAIL</Text>
+                                            <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>{user?.email || 'N/A'}</Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.infoRow}>
+                                        <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(8, 145, 178, 0.1)' : '#ecfeff' }]}>
+                                            <IconButton icon="file-document-outline" iconColor={theme.colors.primary} size={20} />
+                                        </View>
+                                        <View>
+                                            <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>CONTRATO</Text>
+                                            <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>
+                                                {user?.tipoContrato === 'relacionDependencia' ? 'Relación Dependencia' : 'Externo / Monotributo'}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.infoRow}>
+                                        <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(8, 145, 178, 0.1)' : '#ecfeff' }]}>
+                                            <IconButton icon="shield-check-outline" iconColor={theme.colors.primary} size={20} />
+                                        </View>
+                                        <View>
+                                            <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>ID DE EMPLEADO</Text>
+                                            <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>#{user?.id?.substring(0, 8).toUpperCase() || '---'}</Text>
+                                        </View>
+                                    </View>
+
+                                    {/* THEME SWITCHER (GOD TIER ADDITION) */}
+                                    <View style={[styles.infoDivider, { backgroundColor: theme.colors.outline }]} />
+                                    <View style={[styles.infoRow, { justifyContent: 'space-between', paddingRight: 10 }]}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <View style={[styles.infoIconBox, { backgroundColor: isThemeDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9' }]}>
+                                                <IconButton icon="theme-light-dark" iconColor={theme.colors.tertiary} size={20} />
+                                            </View>
                                             <View>
-                                                <Text style={[styles.selectorItemTitle, { color: theme.colors.textPrimary }]}>
-                                                    {tipoSelector === 'vehiculo' ? item.patente : item.codigo}
-                                                </Text>
-                                                <Text style={[styles.selectorItemSubtitle, { color: theme.colors.textSecondary }]}>
-                                                    {tipoSelector === 'vehiculo'
-                                                        ? `${item.marca} ${item.modelo}`
-                                                        : item.descripcion || `Salida: ${item.horaSalida}`
-                                                    }
+                                                <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>TEMA</Text>
+                                                <Text style={[styles.infoValue, { color: theme.colors.textPrimary }]}>
+                                                    {isThemeDark ? 'Modo Oscuro' : 'Modo Claro'}
                                                 </Text>
                                             </View>
-                                            <IconButton icon="chevron-right" iconColor={theme.colors.textSecondary} size={20} />
-                                        </TouchableOpacity>
-                                    ))}
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
-            </Portal>
-        </View>
+                                        </View>
+                                        <Switch value={isThemeDark} onValueChange={toggleTheme} color={theme.colors.primary} />
+                                    </View>
+
+                                </View>
+
+                                <TouchableOpacity
+                                    style={styles.modalCloseFooter}
+                                    onPress={() => setProfileModalVisible(false)}
+                                >
+                                    <Text style={[styles.modalCloseText, { color: theme.colors.textSecondary }]}>Cerrar Perfil</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </Modal>
+                    </Portal>
+
+                    {/* LOGOUT CONFIRMATION MODAL (GOD TIER) */}
+                    <Portal>
+                        <Modal
+                            visible={logoutModalVisible}
+                            onDismiss={() => setLogoutModalVisible(false)}
+                            contentContainerStyle={styles.logoutModalContainer}
+                            theme={{ colors: { backdrop: theme.colors.backdrop } }}
+                        >
+                            <View style={[styles.logoutModalContent, { backgroundColor: theme.colors.surface }]}>
+                                <View style={[styles.logoutIconRing, { borderColor: 'rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(239, 68, 68, 0.05)' }]}>
+                                    <IconButton icon="logout-variant" size={32} iconColor="#ef4444" />
+                                </View>
+                                <Text style={[styles.confirmTitle, { color: theme.colors.textPrimary }]}>¿Cerrar Sesión?</Text>
+                                <Text style={[styles.confirmSubtitle, { color: theme.colors.textSecondary }]}>
+                                    Tu jornada se guardará, pero tendrás que volver a ingresar tus credenciales.
+                                </Text>
+
+                                <View style={styles.logoutActionRow}>
+                                    <TouchableOpacity
+                                        onPress={() => setLogoutModalVisible(false)}
+                                        style={[styles.logoutBtn, styles.logoutBtnCancel, { borderColor: theme.colors.outline }]}
+                                    >
+                                        <Text style={[styles.logoutBtnTextCancel, { color: theme.colors.textSecondary }]}>CANCELAR</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={logout}
+                                        activeOpacity={0.9}
+                                        style={styles.logoutBtn}
+                                    >
+                                        <LinearGradient
+                                            colors={['#ef4444', '#b91c1c']}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 0 }}
+                                            style={styles.logoutBtnGradient}
+                                        >
+                                            <Text style={styles.logoutBtnTextConfirm}>SALIR</Text>
+                                        </LinearGradient>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </Modal>
+                    </Portal>
+
+                    {/* MODAL SELECTOR (Vehículo / Ruta) - FASE 7 */}
+                    <Portal>
+                        <Modal
+                            visible={modalSelectorVisible}
+                            onDismiss={() => setModalSelectorVisible(false)}
+                            contentContainerStyle={styles.modalContainer}
+                            theme={{ colors: { backdrop: isThemeDark ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.5)' } }}
+                        >
+                            <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
+                                <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface }]}>
+                                    <LinearGradient
+                                        colors={[theme.colors.primary, theme.colors.secondary]}
+                                        style={styles.modalHeaderGradient}
+                                    />
+                                    <Text style={[styles.modalName, { color: theme.colors.textPrimary }]}>
+                                        {tipoSelector === 'vehiculo' ? 'Seleccionar Vehículo' : 'Seleccionar Ruta'}
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={[styles.closeModalButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                                        onPress={() => setModalSelectorVisible(false)}
+                                    >
+                                        <IconButton icon="close" iconColor={theme.colors.onSurfaceVariant} size={20} />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View style={styles.modalBody}>
+                                    {/* Search Input */}
+                                    <View style={[styles.searchContainer, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
+                                        <IconButton icon="magnify" iconColor={theme.colors.textSecondary} size={20} />
+                                        <TextInput
+                                            style={{
+                                                flex: 1,
+                                                padding: 8,
+                                                color: theme.colors.textPrimary,
+                                                fontSize: 14,
+                                            }}
+                                            value={searchQuery}
+                                            onChangeText={setSearchQuery}
+                                            placeholder={`Buscar ${tipoSelector === 'vehiculo' ? 'vehículo' : 'ruta'}...`}
+                                            placeholderTextColor={theme.colors.textSecondary}
+                                        />
+                                    </View>
+
+                                    {/* Lista */}
+                                    <ScrollView style={{ maxHeight: 400 }}>
+                                        {(tipoSelector === 'vehiculo' ? listaVehiculos : listaRutas)
+                                            .filter((item: any) => {
+                                                const query = searchQuery.toLowerCase();
+                                                if (tipoSelector === 'vehiculo') {
+                                                    return item.patente?.toLowerCase().includes(query) ||
+                                                        item.marca?.toLowerCase().includes(query) ||
+                                                        item.modelo?.toLowerCase().includes(query);
+                                                } else {
+                                                    return item.codigo?.toLowerCase().includes(query) ||
+                                                        item.descripcion?.toLowerCase().includes(query);
+                                                }
+                                            })
+                                            .map((item: any) => (
+                                                <TouchableOpacity
+                                                    key={item._id}
+                                                    style={[styles.selectorItem, { borderBottomColor: theme.colors.outline }]}
+                                                    onPress={() => seleccionarItem(item)}
+                                                >
+                                                    <View>
+                                                        <Text style={[styles.selectorItemTitle, { color: theme.colors.textPrimary }]}>
+                                                            {tipoSelector === 'vehiculo' ? item.patente : item.codigo}
+                                                        </Text>
+                                                        <Text style={[styles.selectorItemSubtitle, { color: theme.colors.textSecondary }]}>
+                                                            {tipoSelector === 'vehiculo'
+                                                                ? `${item.marca} ${item.modelo}`
+                                                                : item.descripcion || `Salida: ${item.horaSalida}`
+                                                            }
+                                                        </Text>
+                                                    </View>
+                                                    <IconButton icon="chevron-right" iconColor={theme.colors.textSecondary} size={20} />
+                                                </TouchableOpacity>
+                                            ))}
+                                    </ScrollView>
+                                </View>
+                            </View>
+                        </Modal>
+                    </Portal>
+                </ScrollView>
+            </SafeAreaView>
+
+            {/* ALERTA DE CONFIRMACIÓN GOD TIER */}
+            <CustomAlert
+                visible={showAlertConfirm}
+                title="¿Confirmar Asignación?"
+                message={`Vas a asignar el vehículo ${vehiculoSeleccionado?.patente?.toUpperCase()} y la ruta ${rutaSeleccionada?.codigo?.toUpperCase()}. ¿Estás seguro de continuar?`}
+                type="success"
+                confirmText="SÍ, CONFIRMAR"
+                cancelText="CANCELAR"
+                onClose={() => setShowAlertConfirm(false)}
+                onConfirm={guardarCambios}
+            />
+
+            {/* ALERTA DE RESULTADO (EXITO/ERROR) */}
+            <CustomAlert
+                visible={alertConfig.visible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                onClose={() => setAlertConfig({ ...alertConfig, visible: false })}
+            />
+        </View >
     );
 };
 
@@ -532,7 +623,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#020617',
     },
     scrollContent: {
-        paddingTop: 60, // Space for translucent status bar
+        paddingTop: 10,
         paddingBottom: 40,
         paddingHorizontal: 20,
     },
@@ -882,29 +973,25 @@ const styles = StyleSheet.create({
     },
     // FASE 7: Estilos para confirmación de cambios
     confirmButton: {
-        marginTop: 20,
-        marginBottom: 10,
-        borderRadius: 12,
+        marginTop: 5,
+        marginBottom: 5,
+        borderRadius: 15,
         overflow: 'hidden',
-        elevation: 4,
-        shadowColor: '#10b981',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
     },
     confirmGradient: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
+        paddingVertical: 16,
+        paddingHorizontal: 24,
     },
     confirmButtonText: {
         color: 'white',
-        fontWeight: 'bold',
-        marginLeft: 10,
-        fontSize: 15,
-        letterSpacing: 0.5,
+        fontWeight: '900',
+        marginLeft: 4,
+        fontSize: 16,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
     },
     infoDivider: {
         height: 1,
@@ -912,8 +999,6 @@ const styles = StyleSheet.create({
         width: '100%',
         marginVertical: 15,
     },
-    // FIXED: Eliminar duplicado, mantener solo este
-    // (Espacio reservado para modalContainer definido arriba)
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',

@@ -49,7 +49,16 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
 
     return (
         <Portal>
-            <Dialog visible={visible} onDismiss={onClose} style={[styles.dialog, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}>
+            <Dialog
+                visible={visible}
+                onDismiss={onClose}
+                style={[styles.dialog, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                theme={{
+                    colors: {
+                        backdrop: theme.dark ? 'rgba(0,0,0,0.92)' : 'rgba(0,0,0,0.8)'
+                    }
+                }}
+            >
                 <Dialog.Content style={styles.content}>
                     <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
                         <IconButton icon={getIcon()} iconColor={color} size={40} />

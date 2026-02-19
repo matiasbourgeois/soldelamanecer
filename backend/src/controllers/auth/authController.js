@@ -119,6 +119,12 @@ const login = async (req, res) => {
       const Chofer = require("../../models/Chofer");
       const choferPerfil = await Chofer.findOne({ usuario: usuario._id });
       if (choferPerfil) {
+        // 🔒 Bloqueo temporal: los contratados aún no tienen acceso a la app móvil
+        if (choferPerfil.tipoVinculo === 'contratado') {
+          return res.status(403).json({
+            error: "Su acceso a la app móvil no está habilitado aún. Comuníquese con la administración."
+          });
+        }
         datosChofer = {
           tipoContrato: choferPerfil.tipoVinculo, // Mapeamos tipoVinculo a tipoContrato para el frontend
           vehiculoAsignado: choferPerfil.vehiculoAsignado
