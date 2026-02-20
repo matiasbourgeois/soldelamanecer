@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 
 const FormularioContratado = ({ opened, onClose, contratado, recargar }) => {
     const { auth } = useContext(AuthContext);
+    const isAdmin = auth?.rol === 'admin';
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("datos");
     const [loading, setLoading] = useState(false);
@@ -32,7 +33,8 @@ const FormularioContratado = ({ opened, onClose, contratado, recargar }) => {
         email: "",
         fechaIngreso: new Date(),
         fechaEgreso: null,
-        activo: true
+        activo: true,
+        montoChoferDia: 0
     });
 
     // Documentos del legajo
@@ -47,7 +49,8 @@ const FormularioContratado = ({ opened, onClose, contratado, recargar }) => {
                 email: dc.email || contratado.usuario?.email || "",
                 fechaIngreso: dc.fechaIngreso ? new Date(dc.fechaIngreso) : new Date(),
                 fechaEgreso: dc.fechaEgreso ? new Date(dc.fechaEgreso) : null,
-                activo: contratado.activo ?? true
+                activo: contratado.activo ?? true,
+                montoChoferDia: dc.montoChoferDia || 0
             });
             setDocumentos(dc.documentos || {});
             fetchRutaAsignada(contratado._id);
@@ -440,6 +443,15 @@ const FormularioContratado = ({ opened, onClose, contratado, recargar }) => {
                                         description="Se usará para resúmenes y liquidaciones"
                                         value={formData.email}
                                         onChange={(e) => handleInputChange("email", e.target.value)}
+                                    />
+                                    <TextInput
+                                        label="Tarifa Chofer (Vehículo SDA)"
+                                        description="Monto por día si usa vehículo de la empresa"
+                                        placeholder="Ej: 15000"
+                                        type="number"
+                                        value={formData.montoChoferDia}
+                                        onChange={(e) => handleInputChange("montoChoferDia", e.target.value)}
+                                        disabled={!isAdmin}
                                     />
                                     <Select
                                         label="Estado"

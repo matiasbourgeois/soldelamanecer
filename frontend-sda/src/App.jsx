@@ -64,6 +64,10 @@ import ResultadoSeguimiento from "./modules/public/seguimiento/pages/ResultadoSe
 // Pages - Localidades
 import LocalidadesAdmin from "./modules/logistica/localidades/pages/LocalidadesAdmin";
 
+// Pages - Liquidaciones
+import LiquidacionesAdmin from "./modules/logistica/liquidaciones/pages/LiquidacionesAdmin";
+import ConformidadPublica from "./modules/logistica/liquidaciones/pages/ConformidadPublica";
+
 // Cotizador Online
 
 
@@ -106,6 +110,7 @@ function App() {
             <Route path="/cotizador-online" element={<CotizadorCordobaPage />} />
             <Route path="/servicios" element={<Servicios />} />
             <Route path="/login" element={<TransitionScreen message="Preparando su espacio..." />} />
+            <Route path="/conformidad/:token" element={<ConformidadPublica />} />
 
             {/* Rutas Protegidas y Admin */}
             <Route
@@ -155,6 +160,14 @@ function App() {
               element={
                 <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
                   <RutasAdmin />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/liquidaciones"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <LiquidacionesAdmin />
                 </ProtectedByRole>
               }
             />
@@ -322,6 +335,7 @@ function App() {
               <Route path="/cotizador-online" element={<CotizadorCordobaPage />} />
               <Route path="/seguimiento" element={<BuscarSeguimiento />} />
               <Route path="/seguimiento/resultado/:codigo" element={<ResultadoSeguimiento />} />
+              <Route path="/conformidad/:token" element={<ConformidadPublica />} />
             </Routes>
           </main>
           <Footer />

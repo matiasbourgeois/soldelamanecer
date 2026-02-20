@@ -39,6 +39,55 @@ const TabDrogueria = ({ hoja, onSaved }) => {
     const kmTotal = kmBase + (Number(form.kmExtra) || 0);
     const diferenciaCubetas = (form.cubetasSalida || 0) - (form.cubetasRetorno || 0);
 
+    // ── Lógica de Pago Estimado Contratados ───────────────────────────
+    const esContratado = hoja?.chofer?.tipoVinculo === 'contratado';
+    const vehiculo = hoja?.vehiculo;
+    const ruta = hoja?.ruta;
+
+    let calculoPago = null;
+    let tituloPago = "Pago estimado:";
+
+    // Solo calculamos si es contratado (en dependencia no cobran por ruta)
+    if (esContratado && ruta) {
+        // Vehículo SDA (no externo) = Excepción de tarifa solo-chofer
+        if (vehiculo && vehiculo.tipoPropiedad !== 'externo') {
+            const montoChofer = hoja.chofer?.datosContratado?.montoChoferDia || 0;
+            if (montoChofer > 0) {
+                tituloPago = "Tarifa Chofer (Usa auto SDA):";
+                calculoPago = (
+                    <Text fw={800} size="sm" c="cyan.8">
+                        ${montoChofer.toLocaleString('es-AR')} <Text component="span" size="xs" fw={500} c="dimmed">/ día</Text>
+                    </Text>
+                );
+            }
+        } else {
+            // Vehículo propio (Normal) - Se calcula según tipo de pago de la ruta
+            const tipoPago = ruta.tipoPago || 'por_km';
+
+            if (tipoPago === 'por_km' && ruta.precioKm > 0) {
+                calculoPago = (
+                    <Text fw={800} size="sm" c="cyan.8">
+                        ${(kmTotal * ruta.precioKm).toLocaleString('es-AR')}
+                    </Text>
+                );
+            } else if (tipoPago === 'por_distribucion' && ruta.montoPorDistribucion > 0) {
+                tituloPago = "Tarifa por Distribución:";
+                calculoPago = (
+                    <Text fw={800} size="sm" c="cyan.8">
+                        ${ruta.montoPorDistribucion.toLocaleString('es-AR')} <Text component="span" size="xs" fw={500} c="dimmed">por hoja</Text>
+                    </Text>
+                );
+            } else if (tipoPago === 'por_mes' && ruta.montoMensual > 0) {
+                tituloPago = "Tarifa Fija Mensual:";
+                calculoPago = (
+                    <Text fw={800} size="sm" c="cyan.8">
+                        ${ruta.montoMensual.toLocaleString('es-AR')} <Text component="span" size="xs" fw={500} c="dimmed">mes compl.</Text>
+                    </Text>
+                );
+            }
+        }
+    }
+
     // ── Enlace handlers ──────────────────────────────────────────────
     const agregarEnlace = () =>
         setForm(prev => ({ ...prev, horaEnlaces: [...prev.horaEnlaces, ''] }));
@@ -217,12 +266,10 @@ const TabDrogueria = ({ hoja, onSaved }) => {
                                 }
                             }}
                         />
-                        {hoja?.ruta?.precioKm > 0 && (
+                        {calculoPago && (
                             <Paper p={6} radius="sm" bg="cyan.0">
-                                <Text size="xs" c="dimmed">Pago estimado:</Text>
-                                <Text fw={800} size="sm" c="cyan.8">
-                                    ${(kmTotal * hoja.ruta.precioKm).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
-                                </Text>
+                                <Text size="xs" c="cyan.9" fw={600}>{tituloPago}</Text>
+                                {calculoPago}
                             </Paper>
                         )}
                     </Stack>

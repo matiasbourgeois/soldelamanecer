@@ -26,6 +26,9 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
     vehiculoAsignado: "",
     kilometrosEstimados: 0,
     precioKm: 0,
+    tipoPago: 'por_km',
+    montoPorDistribucion: 0,
+    montoMensual: 0,
   });
 
   const [localidadesDisponibles, setLocalidadesDisponibles] = useState([]);
@@ -293,8 +296,23 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
 
           <Paper withBorder p="md" bg="gray.0">
             <Stack gap="sm">
-              <Text fw={600} size="sm">Tarifas y distancia</Text>
-              <Group grow>
+              <Text fw={600} size="sm">Tarifas, distancia y liquidación contratados</Text>
+
+              <Select
+                label="Modelo de Pago (Contratados)"
+                placeholder="Seleccionar esquema..."
+                data={[
+                  { value: 'por_km', label: 'Por Kilómetro (km x precioKm)' },
+                  { value: 'por_distribucion', label: 'Por Distribución (monto x hojas en el mes)' },
+                  { value: 'por_mes', label: 'Tarifa Fija Mensual' }
+                ]}
+                value={formData.tipoPago}
+                onChange={(val) => handleSelectChange('tipoPago', val || 'por_km')}
+                disabled={!isAdmin}
+                description={isAdmin ? "Cómo se liquida el servicio del contratado en esta ruta" : "Solo Admin puede modificar"}
+              />
+
+              <Group grow align="flex-start">
                 <TextInput
                   label="KM Base de la ruta"
                   placeholder="Ej: 450"
@@ -303,22 +321,48 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
                   value={formData.kilometrosEstimados ?? ''}
                   onChange={handleChange}
                   disabled={!isAdmin}
-                  description={!isAdmin ? "Solo Admin puede modificar" : "KM base para liquidación de contratados"}
                 />
-                <TextInput
-                  label="Precio por KM ($)"
-                  placeholder="Ej: 150.50"
-                  name="precioKm"
-                  type="number"
-                  value={formData.precioKm ?? ''}
-                  onChange={handleChange}
-                  disabled={!isAdmin}
-                  description={!isAdmin ? "Solo Admin puede modificar" : "Tarifa base para liquidaciones"}
-                />
+
+                {formData.tipoPago === 'por_km' && (
+                  <TextInput
+                    label="Precio por KM ($)"
+                    placeholder="Ej: 150.50"
+                    name="precioKm"
+                    type="number"
+                    value={formData.precioKm ?? ''}
+                    onChange={handleChange}
+                    disabled={!isAdmin}
+                  />
+                )}
+
+                {formData.tipoPago === 'por_distribucion' && (
+                  <TextInput
+                    label="Monto por Distribución ($)"
+                    placeholder="Ej: 25000"
+                    name="montoPorDistribucion"
+                    type="number"
+                    value={formData.montoPorDistribucion ?? ''}
+                    onChange={handleChange}
+                    disabled={!isAdmin}
+                  />
+                )}
+
+                {formData.tipoPago === 'por_mes' && (
+                  <TextInput
+                    label="Monto Mensual Fijo ($)"
+                    placeholder="Ej: 500000"
+                    name="montoMensual"
+                    type="number"
+                    value={formData.montoMensual ?? ''}
+                    onChange={handleChange}
+                    disabled={!isAdmin}
+                  />
+                )}
               </Group>
-              {isAdmin && (
+
+              {isAdmin && formData.tipoPago === 'por_km' && (
                 <Text size="xs" c="dimmed">
-                  Pago diario contratado = (KM Base + KM Extra del día) × Precio/KM
+                  Pago diario = (KM Base + KM Extra del día) × Precio por KM
                 </Text>
               )}
             </Stack>

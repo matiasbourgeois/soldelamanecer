@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquidación de Viajes</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@400;500;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+        }
+
+        .page {
+            width: 100%;
+            min-height: 297mm;
+            padding: 40px 50px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.05;
+            width: 70%;
+            z-index: -1;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #0891b2;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header-title {
+            font-family: 'Montserrat', sans-serif;
+            color: #0891b2;
+            font-size: 28px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            margin: 0;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            background-color: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #0891b2;
+        }
+
+        .info-col {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .table-container {
+            margin-bottom: 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: #0891b2;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 10px 8px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 11px;
+            color: #334155;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .totals-horizontal {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 16px 30px;
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+
+        .total-item {
+            text-align: center;
+            flex: 1;
+            border-right: 1px solid #e2e8f0;
+            padding: 0 20px;
+        }
+
+        .total-item:last-child {
+            border-right: none;
+        }
+
+        .total-item .label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .total-item .value {
+            font-size: 20px;
+            font-weight: 800;
+            color: #334155;
+        }
+
+        .total-item.highlight .label {
+            color: #0891b2;
+            font-size: 12px;
+        }
+
+        .total-item.highlight .value {
+            font-size: 26px;
+            color: #0891b2;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 40px;
+            left: 50px;
+            right: 50px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        {{#if imagen_fondo}}
+        <img class="watermark" src="{{imagen_fondo}}" alt="Watermark">
+        {{/if}}
+
+        <div class="header">
+            <div>
+                <h1 class="header-title">Liquidación de Viajes</h1>
+                <div class="header-subtitle">Resumen Oficial Confidencial</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 14px; color: #0891b2; font-weight: 800; text-transform: uppercase;">
+                    {{periodoMes}}</div>
+                <div style="font-size: 12px; color: #64748b; font-weight: 600; margin-top: 4px;">{{fechaInicio}} AL
+                    {{fechaFin}}</div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-col">
+                <div class="info-label">Contratado</div>
+                <div class="info-value">{{chofer}}</div>
+                <div style="font-size: 13px; color: #64748b; margin-top: 2px;">DNI: {{dni}}</div>
+            </div>
+            <div class="info-col">
+                <div class="info-label">Período Liquidado</div>
+                <div class="info-value">{{fechaInicio}} - {{fechaFin}}</div>
+            </div>
+            <div class="info-col text-right">
+                <div class="info-label">Resumen Operativo</div>
+                <div class="info-value" style="font-size: 13px; font-weight: 600; line-height: 1.5;">
+                    <div>{{diasTrabajados}} Viajes</div>
+                    <div>{{totalKmBase}} KMs Base</div>
+                    <div>{{totalKmExtra}} KMs Extra</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Fecha</th>
+                        <th>Ruta</th>
+                        <th>Salida</th>
+                        <th style="width: 25%;">Descripción</th>
+                        <th>Vehículo</th>
+                        <th class="text-right">KMs Base</th>
+                        <th class="text-right">KMs Extra</th>
+                        <th style="width: 20%;">Observaciones</th>
+                        <th class="text-right">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each hojas}}
+                    <tr>
+                        <td style="white-space: nowrap;"><strong>{{fecha}}</strong></td>
+                        <td style="white-space: nowrap;">{{ruta}}</td>
+                        <td style="white-space: nowrap;">{{horaSalida}}</td>
+                        <td style="font-size: 10px;">{{descripcion}}</td>
+                        <td style="white-space: nowrap;">{{vehiculo}}</td>
+                        <td class="text-right">{{kmBase}}</td>
+                        <td class="text-right">{{kmExtra}}</td>
+                        <td style="font-size: 10px;">{{observaciones}}</td>
+                        <td class="text-right"><strong>{{monto}}</strong></td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="totals-horizontal">
+            <div class="total-item">
+                <div class="label">Subtotal Viajes</div>
+                <div class="value">{{montoTotalViajesFormat}}</div>
+            </div>
+            {{#if montoMesAdicional}}
+            <div class="total-item">
+                <div class="label">Tarifa Mensual</div>
+                <div class="value">{{montoMesAdicionalFormat}}</div>
+            </div>
+            {{/if}}
+            <div class="total-item highlight">
+                <div class="label">Total a Pagar</div>
+                <div class="value">{{montoTotal}}</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Este documento constituye un resumen de servicios de transporte prestados en carácter de Contratado
+            Independiente.<br>
+            Su confirmación online vía plataforma validará la conformidad de los montos aquí expresados hacia Sol del
+            Amanecer SRL.
+        </div>
+    </div>
+</body>
+
+</html>

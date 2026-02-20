@@ -169,7 +169,7 @@ export function AppLayout({ children, auth, handleLogout }) {
                             label="Gestión Operativa"
                             leftSection={<IconTruckDelivery size={20} stroke={1.5} />}
                             childrenOffset={28}
-                            defaultOpened={isParentActive(['/admin/rutas', '/admin/choferes', '/admin/vehiculos', '/admin/control-operativo'])}
+                            defaultOpened={isParentActive(['/admin/rutas', '/admin/choferes', '/admin/vehiculos', '/admin/control-operativo', '/admin/liquidaciones'])}
                             style={{ borderRadius: theme.radius.md, fontWeight: 600, color: theme.colors.gray[7] }}
                         >
                             <NavLink
@@ -191,6 +191,11 @@ export function AppLayout({ children, auth, handleLogout }) {
                                 label="Vehículos"
                                 leftSection={<IconSteeringWheel size={18} />}
                                 {...getLinkProps('/admin/vehiculos')}
+                            />
+                            <NavLink
+                                label="Liquidación de Contratados"
+                                leftSection={<IconCalculator size={18} />}
+                                {...getLinkProps('/admin/liquidaciones')}
                             />
                         </NavLink>
 

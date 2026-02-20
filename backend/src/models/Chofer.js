@@ -42,6 +42,8 @@ const ChoferSchema = new mongoose.Schema({
       default: null
     },
 
+    montoChoferDia: { type: Number, default: 0 }, // Tarifa por día cuando usa vehículo SDA
+
     // Legajo digital — documentos escaneados
     documentos: {
       dni: {

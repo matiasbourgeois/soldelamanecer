@@ -47,6 +47,13 @@ const RutaSchema = new mongoose.Schema({
   // --- STANDARD RATES & DISTANCE ---
   kilometrosEstimados: { type: Number, default: 0 },
   precioKm: { type: Number, default: 0 },
+  tipoPago: {
+    type: String,
+    enum: ['por_km', 'por_distribucion', 'por_mes'],
+    default: 'por_km'
+  },
+  montoPorDistribucion: { type: Number, default: 0 },
+  montoMensual: { type: Number, default: 0 },
 
   activa: { type: Boolean, default: true }
 }, { timestamps: true });

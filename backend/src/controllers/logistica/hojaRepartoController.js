@@ -830,7 +830,7 @@ const generarHojasAutomaticas = async (fechaReferencia, esFeriadoNacional = fals
 const actualizarHoja = async (req, res) => {
     try {
         const { id } = req.params;
-        const { chofer, vehiculo } = req.body;
+        const { chofer, vehiculo, ruta } = req.body;
 
         // Obtener hoja original para comparar cambios
         const hojaOriginal = await HojaReparto.findById(id)
@@ -838,6 +838,36 @@ const actualizarHoja = async (req, res) => {
             .populate({ path: "ruta", populate: { path: "choferAsignado vehiculoAsignado" } });
 
         if (!hojaOriginal) return res.status(404).json({ error: "Hoja no encontrada" });
+
+        // ─── CAMBIO DE RUTA → Validación de Unicidad "Regla de Oro" ───
+        if (ruta && ruta.toString() !== hojaOriginal.ruta?._id?.toString()) {
+            const inicioDia = new Date(hojaOriginal.fecha);
+            inicioDia.setHours(0, 0, 0, 0);
+            const finDia = new Date(hojaOriginal.fecha);
+            finDia.setHours(23, 59, 59, 999);
+
+            const existeOtra = await HojaReparto.findOne({
+                _id: { $ne: hojaOriginal._id },
+                ruta: ruta,
+                fecha: { $gte: inicioDia, $lte: finDia }
+            });
+
+            if (existeOtra) {
+                return res.status(400).json({
+                    error: `No se puede asignar esta ruta. Ya existe otra hoja (${existeOtra.numeroHoja || 'Pendiente'}) para la misma ruta en este día.`
+                });
+            }
+
+            const Ruta = require("../../models/Ruta");
+            const rutaVieja = hojaOriginal.ruta?.codigo || 'Otra';
+            const rutaNuevaDoc = await Ruta.findById(ruta);
+            const rutaNueva = rutaNuevaDoc?.codigo || ruta;
+
+            hojaOriginal.historialMovimientos.push({
+                usuario: req.usuario?.id || null,
+                accion: `[WEB] Ruta cambiada por Administrativo: "${rutaVieja}" → "${rutaNueva}"`
+            });
+        }
 
         // ─── CAMBIO DE CHOFER → Auditoría + Admin Supremacy ──────────────────
         const choferAnteriorId = hojaOriginal.chofer?._id?.toString() || hojaOriginal.chofer?.toString();
