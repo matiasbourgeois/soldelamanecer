@@ -38,7 +38,11 @@ import {
     Bell as IconBell,
     AlertTriangle as IconAlertTriangle,
     UserCheck as IconUserCheck,
-    Gamepad2
+    Gamepad2,
+    Briefcase as IconBriefcase,
+    Banknote as IconBanknote,
+    Shield as IconShield,
+    MapPin as IconMapPin
 } from 'lucide-react';
 import { apiSistema, apiUsuarios, apiEstaticos } from '../../core/api/apiSistema';
 import clienteAxios from '../../core/api/clienteAxios';
@@ -111,6 +115,7 @@ export function AppLayout({ children, auth, handleLogout }) {
     const renderNavItems = () => {
         return (
             <Box px="md">
+                {/* ─── PRINCIPAL ─── */}
                 <Text size="xs" fw={700} c="dimmed" mb="xs" pl={4} tt="uppercase" style={{ letterSpacing: 1 }}>
                     Principal
                 </Text>
@@ -122,8 +127,6 @@ export function AppLayout({ children, auth, handleLogout }) {
                     {...getLinkProps('/perfil')}
                 />
 
-
-
                 <NavLink
                     label="Seguimiento de Envíos"
                     leftSection={<IconPackage size={20} stroke={1.5} />}
@@ -132,18 +135,14 @@ export function AppLayout({ children, auth, handleLogout }) {
                 />
 
                 <NavLink
-                    label="Cotizador Online de Cargas Dedicadas"
+                    label="Cotizador Online"
                     leftSection={<IconCalculator size={20} stroke={1.5} />}
                     component="a"
                     href="https://cotizadorlogistico.site/"
                     target="_blank"
                     variant="subtle"
                     color="cyan"
-                    style={{
-                        borderRadius: theme.radius.md,
-                        marginBottom: 4,
-                        fontWeight: 500,
-                    }}
+                    style={{ borderRadius: theme.radius.md, marginBottom: 4, fontWeight: 500 }}
                 />
 
                 {/* ROLE: CLIENTE */}
@@ -156,60 +155,18 @@ export function AppLayout({ children, auth, handleLogout }) {
                     />
                 )}
 
-                {/* SECCIÓN ADMINISTRACIÓN */}
+                {/* ─── SECCIÓN DE ADMINISTRACIÓN Y GESTIÓN ─── */}
                 {['admin', 'administrativo'].includes(auth?.rol) && (
                     <>
                         <Divider my="md" color="gray.2" />
+
+                        {/* DOMINIO: LOGÍSTICA & TRÁFICO */}
                         <Text size="xs" fw={700} c="dimmed" mb="xs" pl={4} tt="uppercase" style={{ letterSpacing: 1 }}>
-                            Gestión
+                            Logística & Tráfico
                         </Text>
 
-                        {/* Grupo Operativo */}
                         <NavLink
-                            label="Gestión Operativa"
-                            leftSection={<IconTruckDelivery size={20} stroke={1.5} />}
-                            childrenOffset={28}
-                            defaultOpened={isParentActive(['/admin/rutas', '/admin/choferes', '/admin/vehiculos', '/admin/control-operativo', '/admin/liquidaciones'])}
-                            style={{ borderRadius: theme.radius.md, fontWeight: 600, color: theme.colors.gray[7] }}
-                        >
-                            <NavLink
-                                label="Control Operativo Diario"
-                                leftSection={<IconSteeringWheel size={18} />}
-                                {...getLinkProps('/admin/control-operativo')}
-                            />
-                            <NavLink
-                                label="Rutas"
-                                leftSection={<IconMapRoute size={18} />}
-                                {...getLinkProps('/admin/rutas')}
-                            />
-                            <NavLink
-                                label="Choferes"
-                                leftSection={<IconUsers size={18} />}
-                                {...getLinkProps('/admin/choferes')}
-                            />
-                            <NavLink
-                                label="Vehículos"
-                                leftSection={<IconSteeringWheel size={18} />}
-                                {...getLinkProps('/admin/vehiculos')}
-                            />
-                            <NavLink
-                                label="Liquidación de Contratados"
-                                leftSection={<IconCalculator size={18} />}
-                                {...getLinkProps('/admin/liquidaciones')}
-                            />
-                        </NavLink>
-
-                        {/* Mantenimiento (NUEVO) */}
-                        <NavLink
-                            label="Mantenimiento Vehículos"
-                            leftSection={<IconCalculator size={20} stroke={1.5} />}
-                            rightSection={isActive('/admin/mantenimiento') && <IconChevronRight size={14} />}
-                            {...getLinkProps('/admin/mantenimiento')}
-                        />
-
-                        {/* Grupo Envíos */}
-                        <NavLink
-                            label="Gestión de Envíos"
+                            label="Gestión de Cargas"
                             leftSection={<IconPackage size={20} stroke={1.5} />}
                             childrenOffset={28}
                             defaultOpened={isParentActive(['/envios/gestion', '/hojas-reparto'])}
@@ -227,15 +184,91 @@ export function AppLayout({ children, auth, handleLogout }) {
                             />
                         </NavLink>
 
-                        {/* Contratados Externos */}
                         <NavLink
-                            label="Contratados"
-                            leftSection={<IconUserCheck size={20} stroke={1.5} />}
-                            rightSection={isActive('/admin/contratados') && <IconChevronRight size={14} />}
-                            {...getLinkProps('/admin/contratados')}
-                        />
+                            label="Distribución"
+                            leftSection={<IconMapRoute size={20} stroke={1.5} />}
+                            childrenOffset={28}
+                            defaultOpened={isParentActive(['/admin/rutas', '/admin/control-operativo'])}
+                            style={{ borderRadius: theme.radius.md, fontWeight: 600, color: theme.colors.gray[7] }}
+                        >
+                            <NavLink
+                                label="Rutas"
+                                leftSection={<IconMapPin size={18} />}
+                                {...getLinkProps('/admin/rutas')}
+                            />
+                            <NavLink
+                                label="Control Operativo"
+                                leftSection={<IconSteeringWheel size={18} />}
+                                {...getLinkProps('/admin/control-operativo')}
+                            />
+                        </NavLink>
 
-                        {/* Reportes */}
+                        <Divider my="md" color="gray.2" />
+
+                        {/* DOMINIO: RECURSOS & ACTIVOS */}
+                        <Text size="xs" fw={700} c="dimmed" mb="xs" pl={4} tt="uppercase" style={{ letterSpacing: 1 }}>
+                            Recursos & Activos
+                        </Text>
+
+                        <NavLink
+                            label="Flota Vehicular"
+                            leftSection={<IconTruckDelivery size={20} stroke={1.5} />}
+                            childrenOffset={28}
+                            defaultOpened={isParentActive(['/admin/vehiculos', '/admin/mantenimiento'])}
+                            style={{ borderRadius: theme.radius.md, fontWeight: 600, color: theme.colors.gray[7] }}
+                        >
+                            <NavLink
+                                label="Vehículos"
+                                leftSection={<IconTruckDelivery size={18} />}
+                                {...getLinkProps('/admin/vehiculos')}
+                            />
+                            <NavLink
+                                label="Mantenimiento"
+                                leftSection={<IconTool size={18} />}
+                                {...getLinkProps('/admin/mantenimiento')}
+                            />
+                        </NavLink>
+
+                        <NavLink
+                            label="Personal y Contratistas"
+                            leftSection={<IconUsers size={20} stroke={1.5} />}
+                            childrenOffset={28}
+                            defaultOpened={isParentActive(['/admin/choferes', '/admin/contratados'])}
+                            style={{ borderRadius: theme.radius.md, fontWeight: 600, color: theme.colors.gray[7] }}
+                        >
+                            <NavLink
+                                label="Choferes"
+                                leftSection={<IconUsers size={18} />}
+                                {...getLinkProps('/admin/choferes')}
+                            />
+                            <NavLink
+                                label="Contratados Externos"
+                                leftSection={<IconUserCheck size={18} />}
+                                {...getLinkProps('/admin/contratados')}
+                            />
+                        </NavLink>
+
+                        <Divider my="md" color="gray.2" />
+
+                        {/* DOMINIO: ADMINISTRACIÓN Y ANALÍTICA */}
+                        <Text size="xs" fw={700} c="dimmed" mb="xs" pl={4} tt="uppercase" style={{ letterSpacing: 1 }}>
+                            Administración
+                        </Text>
+
+                        <NavLink
+                            label="Finanzas y Pagos"
+                            leftSection={<IconBanknote size={20} stroke={1.5} />}
+                            childrenOffset={28}
+                            defaultOpened={isParentActive(['/admin/liquidaciones'])}
+                            style={{ borderRadius: theme.radius.md, fontWeight: 600, color: theme.colors.gray[7] }}
+                        >
+                            <NavLink
+                                label="Liquidación Contratados"
+                                leftSection={<IconCalculator size={18} />}
+                                {...getLinkProps('/admin/liquidaciones')}
+                            />
+                        </NavLink>
+
                         <NavLink
                             label="Reportes y Métricas"
                             leftSection={<IconChartBar size={20} stroke={1.5} />}
@@ -245,21 +278,25 @@ export function AppLayout({ children, auth, handleLogout }) {
                     </>
                 )}
 
-                {/* SECCIÓN ADMIN SYSTEM */}
+                {/* ─── DOMINIO: SISTEMA (Solo Admin) ─── */}
                 {auth?.rol === 'admin' && (
                     <>
                         <Divider my="md" color="gray.2" />
+                        <Text size="xs" fw={700} c="dimmed" mb="xs" pl={4} tt="uppercase" style={{ letterSpacing: 1 }}>
+                            Sistema
+                        </Text>
+
                         <NavLink
-                            label="Juegos"
+                            label="Usuarios del Sistema"
+                            leftSection={<IconShield size={20} stroke={1.5} />}
+                            rightSection={isActive('/admin/usuarios') && <IconChevronRight size={14} />}
+                            {...getLinkProps('/admin/usuarios')}
+                        />
+                        <NavLink
+                            label="Juegos y Easter Eggs"
                             leftSection={<Gamepad2 size={20} stroke={1.5} />}
                             rightSection={isActive('/admin/juegos') && <IconChevronRight size={14} />}
                             {...getLinkProps('/admin/juegos')}
-                        />
-                        <NavLink
-                            label="Usuarios del Sistema"
-                            leftSection={<IconUsers size={20} stroke={1.5} />}
-                            rightSection={isActive('/admin/usuarios') && <IconChevronRight size={14} />}
-                            {...getLinkProps('/admin/usuarios')}
                         />
                     </>
                 )}

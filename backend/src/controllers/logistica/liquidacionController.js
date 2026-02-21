@@ -9,12 +9,29 @@ const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
     const fnFin = new Date(fechaFin);
     fnFin.setHours(23, 59, 59, 999);
 
-    // Buscar Hojas del periodo
-    const hojas = await HojaReparto.find({
-        chofer: choferId,
+    // Buscar Hojas del periodo donde:
+    // - chofer == choferId (el titular maneja él mismo)
+    // - O bien la ruta tiene contratistaTitular == choferId (el titular es dueño pero otro maneja)
+    const Ruta = require("../../models/Ruta");
+    const rutasComoTitular = await Ruta.find({ contratistaTitular: choferId }).lean();
+    const idsRutasComoTitular = rutasComoTitular.map(r => r._id);
+
+    // FIX: Para las rutas donde el chofer maneja, NO debe haber otro contratista titular
+    const rutasConOtroTitular = await Ruta.find({
+        contratistaTitular: { $ne: null, $ne: choferId }
+    }).lean();
+    const idsRutasConOtroTitular = rutasConOtroTitular.map(r => r._id);
+
+    const queryHojas = {
         fecha: { $gte: fnInicio, $lte: fnFin },
-        estado: { $ne: 'pendiente' } // Solo hojas confirmadas/cerradas
-    }).populate('ruta vehiculo');
+        estado: { $ne: 'pendiente' }, // Solo hojas confirmadas/cerradas
+        $or: [
+            { chofer: choferId, ruta: { $nin: idsRutasConOtroTitular } },  // Maneja él mismo y la ruta no es de otro
+            { ruta: { $in: idsRutasComoTitular } }                         // Es el titular de la ruta aunque maneje otro
+        ]
+    };
+
+    const hojas = await HojaReparto.find(queryHojas).populate('ruta vehiculo');
 
     if (hojas.length === 0) return { hojasValidas: [], totales: null };
 

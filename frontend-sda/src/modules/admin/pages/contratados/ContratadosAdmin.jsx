@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
     Container, Paper, Title, Group, Button, TextInput, Stack, Text,
-    Badge, ActionIcon, Tooltip, Loader, Center, ThemeIcon, Alert, Anchor, Pagination
+    Badge, ActionIcon, Tooltip, Loader, Center, ThemeIcon, Alert, Anchor, Pagination, SimpleGrid
 } from "@mantine/core";
 import {
     Plus, Search, Truck, MapPin, Phone, Mail, User, Trash2, Pencil,
@@ -14,6 +14,14 @@ import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
 import { confirmarAccion } from "../../../../core/utils/confirmarAccion.jsx";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
+
+const getTarifaTexto = (ruta) => {
+    if (!ruta) return null;
+    if (ruta.tipoPago === 'por_distribucion' && ruta.montoPorDistribucion > 0) return { monto: ruta.montoPorDistribucion, sufijo: '/ vuelta' };
+    if (ruta.tipoPago === 'por_mes' && ruta.montoMensual > 0) return { monto: ruta.montoMensual, sufijo: '/ mes' };
+    if (ruta.precioKm > 0) return { monto: ruta.precioKm, sufijo: '/ km' };
+    return null;
+};
 
 const ContratadosAdmin = () => {
     const [contratados, setContratados] = useState([]);
@@ -40,12 +48,29 @@ const ContratadosAdmin = () => {
             if (dataContratados.totalPaginas !== undefined) {
                 setTotalPaginas(dataContratados.totalPaginas);
             }
-            // Construir mapa: choferID → ruta
+            // Construir mapa: choferID → [ruta1, ruta2, ...]
+            // Soporta tanto rutas propias (choferAsignado) como rutas de las que es titular (contratistaTitular)
             const rutas = dataRutas.rutas || dataRutas.resultados || [];
             const mapa = {};
             rutas.forEach(r => {
                 const choferId = r.choferAsignado?._id || r.choferAsignado;
-                if (choferId) mapa[choferId] = r;
+                const titularId = r.contratistaTitular?._id || r.contratistaTitular;
+
+                // Agregar a la lista del chofer asignado (quien maneja)
+                if (choferId) {
+                    if (!mapa[choferId]) mapa[choferId] = [];
+                    // Usar toString() para comparar ObjectIds de Mongoose correctamente
+                    if (!mapa[choferId].some(x => x._id?.toString() === r._id?.toString())) {
+                        mapa[choferId].push(r);
+                    }
+                }
+                // Si hay un titular distinto, agregar también a su lista
+                if (titularId && titularId !== choferId) {
+                    if (!mapa[titularId]) mapa[titularId] = [];
+                    if (!mapa[titularId].some(x => x._id?.toString() === r._id?.toString())) {
+                        mapa[titularId].push(r);
+                    }
+                }
             });
             setRutasMap(mapa);
         } catch (error) {
@@ -162,111 +187,151 @@ const ContratadosAdmin = () => {
                             const razonSocial = c.datosContratado?.razonSocial;
                             const cuit = c.datosContratado?.cuit;
                             const email = c.datosContratado?.email || c.usuario?.email;
-                            // Datos desde la ruta asignada (fuente de verdad operativa)
-                            const ruta = rutasMap[c._id];
-                            const vehiculo = ruta?.vehiculoAsignado;
+                            // En este ERP, la configuración base de un contratado (vehículo titular y tarifa)
+                            // reside en sus Rutas Maestras asignadas.
+                            const rutasDelChofer = rutasMap[c._id] || [];
+                            // Para rétulos de tarjeta simple, usar la primera con vehículo o la primera disponible
+                            const rutaPrincipal = rutasDelChofer.find(r => r.vehiculoAsignado) || rutasDelChofer[0] || null;
+                            const vehiculo = rutaPrincipal?.vehiculoAsignado || null;
+                            const esContratista = rutasDelChofer.length > 1;
 
                             return (
-                                <Paper key={c._id} withBorder p="md" radius="md" className="hover-shadow"
-                                    style={{ transition: "box-shadow 0.2s" }}>
-                                    <Group justify="space-between" wrap="nowrap" align="center">
-                                        <Group gap="xl" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                                <Paper key={c._id} withBorder p="md" radius="md" className="hover-shadow" style={{ transition: "box-shadow 0.2s" }}>
+                                    <SimpleGrid cols={{ base: 1, lg: 5 }} spacing="xl" verticalSpacing="sm" align="center">
 
-                                            {/* Nombre / Razón Social */}
-                                            <Stack gap={0} style={{ minWidth: 200 }}>
-                                                <Group gap="xs" mb={4}>
-                                                    <Text fw={800} size="md" c={c.activo ? "dark.6" : "gray.5"} lineClamp={1}>
-                                                        {razonSocial || nombre}
-                                                    </Text>
-                                                    {!c.activo && <Badge size="9px" color="gray" variant="filled">INACTIVO</Badge>}
-                                                </Group>
-                                                {razonSocial && (
-                                                    <Text size="xs" c="dimmed" lineClamp={1}>
-                                                        {nombre}
-                                                    </Text>
-                                                )}
-                                                <Text size="xs" c="dimmed" ff="monospace" mt={2}>
-                                                    {cuit ? `CUIT: ${cuit}` : "Sin CUIT"}
+                                        {/* Columna 1: Nombre / Razón Social y Roles */}
+                                        <Stack gap={2}>
+                                            <Group gap="xs" mb={0}>
+                                                <Text fw={800} size="md" c={c.activo ? "dark.6" : "gray.5"} lineClamp={1}>
+                                                    {razonSocial || nombre}
                                                 </Text>
-                                            </Stack>
+                                                {!c.activo && <Badge size="9px" color="gray" variant="filled">INACTIVO</Badge>}
+                                            </Group>
+                                            {razonSocial && (
+                                                <Text size="xs" c="dimmed" lineClamp={1}>
+                                                    {nombre}
+                                                </Text>
+                                            )}
+                                            <Text size="xs" c="dimmed" ff="monospace" mt={2} mb={4}>
+                                                {cuit ? `CUIT: ${cuit}` : "Sin CUIT"}
+                                            </Text>
 
-                                            <Divider orientation="vertical" />
-
-                                            {/* Vehículo y Ruta */}
-                                            <Stack gap={4} style={{ minWidth: 150 }}>
-                                                <Group gap={6}>
-                                                    <Truck size={14} color="gray" />
-                                                    <Text size="xs" fw={700} c="dark.6" lineClamp={1}>
-                                                        {vehiculo ? `${vehiculo.patente} (${vehiculo.marca})` : "Sin vehículo"}
-                                                    </Text>
-                                                    {vehiculo && (
-                                                        <Text size="10px" fw={700} c="gray.5" tt="uppercase">
-                                                            [{vehiculo.tipoPropiedad === "externo" ? "EXT" : "SDA"}]
-                                                        </Text>
-                                                    )}
+                                            {esContratista && (
+                                                <Group gap={6} mt={2}>
+                                                    <Badge size="xs" color="cyan" variant="filled" radius="sm">CONTRATISTA</Badge>
+                                                    <Text size="10px" fw={700} c="cyan.7">{rutasDelChofer.length} líneas asig.</Text>
                                                 </Group>
-                                                <Group gap={6}>
-                                                    <MapPin size={14} color="gray" />
-                                                    <Text size="xs" fw={500} c="dimmed" lineClamp={1}>
-                                                        {ruta ? `Ruta: ${ruta.codigo}` : "Sin ruta"}
-                                                    </Text>
-                                                </Group>
-                                            </Stack>
-
-                                            <Divider orientation="vertical" />
-
-                                            {/* Tarifa y Legajo */}
-                                            <Stack gap={4} style={{ minWidth: 150 }}>
-                                                <Group gap={6}>
-                                                    <FileText size={14} color="gray" />
-                                                    {ruta?.precioKm > 0 ? (
-                                                        <Text size="xs" fw={800} c="dark.6">
-                                                            $ {ruta.precioKm} <span style={{ fontWeight: 500, color: 'var(--mantine-color-gray-5)' }}>/ km</span>
-                                                        </Text>
-                                                    ) : (
-                                                        <Text size="xs" fw={500} c="dimmed">Sin tarifa</Text>
-                                                    )}
-                                                </Group>
-                                                <Group gap={6}>
-                                                    {badge.icon}
-                                                    <Text size="xs" fw={600} c={badge.color}>
-                                                        {badge.label}
+                                            )}
+                                            {rutaPrincipal?.contratistaTitular && rutaPrincipal.contratistaTitular._id !== c._id && (
+                                                <Group gap={4} mt={2}>
+                                                    <Badge size="xs" color="gray" variant="light" radius="sm">SUBCONTRATADO</Badge>
+                                                    <Text size="10px" c="dimmed">
+                                                        de {rutaPrincipal.contratistaTitular.usuario?.nombre} {rutaPrincipal.contratistaTitular.usuario?.apellido || ''}
                                                     </Text>
                                                 </Group>
+                                            )}
+                                        </Stack>
+
+                                        {/* Columna 2 y 3: Rutas y Tarifas Unificadas */}
+                                        <div style={{ gridColumn: 'span 2' }}>
+                                            <Stack gap={6}>
+                                                <Text size="10px" c="dimmed" tt="uppercase" fw={800} ls={0.5}>Líneas y Tarifas</Text>
+                                                {esContratista ? (
+                                                    <Stack gap={4}>
+                                                        {rutasDelChofer.map(r => {
+                                                            const tarifaInfo = getTarifaTexto(r);
+                                                            return (
+                                                                <Group justify="space-between" key={r._id} gap="sm" wrap="nowrap" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)', paddingBottom: 4 }}>
+                                                                    <Group gap={5} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                                                                        <Truck size={12} color="var(--mantine-color-gray-5)" style={{ flexShrink: 0 }} />
+                                                                        <Text size="xs" c="dark.5" lineClamp={1}>
+                                                                            <span style={{ fontWeight: 700 }}>{r.codigo}</span>
+                                                                            {r.vehiculoAsignado && ` · ${r.vehiculoAsignado.patente}`}
+                                                                        </Text>
+                                                                    </Group>
+                                                                    <Text size="xs" fw={700} c="dark.6" style={{ whiteSpace: 'nowrap' }}>
+                                                                        {tarifaInfo
+                                                                            ? <span>${tarifaInfo.monto} <span style={{ fontWeight: 400, color: 'var(--mantine-color-gray-5)' }}>{tarifaInfo.sufijo}</span></span>
+                                                                            : <span style={{ fontWeight: 400, color: 'var(--mantine-color-gray-5)' }}>—</span>
+                                                                        }
+                                                                    </Text>
+                                                                </Group>
+                                                            );
+                                                        })}
+                                                    </Stack>
+                                                ) : (
+                                                    <Stack gap={4}>
+                                                        {rutaPrincipal ? (
+                                                            <Group justify="space-between" gap="sm" wrap="nowrap" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)', paddingBottom: 4 }}>
+                                                                <Group gap={5} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                                                                    <Truck size={12} color="var(--mantine-color-gray-5)" style={{ flexShrink: 0 }} />
+                                                                    <Text size="xs" c="dark.5" lineClamp={1}>
+                                                                        <span style={{ fontWeight: 700 }}>{rutaPrincipal.codigo}</span>
+                                                                        {vehiculo && ` · ${vehiculo.patente}`}
+                                                                    </Text>
+                                                                </Group>
+                                                                {(() => {
+                                                                    const tarifaInfo = getTarifaTexto(rutaPrincipal);
+                                                                    return tarifaInfo ? (
+                                                                        <Text size="xs" fw={800} c="dark.6" style={{ whiteSpace: 'nowrap' }}>
+                                                                            ${tarifaInfo.monto} <span style={{ fontWeight: 500, color: 'var(--mantine-color-gray-5)' }}>{tarifaInfo.sufijo}</span>
+                                                                        </Text>
+                                                                    ) : (
+                                                                        <Text size="xs" fw={500} c="dimmed">Sin tarifa</Text>
+                                                                    );
+                                                                })()}
+                                                            </Group>
+                                                        ) : (
+                                                            <Text size="xs" c="dimmed">Sin ruta asignada</Text>
+                                                        )}
+                                                    </Stack>
+                                                )}
                                             </Stack>
+                                        </div>
 
-                                            <Divider orientation="vertical" />
+                                        {/* Columna 4: Documentación */}
+                                        <Stack gap={4} justify="center">
+                                            <Text size="10px" c="dimmed" tt="uppercase" fw={800} ls={0.5} mb={2}>Documentación</Text>
+                                            <Group gap={6}>
+                                                {badge.icon}
+                                                <Text size="xs" fw={600} c={badge.color}>
+                                                    {badge.label}
+                                                </Text>
+                                            </Group>
+                                        </Stack>
 
-                                            {/* Contacto */}
-                                            <Stack gap={4} style={{ minWidth: 140 }} visibleFrom="lg">
+                                        {/* Columna 5: Contacto y Acción */}
+                                        <Group justify="space-between" align="center" wrap="nowrap" h="100%" style={{ width: '100%' }}>
+                                            <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
                                                 {email && (
-                                                    <Group gap={5}>
-                                                        <Mail size={13} color="var(--mantine-color-gray-5)" />
-                                                        <Text size="xs" c="dark.4" fw={500} lineClamp={1}>{email}</Text>
+                                                    <Group gap={5} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                                                        <Mail size={13} color="var(--mantine-color-gray-5)" style={{ flexShrink: 0 }} />
+                                                        <Text size="xs" c="dark.4" fw={500} lineClamp={1} ta="left" style={{ flex: 1, minWidth: 0 }}>{email}</Text>
                                                     </Group>
                                                 )}
                                                 {c.datosContratado?.fechaIngreso && (
-                                                    <Group gap={5}>
-                                                        <Calendar size={13} color="var(--mantine-color-gray-5)" />
-                                                        <Text size="xs" c="dark.4" fw={500}>
+                                                    <Group gap={5} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                                                        <Calendar size={13} color="var(--mantine-color-gray-5)" style={{ flexShrink: 0 }} />
+                                                        <Text size="xs" c="dark.4" fw={500} lineClamp={1} ta="left" style={{ flex: 1, minWidth: 0 }}>
                                                             Desde {dayjs(c.datosContratado.fechaIngreso).format("DD/MM/YYYY")}
                                                         </Text>
                                                     </Group>
                                                 )}
                                             </Stack>
-                                        </Group>
 
-                                        {/* Acciones */}
-                                        <ActionIcon
-                                            variant="light"
-                                            color="gray"
-                                            size="lg"
-                                            radius="md"
-                                            onClick={() => handleEditar(c)}
-                                        >
-                                            <ArrowRight size={18} />
-                                        </ActionIcon>
-                                    </Group>
+                                            {/* Acción principal (Editar) alineada a la derecha y centrada */}
+                                            <ActionIcon
+                                                variant="light"
+                                                color="gray"
+                                                size="lg"
+                                                radius="md"
+                                                onClick={() => handleEditar(c)}
+                                                style={{ flexShrink: 0 }}
+                                            >
+                                                <ArrowRight size={18} />
+                                            </ActionIcon>
+                                        </Group>
+                                    </SimpleGrid>
                                 </Paper>
                             );
                         }) : (

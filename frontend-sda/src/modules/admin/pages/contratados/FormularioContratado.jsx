@@ -24,7 +24,7 @@ const FormularioContratado = ({ opened, onClose, contratado, recargar }) => {
     const [activeTab, setActiveTab] = useState("datos");
     const [loading, setLoading] = useState(false);
     const [loadingRuta, setLoadingRuta] = useState(false);
-    const [rutaAsignada, setRutaAsignada] = useState(null); // Ruta operativa desde el sistema
+    const [rutasAsignadas, setRutasAsignadas] = useState([]); // Rutas operativas (puede ser más de una)
 
     // Datos del formulario — solo datosContratado editables (no vehículo ni ruta)
     const [formData, setFormData] = useState({
@@ -57,20 +57,23 @@ const FormularioContratado = ({ opened, onClose, contratado, recargar }) => {
         }
     }, [contratado]);
 
-    // Buscar la ruta que tiene asignado a este contratado como choferAsignado
+    // Buscar todas las rutas donde este contratado es choferAsignado o contratistaTitular
     const fetchRutaAsignada = async (choferID) => {
         setLoadingRuta(true);
         try {
             const token = localStorage.getItem("token");
-            const { data } = await axios.get(apiSistema("/rutas"), {
+            const { data } = await axios.get(apiSistema("/rutas?limite=200&pagina=0"), {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const rutas = Array.isArray(data) ? data : (data.rutas || data.resultados || []);
-            const ruta = rutas.find(r =>
+            // Incluir rutas donde es el chofer directo O el titular
+            const misRutas = rutas.filter(r =>
                 r.choferAsignado?._id === choferID ||
-                r.choferAsignado === choferID
+                r.choferAsignado === choferID ||
+                r.contratistaTitular?._id === choferID ||
+                r.contratistaTitular === choferID
             );
-            setRutaAsignada(ruta || null);
+            setRutasAsignadas(misRutas);
         } catch (error) {
             console.error("No se pudo cargar la ruta asignada:", error);
         } finally {
@@ -198,7 +201,7 @@ const FormularioContratado = ({ opened, onClose, contratado, recargar }) => {
             return <Center py="xl"><Loader color="cyan" type="dots" /></Center>;
         }
 
-        if (!rutaAsignada) {
+        if (rutasAsignadas.length === 0) {
             return (
                 <Stack gap="md">
                     <Alert
@@ -276,100 +279,116 @@ const FormularioContratado = ({ opened, onClose, contratado, recargar }) => {
             );
         }
 
-        // Tiene ruta asignada → mostrar info
-        const veh = rutaAsignada.vehiculoAsignado;
+        // Tiene rutas asignadas → mostrar tarjetas por cada ruta
         return (
             <Stack gap="md">
                 <Alert
                     icon={<IconCheck size={16} />}
                     color="teal"
                     variant="light"
-                    title="Asignación operativa activa"
+                    title={rutasAsignadas.length > 1 ? `${rutasAsignadas.length} líneas activas` : "Asignación operativa activa"}
                     radius="md"
                     styles={{ title: { fontWeight: 700 } }}
                 >
-                    Este contratado está asignado a la ruta <strong>{rutaAsignada.codigo}</strong>.
+                    {rutasAsignadas.length > 1
+                        ? `Este contratado gestiona ${rutasAsignadas.length} rutas en el sistema.`
+                        : `Este contratado está asignado a la ruta `}
+                    {rutasAsignadas.length === 1 && <strong>{rutasAsignadas[0].codigo}</strong>}
+                    {rutasAsignadas.length > 1 && (
+                        <Badge ml={6} size="xs" color="indigo" variant="filled">CONTRATISTA</Badge>
+                    )}
                 </Alert>
 
-                <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-                    {/* Ruta */}
-                    <Paper withBorder p="md" radius="md" ta="center" bg="indigo.0">
-                        <IconRoute size={28} color="var(--mantine-color-indigo-6)" style={{ marginBottom: 4 }} />
-                        <Text size="xs" c="indigo" fw={700} tt="uppercase">Ruta Asignada</Text>
-                        <Text fw={800} size="lg" c="indigo.8">{rutaAsignada.codigo}</Text>
-                        {rutaAsignada.descripcion && (
-                            <Text size="xs" c="dimmed" mt={2}>{rutaAsignada.descripcion}</Text>
-                        )}
-                    </Paper>
+                {rutasAsignadas.map(rutaItem => {
+                    const veh = rutaItem.vehiculoAsignado;
+                    return (
+                        <Paper key={rutaItem._id} withBorder p="md" radius="md" style={{ borderColor: 'var(--mantine-color-gray-3)' }}>
+                            <Group justify="space-between" mb="xs">
+                                <Group gap="xs">
+                                    <ThemeIcon color="indigo" variant="light" size="sm" radius="md">
+                                        <IconRoute size={14} />
+                                    </ThemeIcon>
+                                    <Text fw={800} size="sm" c="dark.7">{rutaItem.codigo}</Text>
+                                    {rutaItem.choferAsignado && rutaItem.choferAsignado._id !== contratado?._id && (
+                                        <Badge size="xs" color="gray" variant="light">
+                                            Manejado por: {rutaItem.choferAsignado.usuario?.nombre} {rutaItem.choferAsignado.usuario?.apellido || ''}
+                                        </Badge>
+                                    )}
+                                </Group>
+                                {rutaItem.descripcion && (
+                                    <Text size="xs" c="dimmed" fs="italic" lineClamp={1} style={{ flex: 1, textAlign: 'right' }}>
+                                        {rutaItem.descripcion}
+                                    </Text>
+                                )}
+                            </Group>
 
-                    {/* Vehículo */}
-                    <Paper withBorder p="md" radius="md" ta="center" bg={veh ? "cyan.0" : "gray.0"}>
-                        <IconTruck size={28} color={veh ? "var(--mantine-color-cyan-6)" : "#ccc"} style={{ marginBottom: 4 }} />
-                        <Text size="xs" c="cyan" fw={700} tt="uppercase">Vehículo en Ruta</Text>
-                        {veh ? (
-                            <>
-                                <Text fw={800} size="lg" c="cyan.8" ff="monospace">{veh.patente}</Text>
-                                <Text size="xs" c="dimmed">{veh.marca} {veh.modelo}</Text>
-                                <Badge
-                                    variant="light"
-                                    color={veh.tipoPropiedad === "externo" ? "orange" : "blue"}
-                                    size="xs"
-                                    mt={4}
-                                >
-                                    {veh.tipoPropiedad === "externo" ? "Externo" : "Propio SDA"}
-                                </Badge>
-                            </>
-                        ) : (
-                            <Text size="sm" c="dimmed" mt={4}>Sin vehículo asignado</Text>
-                        )}
-                    </Paper>
+                            <Divider mb="sm" color="gray.2" />
 
-                    {/* Tarifa */}
-                    <Paper withBorder p="md" radius="md" ta="center" bg="green.0">
-                        <Text size="xs" c="green" fw={700} tt="uppercase">Tarifa Base</Text>
-                        <Text fw={800} size="xl" c="green.8">
-                            {rutaAsignada.precioKm > 0 ? `$${rutaAsignada.precioKm}` : "—"}
-                        </Text>
-                        {rutaAsignada.precioKm > 0 && (
-                            <Text size="xs" c="dimmed">por kilómetro</Text>
-                        )}
-                        {rutaAsignada.kilometrosEstimados > 0 && (
-                            <Text size="xs" c="dimmed" mt={2}>
-                                ~{rutaAsignada.kilometrosEstimados} km estimados
-                            </Text>
-                        )}
-                    </Paper>
-                </SimpleGrid>
+                            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
+                                {/* Horario */}
+                                <Group wrap="nowrap" align="flex-start" gap="sm">
+                                    <ThemeIcon variant="transparent" color="indigo" size="md">
+                                        <IconCalendar size={18} />
+                                    </ThemeIcon>
+                                    <Stack gap={0}>
+                                        <Text size="10px" c="dimmed" tt="uppercase" fw={800} ls={0.5}>Horario Salida</Text>
+                                        <Text fw={700} size="sm" c="dark.6">{rutaItem.horaSalida || "A designar"}</Text>
+                                        {rutaItem.kilometrosEstimados > 0 && (
+                                            <Text size="xs" c="dimmed">~{rutaItem.kilometrosEstimados} km</Text>
+                                        )}
+                                    </Stack>
+                                </Group>
 
-                {/* Acciones */}
-                <Group gap="sm" mt="xs">
-                    <Button
-                        variant="light"
-                        color="indigo"
-                        size="xs"
-                        leftSection={<IconExternalLink size={14} />}
-                        onClick={() => navigate("/admin/rutas")}
-                    >
-                        Editar asignación en Rutas
-                    </Button>
-                    <Button
-                        variant="light"
-                        color="cyan"
-                        size="xs"
-                        leftSection={<IconExternalLink size={14} />}
-                        onClick={() =>
-                            navigate("/admin/vehiculos", {
-                                state: { abrirNuevo: !veh, tipoPropiedad: "externo" }
-                            })
-                        }
-                    >
-                        {veh ? "Editar vehículo" : "Registrar vehículo externo"}
-                    </Button>
-                </Group>
+                                {/* Vehículo */}
+                                <Group wrap="nowrap" align="flex-start" gap="sm">
+                                    <ThemeIcon variant="transparent" color={veh ? "cyan" : "gray"} size="md">
+                                        <IconTruck size={18} />
+                                    </ThemeIcon>
+                                    <Stack gap={0}>
+                                        <Text size="10px" c="dimmed" tt="uppercase" fw={800} ls={0.5}>Vehículo en Ruta</Text>
+                                        {veh ? (
+                                            <>
+                                                <Text fw={700} size="sm" c="dark.6" ff="monospace">{veh.patente}</Text>
+                                                <Text size="xs" c="dimmed" lineClamp={1}>{veh.marca} {veh.modelo}</Text>
+                                                <Group gap={4} mt={2}>
+                                                    <Badge variant="dot" color={veh.tipoPropiedad === "externo" ? "orange" : "blue"} size="sm" style={{ border: 'none', padding: 0, justifyContent: 'flex-start' }}>
+                                                        {veh.tipoPropiedad === "externo" ? "Externo" : "Propio SDA"}
+                                                    </Badge>
+                                                </Group>
+                                            </>
+                                        ) : (
+                                            <Text size="xs" c="dimmed" fs="italic" mt={2}>Sin vehículo asignado</Text>
+                                        )}
+                                    </Stack>
+                                </Group>
 
-                <Alert icon={<IconInfoCircle size={14} />} color="blue" variant="light" radius="md" size="sm">
-                    La tarifa y el vehículo se gestionan desde <strong>Gestión de Rutas</strong>. Aquí solo se visualiza la asignación actual.
-                </Alert>
+                                {/* Tarifa */}
+                                <Group wrap="nowrap" align="flex-start" gap="sm">
+                                    <ThemeIcon variant="transparent" color="green" size="md">
+                                        <IconFileText size={18} />
+                                    </ThemeIcon>
+                                    <Stack gap={0}>
+                                        <Text size="10px" c="dimmed" tt="uppercase" fw={800} ls={0.5}>
+                                            {rutaItem.tipoPago === 'por_distribucion' ? 'Tarifa Diaria' : rutaItem.tipoPago === 'por_mes' ? 'Tarifa Mensual' : 'Tarifa por KM'}
+                                        </Text>
+                                        <Text fw={800} size="md" c="green.7">
+                                            {rutaItem.tipoPago === 'por_distribucion' && rutaItem.montoPorDistribucion > 0
+                                                ? `$${rutaItem.montoPorDistribucion}`
+                                                : rutaItem.tipoPago === 'por_mes' && rutaItem.montoMensual > 0
+                                                    ? `$${rutaItem.montoMensual}`
+                                                    : rutaItem.precioKm > 0
+                                                        ? `$${rutaItem.precioKm}`
+                                                        : "—"}
+                                        </Text>
+                                        <Text size="xs" c="dimmed">
+                                            {rutaItem.tipoPago === 'por_distribucion' ? 'por vuelta' : rutaItem.tipoPago === 'por_mes' ? 'por mes' : 'por km'}
+                                        </Text>
+                                    </Stack>
+                                </Group>
+                            </SimpleGrid>
+                        </Paper>
+                    );
+                })}
             </Stack>
         );
     };

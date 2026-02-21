@@ -13,7 +13,8 @@ const crearRuta = async (req, res) => {
       zona,
       localidades = [],
       choferAsignado,
-      vehiculoAsignado
+      vehiculoAsignado,
+      contratistaTitular
     } = req.body;
 
     const nuevaRuta = new Ruta({
@@ -25,6 +26,7 @@ const crearRuta = async (req, res) => {
       localidades,
       choferAsignado: choferAsignado || null,
       vehiculoAsignado: vehiculoAsignado || null,
+      contratistaTitular: contratistaTitular || null,
     });
 
     await nuevaRuta.save();
@@ -64,7 +66,11 @@ const obtenerRutas = async (req, res) => {
         }
       })
       .populate("vehiculoAsignado", "patente marca modelo tipoPropiedad estado")
-
+      .populate({
+        path: "contratistaTitular",
+        select: "usuario datosContratado",
+        populate: { path: "usuario", select: "nombre" }
+      })
       .lean();
 
     const total = await Ruta.countDocuments(filtro);
@@ -93,6 +99,11 @@ const obtenerTodasLasRutas = async (req, res) => {
         }
       })
       .populate("vehiculoAsignado", "patente marca modelo")
+      .populate({
+        path: "contratistaTitular",
+        select: "usuario datosContratado",
+        populate: { path: "usuario", select: "nombre" }
+      })
       .populate("localidades", "nombre") // opcional si lo usás
       .lean();
 

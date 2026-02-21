@@ -336,6 +336,8 @@ function App() {
               <Route path="/seguimiento" element={<BuscarSeguimiento />} />
               <Route path="/seguimiento/resultado/:codigo" element={<ResultadoSeguimiento />} />
               <Route path="/conformidad/:token" element={<ConformidadPublica />} />
+              {/* Fallback para cuando expira la sesión o entra a una ruta que no existe en el scope público */}
+              <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </main>
           <Footer />

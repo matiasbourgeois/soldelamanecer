@@ -36,6 +36,16 @@ const RutaSchema = new mongoose.Schema({
     default: null
   },
 
+  // Contratista que cobra por esta línea (puede ser distinto al chofer físico).
+  // Cuando un contratista tiene múltiples líneas con choferes distintos,
+  // se pone aquí quién es el titular que consolida el pago.
+  // Si es null, el sistema asume que el titular es el mismo choferAsignado.
+  contratistaTitular: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Chofer",
+    default: null
+  },
+
   vehiculoAsignado: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Vehiculo",

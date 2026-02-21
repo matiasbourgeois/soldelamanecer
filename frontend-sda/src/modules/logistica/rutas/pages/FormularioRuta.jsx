@@ -24,6 +24,7 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
     localidades: [], // IDs array
     choferAsignado: "",
     vehiculoAsignado: "",
+    contratistaTitular: "",
     kilometrosEstimados: 0,
     precioKm: 0,
     tipoPago: 'por_km',
@@ -91,6 +92,11 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
           ruta.vehiculoAsignado && typeof ruta.vehiculoAsignado === "object"
             ? ruta.vehiculoAsignado._id
             : ruta.vehiculoAsignado || "",
+
+        contratistaTitular:
+          ruta.contratistaTitular && typeof ruta.contratistaTitular === "object"
+            ? ruta.contratistaTitular._id
+            : ruta.contratistaTitular || "",
       });
     }
   }, [ruta, localidadesDisponibles]);
@@ -139,6 +145,7 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
       ...formData,
       choferAsignado: formData.choferAsignado || null,
       vehiculoAsignado: formData.vehiculoAsignado || null,
+      contratistaTitular: formData.contratistaTitular || null,
       // localidades is already an array of IDs
     };
 
@@ -294,6 +301,20 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
             />
           </Group>
 
+          {/* Contratista Titular — solo admin, para casos de flotilleros */}
+          {isAdmin && (
+            <Select
+              label="Contratista Titular (opcional)"
+              description="Solo completar si el chofer asignado trabaja PARA otro contratado que es quien cobra. En el caso normal (el mismo chofer cobra), dejar vacío."
+              placeholder="Buscar contratista que cobra por esta línea..."
+              data={opcionesChoferes}
+              value={formData.contratistaTitular}
+              onChange={(val) => handleSelectChange("contratistaTitular", val)}
+              searchable
+              clearable
+            />
+          )}
+
           <Paper withBorder p="md" bg="gray.0">
             <Stack gap="sm">
               <Text fw={600} size="sm">Tarifas, distancia y liquidación contratados</Text>
@@ -303,7 +324,7 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
                 placeholder="Seleccionar esquema..."
                 data={[
                   { value: 'por_km', label: 'Por Kilómetro (km x precioKm)' },
-                  { value: 'por_distribucion', label: 'Por Distribución (monto x hojas en el mes)' },
+                  { value: 'por_distribucion', label: 'Por distribución diaria (monto fijo por vuelta)' },
                   { value: 'por_mes', label: 'Tarifa Fija Mensual' }
                 ]}
                 value={formData.tipoPago}
@@ -313,15 +334,17 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
               />
 
               <Group grow align="flex-start">
-                <TextInput
-                  label="KM Base de la ruta"
-                  placeholder="Ej: 450"
-                  name="kilometrosEstimados"
-                  type="number"
-                  value={formData.kilometrosEstimados ?? ''}
-                  onChange={handleChange}
-                  disabled={!isAdmin}
-                />
+                {formData.tipoPago === 'por_km' && (
+                  <TextInput
+                    label="KM Base de la ruta"
+                    placeholder="Ej: 450"
+                    name="kilometrosEstimados"
+                    type="number"
+                    value={formData.kilometrosEstimados ?? ''}
+                    onChange={handleChange}
+                    disabled={!isAdmin}
+                  />
+                )}
 
                 {formData.tipoPago === 'por_km' && (
                   <TextInput
