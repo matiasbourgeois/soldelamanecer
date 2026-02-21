@@ -399,6 +399,9 @@ const actualizarAsignacion = async (req, res) => {
 const obtenerContratados = async (req, res) => {
   try {
     const busqueda = req.query.busqueda?.trim() || "";
+    const pagina = parseInt(req.query.pagina) || 1;
+    const limite = parseInt(req.query.limite) || 10;
+    const skip = (pagina - 1) * limite;
     const regex = new RegExp(busqueda, "i");
 
     // Buscar usuarios que matcheen la búsqueda para filtro por nombre
@@ -411,16 +414,9 @@ const obtenerContratados = async (req, res) => {
     }
 
     // Construir query: solo contratados
-    const query = { tipoVinculo: "contratado" };
+    let queryFinal;
     if (idsUsuarios) {
-      query.$or = [
-        { usuario: { $in: idsUsuarios } },
-        { "datosContratado.razonSocial": regex },
-        { "datosContratado.cuit": regex }
-      ];
-      delete query.tipoVinculo; // necesitamos $and para combinar
-      // Reconstruir como $and
-      const queryFinal = {
+      queryFinal = {
         tipoVinculo: "contratado",
         $or: [
           { usuario: { $in: idsUsuarios } },
@@ -428,21 +424,26 @@ const obtenerContratados = async (req, res) => {
           { "datosContratado.cuit": regex }
         ]
       };
-      const contratados = await Chofer.find(queryFinal)
-        .populate("usuario", "nombre email activo")
-        .populate("datosContratado.vehiculoDefault", "patente marca modelo")
-        .populate("datosContratado.rutaDefault", "codigo descripcion precioKm kilometrosEstimados")
-        .lean();
-      return res.json(contratados);
+    } else {
+      queryFinal = { tipoVinculo: "contratado" };
     }
 
-    const contratados = await Chofer.find(query)
+    const total = await Chofer.countDocuments(queryFinal);
+    const contratados = await Chofer.find(queryFinal)
       .populate("usuario", "nombre email activo")
       .populate("datosContratado.vehiculoDefault", "patente marca modelo")
       .populate("datosContratado.rutaDefault", "codigo descripcion precioKm kilometrosEstimados")
+      .skip(skip)
+      .limit(limite)
       .lean();
 
-    res.json(contratados);
+    res.json({
+      contratados,
+      total,
+      paginaActual: pagina,
+      totalPaginas: Math.ceil(total / limite),
+      limite
+    });
   } catch (error) {
     console.error("Error al obtener contratados:", error);
     res.status(500).json({ msg: "Error al obtener contratados." });

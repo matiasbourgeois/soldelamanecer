@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
     Container, Paper, Title, Group, Button, TextInput, Stack, Text,
-    Badge, ActionIcon, Tooltip, Loader, Center, ThemeIcon, Alert, Anchor
+    Badge, ActionIcon, Tooltip, Loader, Center, ThemeIcon, Alert, Anchor, Pagination
 } from "@mantine/core";
 import {
     Plus, Search, Truck, MapPin, Phone, Mail, User, Trash2, Pencil,
@@ -22,6 +22,9 @@ const ContratadosAdmin = () => {
     const [busqueda, setBusqueda] = useState("");
     const [mostrarModal, setMostrarModal] = useState(false);
     const [contratadoEditando, setContratadoEditando] = useState(null);
+    const [pagina, setPagina] = useState(1);
+    const [totalPaginas, setTotalPaginas] = useState(1);
+    const limite = 10;
     const navigate = useNavigate();
 
     const fetchContratados = async () => {
@@ -30,10 +33,13 @@ const ContratadosAdmin = () => {
             const token = localStorage.getItem("token");
             // Fetch paralelo: contratados + todas las rutas
             const [{ data: dataContratados }, { data: dataRutas }] = await Promise.all([
-                axios.get(apiSistema(`/choferes/contratados?busqueda=${busqueda}`), { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(apiSistema(`/choferes/contratados?busqueda=${busqueda}&pagina=${pagina}&limite=${limite}`), { headers: { Authorization: `Bearer ${token}` } }),
                 axios.get(apiSistema("/rutas?limite=200&pagina=0"), { headers: { Authorization: `Bearer ${token}` } })
             ]);
-            setContratados(dataContratados);
+            setContratados(dataContratados.contratados || []);
+            if (dataContratados.totalPaginas !== undefined) {
+                setTotalPaginas(dataContratados.totalPaginas);
+            }
             // Construir mapa: choferID → ruta
             const rutas = dataRutas.rutas || dataRutas.resultados || [];
             const mapa = {};
@@ -51,9 +57,13 @@ const ContratadosAdmin = () => {
     };
 
     useEffect(() => {
+        setPagina(1);
+    }, [busqueda]);
+
+    useEffect(() => {
         const timeout = setTimeout(fetchContratados, 300);
         return () => clearTimeout(timeout);
-    }, [busqueda]);
+    }, [busqueda, pagina]);
 
     const handleEditar = (contratado) => {
         setContratadoEditando(contratado);
@@ -70,9 +80,9 @@ const ContratadosAdmin = () => {
     };
 
     const getBadgeLegajo = (legajo) => {
-        if (legajo.porcentaje === 100) return { color: "teal", label: "Legajo Completo", icon: <CheckCircle2 size={12} /> };
-        if (legajo.porcentaje >= 60) return { color: "yellow", label: `${legajo.completo}/${legajo.total} docs`, icon: <AlertTriangle size={12} /> };
-        return { color: "red", label: `${legajo.completo}/${legajo.total} docs`, icon: <XCircle size={12} /> };
+        if (legajo.porcentaje === 100) return { color: "teal.6", label: "Legajo Completo", icon: <CheckCircle2 size={14} color="var(--mantine-color-teal-6)" /> };
+        if (legajo.porcentaje >= 60) return { color: "orange.5", label: `Incompleto (${legajo.completo}/${legajo.total})`, icon: <AlertTriangle size={14} color="var(--mantine-color-orange-5)" /> };
+        return { color: "red.5", label: `Pendiente (${legajo.completo}/${legajo.total})`, icon: <XCircle size={14} color="var(--mantine-color-red-5)" /> };
     };
 
     return (
@@ -114,9 +124,9 @@ const ContratadosAdmin = () => {
                 {/* Aviso informativo */}
                 <Alert
                     icon={<AlertTriangle size={16} />}
-                    color="blue"
+                    color="gray"
                     variant="light"
-                    mb="md"
+                    mb="xl"
                     radius="md"
                     title="¿Cómo agregar un contratado?"
                     styles={{ title: { fontWeight: 700 } }}
@@ -158,50 +168,46 @@ const ContratadosAdmin = () => {
 
                             return (
                                 <Paper key={c._id} withBorder p="md" radius="md" className="hover-shadow"
-                                    style={{ transition: "box-shadow 0.2s", borderLeft: `3px solid ${c.activo ? "var(--mantine-color-cyan-5)" : "var(--mantine-color-gray-4)"}` }}>
-                                    <Group justify="space-between" wrap="nowrap">
-                                        <Group gap="lg" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                                    style={{ transition: "box-shadow 0.2s" }}>
+                                    <Group justify="space-between" wrap="nowrap" align="center">
+                                        <Group gap="xl" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
 
                                             {/* Nombre / Razón Social */}
-                                            <Stack gap={2} style={{ minWidth: 180 }}>
-                                                <Text fw={700} size="md" c="dark.4" lineClamp={1}>
-                                                    {razonSocial || nombre}
-                                                </Text>
+                                            <Stack gap={0} style={{ minWidth: 200 }}>
+                                                <Group gap="xs" mb={4}>
+                                                    <Text fw={800} size="md" c={c.activo ? "dark.6" : "gray.5"} lineClamp={1}>
+                                                        {razonSocial || nombre}
+                                                    </Text>
+                                                    {!c.activo && <Badge size="9px" color="gray" variant="filled">INACTIVO</Badge>}
+                                                </Group>
                                                 {razonSocial && (
                                                     <Text size="xs" c="dimmed" lineClamp={1}>
-                                                        <User size={10} style={{ marginRight: 4, verticalAlign: "middle" }} />
                                                         {nombre}
                                                     </Text>
                                                 )}
-                                                {cuit && (
-                                                    <Text size="xs" c="dimmed" ff="monospace">
-                                                        CUIT: {cuit}
-                                                    </Text>
-                                                )}
+                                                <Text size="xs" c="dimmed" ff="monospace" mt={2}>
+                                                    {cuit ? `CUIT: ${cuit}` : "Sin CUIT"}
+                                                </Text>
                                             </Stack>
 
                                             <Divider orientation="vertical" />
 
-                                            {/* Vehículo y Ruta — desde asignación en Rutas */}
-                                            <Stack gap={4} style={{ minWidth: 160 }}>
+                                            {/* Vehículo y Ruta */}
+                                            <Stack gap={4} style={{ minWidth: 150 }}>
                                                 <Group gap={6}>
                                                     <Truck size={14} color="gray" />
-                                                    <Text size="sm" fw={500} lineClamp={1}>
-                                                        {vehiculo
-                                                            ? `${vehiculo.patente} (${vehiculo.marca})`
-                                                            : "Sin vehículo"}
+                                                    <Text size="xs" fw={700} c="dark.6" lineClamp={1}>
+                                                        {vehiculo ? `${vehiculo.patente} (${vehiculo.marca})` : "Sin vehículo"}
                                                     </Text>
                                                     {vehiculo && (
-                                                        <Badge size="xs" variant="dot"
-                                                            color={vehiculo.tipoPropiedad === "externo" ? "orange" : "blue"}
-                                                        >
-                                                            {vehiculo.tipoPropiedad === "externo" ? "Ext" : "SDA"}
-                                                        </Badge>
+                                                        <Text size="10px" fw={700} c="gray.5" tt="uppercase">
+                                                            [{vehiculo.tipoPropiedad === "externo" ? "EXT" : "SDA"}]
+                                                        </Text>
                                                     )}
                                                 </Group>
                                                 <Group gap={6}>
                                                     <MapPin size={14} color="gray" />
-                                                    <Text size="sm" c="dimmed" lineClamp={1}>
+                                                    <Text size="xs" fw={500} c="dimmed" lineClamp={1}>
                                                         {ruta ? `Ruta: ${ruta.codigo}` : "Sin ruta"}
                                                     </Text>
                                                 </Group>
@@ -209,23 +215,24 @@ const ContratadosAdmin = () => {
 
                                             <Divider orientation="vertical" />
 
-                                            {/* Tarifa y Legajo — tarifa desde la ruta */}
-                                            <Stack gap={4} align="center">
-                                                {ruta?.precioKm > 0 ? (
-                                                    <Badge variant="light" color="indigo" size="sm">
-                                                        $ {ruta.precioKm} / km
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge variant="dot" color="gray" size="sm">Sin tarifa</Badge>
-                                                )}
-                                                <Badge
-                                                    variant="light"
-                                                    color={badge.color}
-                                                    size="xs"
-                                                    leftSection={badge.icon}
-                                                >
-                                                    {badge.label}
-                                                </Badge>
+                                            {/* Tarifa y Legajo */}
+                                            <Stack gap={4} style={{ minWidth: 150 }}>
+                                                <Group gap={6}>
+                                                    <FileText size={14} color="gray" />
+                                                    {ruta?.precioKm > 0 ? (
+                                                        <Text size="xs" fw={800} c="dark.6">
+                                                            $ {ruta.precioKm} <span style={{ fontWeight: 500, color: 'var(--mantine-color-gray-5)' }}>/ km</span>
+                                                        </Text>
+                                                    ) : (
+                                                        <Text size="xs" fw={500} c="dimmed">Sin tarifa</Text>
+                                                    )}
+                                                </Group>
+                                                <Group gap={6}>
+                                                    {badge.icon}
+                                                    <Text size="xs" fw={600} c={badge.color}>
+                                                        {badge.label}
+                                                    </Text>
+                                                </Group>
                                             </Stack>
 
                                             <Divider orientation="vertical" />
@@ -234,14 +241,14 @@ const ContratadosAdmin = () => {
                                             <Stack gap={4} style={{ minWidth: 140 }} visibleFrom="lg">
                                                 {email && (
                                                     <Group gap={5}>
-                                                        <Mail size={13} color="gray" />
-                                                        <Text size="xs" c="dimmed" lineClamp={1}>{email}</Text>
+                                                        <Mail size={13} color="var(--mantine-color-gray-5)" />
+                                                        <Text size="xs" c="dark.4" fw={500} lineClamp={1}>{email}</Text>
                                                     </Group>
                                                 )}
                                                 {c.datosContratado?.fechaIngreso && (
                                                     <Group gap={5}>
-                                                        <Calendar size={13} color="gray" />
-                                                        <Text size="xs" c="dimmed">
+                                                        <Calendar size={13} color="var(--mantine-color-gray-5)" />
+                                                        <Text size="xs" c="dark.4" fw={500}>
                                                             Desde {dayjs(c.datosContratado.fechaIngreso).format("DD/MM/YYYY")}
                                                         </Text>
                                                     </Group>
@@ -250,21 +257,15 @@ const ContratadosAdmin = () => {
                                         </Group>
 
                                         {/* Acciones */}
-                                        <Group gap="xs" wrap="nowrap">
-                                            {!c.activo && (
-                                                <Badge color="red" variant="light" size="xs">INACTIVO</Badge>
-                                            )}
-                                            <Tooltip label="Editar legajo">
-                                                <ActionIcon
-                                                    variant="subtle"
-                                                    color="blue"
-                                                    size="lg"
-                                                    onClick={() => handleEditar(c)}
-                                                >
-                                                    <Pencil size={20} />
-                                                </ActionIcon>
-                                            </Tooltip>
-                                        </Group>
+                                        <ActionIcon
+                                            variant="light"
+                                            color="gray"
+                                            size="lg"
+                                            radius="md"
+                                            onClick={() => handleEditar(c)}
+                                        >
+                                            <ArrowRight size={18} />
+                                        </ActionIcon>
                                     </Group>
                                 </Paper>
                             );
@@ -292,6 +293,21 @@ const ContratadosAdmin = () => {
                             </Center>
                         )}
                     </Stack>
+                )}
+
+                {totalPaginas > 1 && !loading && (
+                    <>
+                        <Divider />
+                        <Group justify="center" p="md" style={{ backgroundColor: '#f8f9fa' }}>
+                            <Pagination
+                                page={pagina}
+                                onChange={setPagina}
+                                total={totalPaginas}
+                                color="cyan"
+                                radius="md"
+                            />
+                        </Group>
+                    </>
                 )}
             </Paper>
 
