@@ -2,6 +2,9 @@ const Usuario = require("../../models/Usuario");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { enviarEmailVerificacion } = require("../../utils/emailService");
 const logger = require("../../utils/logger");
 const handlebars = require("handlebars");
@@ -149,8 +152,96 @@ const login = async (req, res) => {
   }
 };
 
+// 🔹 Login con Google
+const googleLogin = async (req, res) => {
+  try {
+    const { token: googleToken } = req.body;
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: googleToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    let usuario = await Usuario.findOne({ email });
+
+    if (!usuario) {
+      // Registrar nuevo usuario
+      const dummyPassword = crypto.randomBytes(16).toString("hex");
+
+      usuario = new Usuario({
+        nombre: name,
+        email,
+        contrasena: dummyPassword,
+        rol: "cliente",
+        verificado: true,
+        activo: true,
+        authProvider: "google",
+        fotoPerfil: picture || ""
+      });
+      await usuario.save();
+    } else {
+      // Asociar si es necesario
+      if (usuario.authProvider !== 'google' || !usuario.verificado) {
+        usuario.authProvider = 'google';
+        usuario.verificado = true; // Si entró con Google, asimilamos su verificación
+        if (!usuario.fotoPerfil && picture) {
+          usuario.fotoPerfil = picture;
+        }
+        await usuario.save();
+      }
+    }
+
+    // Lógica JWT igual al login clásico
+    const expiresIn = usuario.rol === 'chofer' ? '3650d' : '24h';
+
+    const token = jwt.sign(
+      { id: usuario._id, rol: usuario.rol },
+      JWT_SECRET,
+      { expiresIn }
+    );
+
+    let datosChofer = {};
+    if (usuario.rol === 'chofer') {
+      const Chofer = require("../../models/Chofer");
+      const choferPerfil = await Chofer.findOne({ usuario: usuario._id });
+      if (choferPerfil) {
+        if (choferPerfil.tipoVinculo === 'contratado') {
+          return res.status(403).json({
+            error: "Su acceso a la app móvil no está habilitado aún. Comuníquese con la administración."
+          });
+        }
+        datosChofer = {
+          tipoContrato: choferPerfil.tipoVinculo,
+          vehiculoAsignado: choferPerfil.vehiculoAsignado
+        };
+      }
+    }
+
+    res.json({
+      token,
+      usuario: {
+        id: usuario._id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol,
+        perfilCompleto: usuario.perfilCompleto || false,
+        fotoPerfil: usuario.fotoPerfil,
+        ...datosChofer
+      },
+    });
+
+  } catch (error) {
+    logger.error("🚨 Error en login con Google:", error);
+    res.status(500).json({ error: "Error de autenticación con Google" });
+  }
+};
+
 module.exports = {
   register,
   verificarCuenta,
   login,
+  googleLogin,
 };

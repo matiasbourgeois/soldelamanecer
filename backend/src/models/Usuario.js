@@ -14,6 +14,7 @@ const UsuarioSchema = new mongoose.Schema({
   verificado: { type: Boolean, default: false },
   tokenVerificacion: { type: String },
   activo: { type: Boolean, default: true },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
 
   // ✅ CAMPOS FALTANTES PARA PERFIL
   dni: { type: String },

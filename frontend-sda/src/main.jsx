@@ -7,6 +7,7 @@ import "react-datepicker/dist/react-datepicker.css";
 
 
 import { AuthProvider } from "@core/context/AuthProvider";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { MantineProvider, createTheme } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { ModalsProvider } from "@mantine/modals";
@@ -21,13 +22,15 @@ const theme = createTheme({
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <MantineProvider theme={theme}>
-      <Notifications position="top-right" zIndex={2077} />
-      <ModalsProvider labels={{ confirm: 'Confirmar', cancel: 'Cancelar' }}>
-        <AuthProvider>
-          <App key={Date.now()} />
-        </AuthProvider>
-      </ModalsProvider>
-    </MantineProvider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <MantineProvider theme={theme}>
+        <Notifications position="top-right" zIndex={2077} />
+        <ModalsProvider labels={{ confirm: 'Confirmar', cancel: 'Cancelar' }}>
+          <AuthProvider>
+            <App key={Date.now()} />
+          </AuthProvider>
+        </ModalsProvider>
+      </MantineProvider>
+    </GoogleOAuthProvider>
   </React.StrictMode>
 );

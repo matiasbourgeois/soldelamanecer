@@ -1,7 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiUsuarios } from "@core/api/apiSistema";
+import clienteAxios from "@core/api/clienteAxios";
+import AuthContext from "@core/context/AuthProvider";
+import { GoogleLogin } from "@react-oauth/google";
 import {
   TextInput,
   PasswordInput,
@@ -21,12 +24,15 @@ import {
   List,
   ThemeIcon,
   Group,
-  ScrollArea
+  ScrollArea,
+  Divider,
+  Center
 } from "@mantine/core";
 import { IconAlertCircle, IconCheck, IconX, IconShieldLock } from "@tabler/icons-react";
 
 function Registro() {
   const navigate = useNavigate();
+  const { setAuth } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     nombre: "",
     email: "",
@@ -101,6 +107,38 @@ function Registro() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setError("");
+    setMensaje("");
+    try {
+      const response = await clienteAxios.post("/usuarios/login-google", {
+        token: credentialResponse.credential,
+      });
+
+      const data = response.data;
+      const { token, usuario } = data;
+      const usuarioConToken = { ...usuario, _id: usuario._id || usuario.id, token };
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("usuario", JSON.stringify(usuarioConToken));
+      setAuth(usuarioConToken);
+
+      setMensaje("¡Registro con Google exitoso! Redirigiendo...");
+      setTimeout(() => {
+        if (usuario.rol === "cliente" && !usuario.perfilCompleto) {
+          navigate("/completar-perfil");
+        } else {
+          navigate("/perfil");
+        }
+      }, 1500);
+    } catch (error) {
+      console.error("Google Login error:", error);
+      setError("Error al registrarse con Google");
+      setLoading(false);
+    }
+  };
+
   // Helper for password requirements list
   const getRequirementIcon = (met) => (
     <ThemeIcon color={met ? "teal" : "gray"} size="xs" radius="xl">
@@ -168,6 +206,7 @@ function Registro() {
                 onChange={handleChange}
                 size="md"
                 radius="md"
+                autoComplete="off"
                 styles={{ input: { height: rem(36) } }}
               />
 
@@ -180,6 +219,7 @@ function Registro() {
                 onChange={handleChange}
                 size="md"
                 radius="md"
+                autoComplete="off"
                 styles={{ input: { height: rem(36) } }}
               />
 
@@ -192,6 +232,7 @@ function Registro() {
                 onChange={handleChange}
                 size="md"
                 radius="md"
+                autoComplete="new-password"
                 styles={{ input: { height: rem(36) } }}
               />
 
@@ -204,31 +245,34 @@ function Registro() {
                 onChange={handleChange}
                 size="md"
                 radius="md"
+                autoComplete="new-password"
                 styles={{ input: { height: rem(36) } }}
               />
 
-              {/* Password Requirements Box - ALWAYS VISIBLE */}
-              <Paper withBorder p="xs" radius="md" bg="gray.0">
-                <Text size="sm" fw={700} mb="xs" c="dimmed">Requisitos de contraseña:</Text>
-                <List spacing="xs" size="sm" center icon={
-                  <ThemeIcon color="gray" size="xs" radius="xl">
-                    <IconX size={8} />
-                  </ThemeIcon>
-                }>
-                  <List.Item icon={getRequirementIcon(hasMinLength)}>
-                    Mínimo 8 caracteres
-                  </List.Item>
-                  <List.Item icon={getRequirementIcon(hasTwoNums)}>
-                    Al menos 2 números
-                  </List.Item>
-                  <List.Item icon={getRequirementIcon(hasSym)}>
-                    Al menos 1 símbolo
-                  </List.Item>
-                  <List.Item icon={getRequirementIcon(passwordsMatch && formData.contrasena.length > 0)}>
-                    Las contraseñas coinciden
-                  </List.Item>
-                </List>
-              </Paper>
+              {/* Password Requirements Box - Solo visible si hay texto en la contraseña */}
+              {formData.contrasena.length > 0 && (
+                <Paper withBorder p="xs" radius="md" bg="gray.0">
+                  <Text size="sm" fw={700} mb="xs" c="dimmed">Requisitos de contraseña:</Text>
+                  <List spacing="xs" size="sm" center icon={
+                    <ThemeIcon color="gray" size="xs" radius="xl">
+                      <IconX size={8} />
+                    </ThemeIcon>
+                  }>
+                    <List.Item icon={getRequirementIcon(hasMinLength)}>
+                      Mínimo 8 caracteres
+                    </List.Item>
+                    <List.Item icon={getRequirementIcon(hasTwoNums)}>
+                      Al menos 2 números
+                    </List.Item>
+                    <List.Item icon={getRequirementIcon(hasSym)}>
+                      Al menos 1 símbolo
+                    </List.Item>
+                    <List.Item icon={getRequirementIcon(passwordsMatch && formData.confirmPassword.length > 0)}>
+                      Las contraseñas coinciden
+                    </List.Item>
+                  </List>
+                </Paper>
+              )}
 
               <Group align="center" gap="xs">
                 <Checkbox
@@ -257,6 +301,24 @@ function Registro() {
               >
                 REGISTRARSE
               </Button>
+
+              <Divider label="O registro rápido con" labelPosition="center" my="sm" />
+
+              <Center>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => {
+                      setError("No se pudo conectar con Google");
+                    }}
+                    useOneTap
+                    shape="pill"
+                    text="signup_with"
+                    size="large"
+                    theme="outline"
+                  />
+                </div>
+              </Center>
             </Stack>
           </form>
 

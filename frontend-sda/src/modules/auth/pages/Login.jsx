@@ -3,6 +3,7 @@ import { apiUsuarios } from "@core/api/apiSistema";
 import clienteAxios from "@core/api/clienteAxios";
 import AuthContext from "@core/context/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import {
   TextInput,
   PasswordInput,
@@ -19,7 +20,8 @@ import {
   Box,
   rem,
   Center,
-  Badge
+  Badge,
+  Divider
 } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
 
@@ -74,6 +76,36 @@ function Login() {
       console.error("Login error:", error);
       const errorMsg = error.response?.data?.error || error.response?.data?.msg || "Credenciales incorrectas";
       setError(errorMsg);
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await clienteAxios.post("/usuarios/login-google", {
+        token: credentialResponse.credential,
+      });
+
+      const data = response.data;
+      const { token, usuario } = data;
+      const usuarioConToken = { ...usuario, _id: usuario._id || usuario.id, token };
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("usuario", JSON.stringify(usuarioConToken));
+      setAuth(usuarioConToken);
+
+      setTimeout(() => {
+        if (usuario.rol === "cliente" && !usuario.perfilCompleto) {
+          navigate("/completar-perfil");
+        } else {
+          navigate("/perfil");
+        }
+      }, 800);
+    } catch (error) {
+      console.error("Google Login error:", error);
+      setError("Error al iniciar sesión con Google");
       setLoading(false);
     }
   };
@@ -160,6 +192,24 @@ function Login() {
               >
                 INICIAR SESIÓN
               </Button>
+
+              <Divider label="O continuar con" labelPosition="center" my="sm" />
+
+              <Center>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => {
+                      setError("No se pudo conectar con Google");
+                    }}
+                    useOneTap
+                    shape="pill"
+                    text="continue_with"
+                    size="large"
+                    theme="outline"
+                  />
+                </div>
+              </Center>
             </Stack>
           </form>
 
