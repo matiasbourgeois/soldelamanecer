@@ -4,13 +4,14 @@ import {
     Container, Paper, Title, Table, Group, TextInput, Pagination,
     Text, ActionIcon, Tooltip, Badge, ScrollArea, LoadingOverlay,
     ActionIcon as MantineActionIcon, Select, Button, Stack, Divider,
-    SimpleGrid, Card, RingProgress, Center, ThemeIcon, Tabs, Box
+    SimpleGrid, Card, RingProgress, Center, ThemeIcon, Tabs, Box,
+    Menu, Modal, NumberInput, Textarea
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import {
     Search, FileText, Eye, Truck, User, Calendar, RefreshCcw,
     CheckCircle2, AlertCircle, XCircle, Plus, FilterX, Play, Zap, Clock, ListTodo,
-    Smartphone, BookOpen, FileDown
+    Smartphone, BookOpen, FileDown, Star
 } from "lucide-react";
 import clienteAxios from "../../../../core/api/clienteAxios";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
@@ -63,9 +64,18 @@ const ControlOperativo = () => {
         return usuario.rol === 'admin' || usuario.rol === 'administrativo';
     };
 
-    // Recursos para Quick Edit
+    // Recursos para Quick Edit & Modal
     const [choferesList, setChoferesList] = useState([]);
     const [vehiculosList, setVehiculosList] = useState([]);
+    const [rutasList, setRutasList] = useState([]);
+
+    // Modal Hoja Especial
+    const [modalEspecialOpen, setModalEspecialOpen] = useState(false);
+    const [formEspecial, setFormEspecial] = useState({
+        fecha: new Date(), rutaId: null, choferId: null, vehiculoId: null,
+        kilometros: 0, precioKm: 0, observaciones: ''
+    });
+    const [creandoEspecial, setCreandoEspecial] = useState(false);
 
     // Métricas
     const [stats, setStats] = useState({
@@ -77,9 +87,10 @@ const ControlOperativo = () => {
 
     const obtenerRecursos = async () => {
         try {
-            const [resChoferes, resVehiculos] = await Promise.all([
+            const [resChoferes, resVehiculos, resRutas] = await Promise.all([
                 clienteAxios.get("/choferes/solo-nombres"),
-                clienteAxios.get("/vehiculos")
+                clienteAxios.get("/vehiculos"),
+                clienteAxios.get("/rutas")
             ]);
 
             const opcionesChofer = (resChoferes.data || []).map(c => ({
@@ -93,6 +104,11 @@ const ControlOperativo = () => {
             setVehiculosList((resVehiculos.data || []).map(v => ({
                 value: v._id,
                 label: `${v.patente} (${v.marca} ${v.modelo})`
+            })));
+
+            setRutasList((resRutas.data || []).map(r => ({
+                value: r._id,
+                label: r.codigo
             })));
         } catch (error) {
             console.error("Error al obtener recursos:", error);
@@ -297,6 +313,84 @@ const ControlOperativo = () => {
         }
     };
 
+    const descargarReporteEspeciales = async () => {
+        try {
+            const hoy = new Date();
+            const mes = hoy.getMonth() + 1; // 1-12
+            const anio = hoy.getFullYear();
+
+            const response = await clienteAxios.get(`/hojas-reparto/reporte-especiales`, {
+                params: { mes, anio }
+            });
+
+            const { especiales } = response.data;
+
+            if (especiales.length === 0) {
+                mostrarAlerta("No hay hojas especiales registradas este mes", "info");
+                return;
+            }
+
+            const headers = ['Fecha', 'Nº Hoja Especial', 'Base Ruta', 'Chofer Asignado', 'Vehículo Asignado', 'KMs Facturados', 'Precio/Km', 'Motivo / Observación'];
+            const rows = especiales.map(h => [
+                new Date(h.fecha).toLocaleDateString('es-AR'),
+                h.numeroHoja,
+                h.rutaOriginal || '-',
+                h.chofer || '-',
+                h.vehiculo || '-',
+                h.kilometros,
+                h.precioKm,
+                h.observaciones?.replace(/,/g, ' ') || '-'
+            ]);
+
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `reporte_especiales_${mes}_${anio}.csv`;
+            link.click();
+
+            mostrarAlerta(`Reporte descargado: ${especiales.length} hojas especiales`, "success");
+        } catch (error) {
+            console.error("Error al descargar reporte especiales:", error);
+            mostrarAlerta("Error al generar el reporte", "error");
+        }
+    };
+
+    const handleSubmitEspecial = async () => {
+        try {
+            if (!formEspecial.observaciones.trim()) {
+                mostrarAlerta('Debes ingresar el motivo/observación obligatoriamente', 'warning');
+                return;
+            }
+            setCreandoEspecial(true);
+            await clienteAxios.post('/hojas-reparto/especial', {
+                fecha: formEspecial.fecha,
+                ruta: formEspecial.rutaId,
+                chofer: formEspecial.choferId,
+                vehiculo: formEspecial.vehiculoId,
+                kilometrosEstimados: Number(formEspecial.kilometros) || 0,
+                precioKm: Number(formEspecial.precioKm) || 0,
+                observaciones: formEspecial.observaciones
+            });
+            mostrarAlerta('Hoja Especial generada exitosamente', 'success');
+            setModalEspecialOpen(false);
+            setFormEspecial({
+                fecha: new Date(), rutaId: null, choferId: null, vehiculoId: null,
+                kilometros: 0, precioKm: 0, observaciones: ''
+            });
+            obtenerHojas();
+        } catch (error) {
+            console.error(error);
+            mostrarAlerta(error?.response?.data?.error || 'Error al generar la hoja especial', 'error');
+        } finally {
+            setCreandoEspecial(false);
+        }
+    };
+
     useEffect(() => {
         obtenerHojas();
         obtenerRecursos();
@@ -381,7 +475,7 @@ const ControlOperativo = () => {
                             color="orange.6"
                             leftSection={<Plus size={18} />}
                             radius="md"
-                            onClick={() => navigate('/hojas-reparto/crear')}
+                            onClick={() => setModalEspecialOpen(true)}
                         >
                             Hoja Especial
                         </Button>
@@ -464,7 +558,10 @@ const ControlOperativo = () => {
                             label="Buscar"
                             leftSection={<Search size={16} />}
                             value={filtroNumero}
-                            onChange={(e) => setFiltroNumero(e.target.value)}
+                            onChange={(e) => {
+                                setFiltroNumero(e.target.value);
+                                setPaginaActual(1);
+                            }}
                             radius="md"
                             w={180}
                         />
@@ -473,7 +570,10 @@ const ControlOperativo = () => {
                             placeholder="Todos los choferes..."
                             data={filtroChoferOpciones}
                             value={filtroChofer}
-                            onChange={setFiltroChofer}
+                            onChange={(val) => {
+                                setFiltroChofer(val);
+                                setPaginaActual(1);
+                            }}
                             clearable
                             w={220}
                             radius="md"
@@ -485,7 +585,10 @@ const ControlOperativo = () => {
                                     label="Desde"
                                     placeholder="Elegir fecha"
                                     value={filtroDesde}
-                                    onChange={setFiltroDesde}
+                                    onChange={(val) => {
+                                        setFiltroDesde(val);
+                                        setPaginaActual(1);
+                                    }}
                                     clearable
                                     radius="md"
                                     w={150}
@@ -496,7 +599,10 @@ const ControlOperativo = () => {
                                     label="Hasta"
                                     placeholder="Elegir fecha"
                                     value={filtroHasta}
-                                    onChange={setFiltroHasta}
+                                    onChange={(val) => {
+                                        setFiltroHasta(val);
+                                        setPaginaActual(1);
+                                    }}
                                     clearable
                                     radius="md"
                                     w={150}
@@ -512,17 +618,30 @@ const ControlOperativo = () => {
                         )}
                     </Group>
                     <Group>
-                        <Tooltip label="Descargar Reporte Mensual (CSV)">
-                            <MantineActionIcon
-                                variant="light"
-                                color="green"
-                                size="xl"
-                                radius="md"
-                                onClick={descargarReporteMensual}
-                            >
-                                <FileDown size={20} />
-                            </MantineActionIcon>
-                        </Tooltip>
+                        <Menu shadow="md" width={220} position="bottom-end">
+                            <Menu.Target>
+                                <Tooltip label="Reportes Mensuales (CSV)">
+                                    <MantineActionIcon variant="light" color="green" size="xl" radius="md">
+                                        <FileDown size={20} />
+                                    </MantineActionIcon>
+                                </Tooltip>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                                <Menu.Label>Exportaciones Mensuales</Menu.Label>
+                                <Menu.Item
+                                    leftSection={<AlertCircle size={16} color="var(--mantine-color-orange-6)" />}
+                                    onClick={descargarReporteMensual}
+                                >
+                                    Reporte Discrepancias...
+                                </Menu.Item>
+                                <Menu.Item
+                                    leftSection={<Star size={16} color="var(--mantine-color-yellow-6)" />}
+                                    onClick={descargarReporteEspeciales}
+                                >
+                                    Reporte Especiales...
+                                </Menu.Item>
+                            </Menu.Dropdown>
+                        </Menu>
                         <Tooltip label="Refrescar Datos">
                             <MantineActionIcon variant="light" color="cyan" size="xl" radius="md" onClick={obtenerHojas}>
                                 <RefreshCcw size={20} />
@@ -562,9 +681,16 @@ const ControlOperativo = () => {
                                     const vehiculoCambio = planVehiculoId && realVehiculoId && planVehiculoId !== realVehiculoId;
                                     const tieneDiscrepancia = hoja.estado !== 'pendiente' && (choferCambio || vehiculoCambio);
 
+                                    const esEspecial = hoja.numeroHoja?.includes('ESPECIAL') || hoja.esEspecial;
+                                    const esDuplicada = hoja.esDuplicada; // Viene del backend fase 5
+
                                     // Colores Semánticos de Fila
                                     let rowBg = 'transparent';
-                                    if (hoja.estado === 'en reparto' || hoja.estado === 'cerrada') {
+                                    if (esEspecial) {
+                                        rowBg = '#fff8e6'; // Amber pálido
+                                    } else if (esDuplicada) {
+                                        rowBg = '#fff0f6'; // Pink pálido
+                                    } else if (hoja.estado === 'en reparto' || hoja.estado === 'cerrada') {
                                         rowBg = tieneDiscrepancia ? '#fff9db' : '#ebfbee'; // Naranja suave vs Verde suave
                                     }
 
@@ -595,7 +721,21 @@ const ControlOperativo = () => {
                                             </Table.Td>
                                             <Table.Td>
                                                 <Stack gap={2}>
-                                                    <Text size="xs" c="cyan.9" fw={800} tt="uppercase">{hoja.ruta?.codigo || "ESPECIAL"}</Text>
+                                                    <Group gap={4}>
+                                                        <Text size="xs" c={esEspecial ? "orange.8" : "cyan.9"} fw={800} tt="uppercase">
+                                                            {hoja.ruta?.codigo || (esEspecial ? "ESPECIAL (SIN RUTA)" : "ESPECIAL")}
+                                                        </Text>
+                                                        {esEspecial && (
+                                                            <Tooltip label="Hoja de Reparto Especial">
+                                                                <Star size={12} color="var(--mantine-color-orange-6)" />
+                                                            </Tooltip>
+                                                        )}
+                                                        {esDuplicada && (
+                                                            <Tooltip label="Ruta Duplicada en el mismo día">
+                                                                <Badge color="red" variant="filled" size="xs">DUPLICADA</Badge>
+                                                            </Tooltip>
+                                                        )}
+                                                    </Group>
                                                     <Group gap={6} align="center">
                                                         {hoja.ruta?.horaSalida && (
                                                             <Text size="10px" c="dimmed" fw={500}>
@@ -730,6 +870,91 @@ const ControlOperativo = () => {
                     )}
                 </Group>
             </Paper>
+
+            {/* Modal Nueva Hoja Especial */}
+            <Modal
+                opened={modalEspecialOpen}
+                onClose={() => setModalEspecialOpen(false)}
+                title={<Title order={4}>Nueva Hoja Especial</Title>}
+                size="md"
+                radius="md"
+            >
+                <Stack spacing="md">
+                    <DatePickerInput
+                        label="Fecha de la Hoja"
+                        placeholder="Elija fecha"
+                        value={formEspecial.fecha}
+                        onChange={(d) => setFormEspecial({ ...formEspecial, fecha: d })}
+                        required
+                        locale="es"
+                        valueFormat="DD/MM/YYYY"
+                    />
+
+                    <Select
+                        label="Ruta Base (Opcional)"
+                        placeholder="Sin ruta asignada"
+                        data={rutasList}
+                        value={formEspecial.rutaId}
+                        onChange={(val) => setFormEspecial({ ...formEspecial, rutaId: val })}
+                        searchable
+                        clearable
+                    />
+
+                    <SimpleGrid cols={2}>
+                        <Select
+                            label="Vehículo"
+                            placeholder="Ninguno"
+                            data={vehiculosList}
+                            value={formEspecial.vehiculoId}
+                            onChange={(val) => setFormEspecial({ ...formEspecial, vehiculoId: val })}
+                            searchable
+                            clearable
+                        />
+                        <Select
+                            label="Chofer"
+                            placeholder="Ninguno"
+                            data={choferesList}
+                            value={formEspecial.choferId}
+                            onChange={(val) => setFormEspecial({ ...formEspecial, choferId: val })}
+                            searchable
+                            clearable
+                        />
+                    </SimpleGrid>
+
+                    <SimpleGrid cols={2}>
+                        <NumberInput
+                            label="Kilómetros Totales"
+                            value={formEspecial.kilometros}
+                            onChange={(val) => setFormEspecial({ ...formEspecial, kilometros: val })}
+                            min={0}
+                        />
+                        <NumberInput
+                            label="Precio por Km ($)"
+                            value={formEspecial.precioKm}
+                            onChange={(val) => setFormEspecial({ ...formEspecial, precioKm: val })}
+                            min={0}
+                        />
+                    </SimpleGrid>
+
+                    <Textarea
+                        label="Motivo / Observación"
+                        placeholder="Refuerzo zona norte, turno noche..."
+                        required
+                        value={formEspecial.observaciones}
+                        onChange={(e) => setFormEspecial({ ...formEspecial, observaciones: e.target.value })}
+                        minRows={2}
+                    />
+
+                    <Group justify="flex-end" mt="md">
+                        <Button variant="light" color="gray" onClick={() => setModalEspecialOpen(false)}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleSubmitEspecial} color="orange" loading={creandoEspecial}>
+                            Generar Hoja
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
         </Container>
     );
 };

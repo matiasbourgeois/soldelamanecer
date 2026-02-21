@@ -121,6 +121,10 @@ const HojaRepartoScreen = ({ navigation }: any) => {
         }
     };
 
+    if (hojasDisponibles.length > 1 && !hojaSeleccionada) {
+        return <SelectorHojasScreen hojas={hojasDisponibles} onSeleccionarHoja={setHojaSeleccionada} />;
+    }
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor="transparent" translucent />

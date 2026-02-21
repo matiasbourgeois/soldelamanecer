@@ -221,19 +221,25 @@ const obtenerMiConfiguracion = async (req, res) => {
     const inicioDia = new Date(hoy).setHours(0, 0, 0, 0);
     const finDia = new Date(hoy).setHours(23, 59, 59, 999);
 
-    const hojaHoy = await HojaReparto.findOne({
+    const hojasActivas = await HojaReparto.find({
       chofer: chofer._id,
       fecha: { $gte: inicioDia, $lte: finDia },
       estado: { $ne: "cerrada" }
     }).populate("vehiculo ruta");
 
-    if (hojaHoy) {
+    if (hojasActivas.length > 0) {
       return res.json({
-        vehiculo: hojaHoy.vehiculo,
-        ruta: hojaHoy.ruta,
-        hojaRepartoId: hojaHoy._id,
-        hojaRepartoCodigo: hojaHoy.numeroHoja || `${hojaHoy.ruta?.codigo?.replace(/^L-/, '')}-${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}${String(hoy.getDate()).padStart(2, '0')}`,
-        esPlanificada: true
+        vehiculo: hojasActivas[0].vehiculo,
+        ruta: hojasActivas[0].ruta,
+        hojaRepartoId: hojasActivas[0]._id,
+        hojaRepartoCodigo: hojasActivas[0].numeroHoja || `${hojasActivas[0].ruta?.codigo?.replace(/^L-/, '')}-${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}${String(hoy.getDate()).padStart(2, '0')}`,
+        esPlanificada: true,
+        hojasActivas: hojasActivas.map(hoja => ({
+          vehiculo: hoja.vehiculo,
+          ruta: hoja.ruta,
+          hojaRepartoId: hoja._id,
+          hojaRepartoCodigo: hoja.numeroHoja || `${hoja.ruta?.codigo?.replace(/^L-/, '')}-${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}${String(hoy.getDate()).padStart(2, '0')}`,
+        }))
       });
     }
 
@@ -258,6 +264,7 @@ const obtenerMiConfiguracion = async (req, res) => {
           ruta: null,
           hojaRepartoId: null,
           esPlanificada: false,
+          hojasActivas: [],
           removidoPorAdmin: true  // flag para que la app pueda mostrar un mensaje claro
         });
       }
@@ -272,7 +279,8 @@ const obtenerMiConfiguracion = async (req, res) => {
       vehiculo: vehiculoFinal,
       ruta: rutaAsignada,
       hojaRepartoId: null,
-      esPlanificada: false
+      esPlanificada: false,
+      hojasActivas: []
     });
 
   } catch (error) {

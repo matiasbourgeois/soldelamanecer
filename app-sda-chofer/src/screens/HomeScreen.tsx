@@ -277,18 +277,27 @@ const HomeScreen = ({ navigation }: any) => {
 
                         <TouchableOpacity
                             style={styles.statusItem}
-                            onPress={() => abrirSelector('ruta')}
+                            onPress={() => {
+                                if (!config?.hojasActivas || config.hojasActivas.length <= 1) {
+                                    abrirSelector('ruta');
+                                }
+                            }}
                             activeOpacity={0.7}
+                            disabled={config?.hojasActivas?.length > 1}
                         >
-                            <View style={[styles.statusIconBase, { backgroundColor: isThemeDark ? 'rgba(56, 189, 248, 0.05)' : 'rgba(0, 188, 212, 0.08)' }]}>
-                                <IconButton icon="map-marker-distance" iconColor={theme.colors.primary} size={24} style={{ margin: 0 }} />
+                            <View style={[styles.statusIconBase, { backgroundColor: config?.hojasActivas?.length > 1 ? 'rgba(234, 179, 8, 0.15)' : (isThemeDark ? 'rgba(56, 189, 248, 0.05)' : 'rgba(0, 188, 212, 0.08)') }]}>
+                                <IconButton icon={config?.hojasActivas?.length > 1 ? "map-marker-multiple-outline" : "map-marker-distance"} iconColor={config?.hojasActivas?.length > 1 ? "#eab308" : theme.colors.primary} size={24} style={{ margin: 0 }} />
                             </View>
                             <View style={styles.statusTextContainer}>
-                                <Text style={styles.statusLabel}>RUTA ACTIVA</Text>
-                                <Text style={[styles.statusMainValue, { color: theme.colors.textPrimary }]}>
-                                    {rutaSeleccionada ? rutaSeleccionada.codigo?.toUpperCase() : 'SIN RUTA'}
+                                <Text style={[styles.statusLabel, config?.hojasActivas?.length > 1 && { color: '#eab308' }]}>
+                                    {config?.hojasActivas?.length > 1 ? 'MÚLTIPLES RUTAS ASIGNADAS' : 'RUTA ACTIVA'}
                                 </Text>
-                                {rutaSeleccionada && (
+                                <Text style={[styles.statusMainValue, { color: theme.colors.textPrimary }]}>
+                                    {config?.hojasActivas?.length > 1
+                                        ? `${config.hojasActivas.length} Rutas Listas`
+                                        : (rutaSeleccionada ? rutaSeleccionada.codigo?.toUpperCase() : 'SIN RUTA')}
+                                </Text>
+                                {rutaSeleccionada && (!config?.hojasActivas || config.hojasActivas.length <= 1) && (
                                     <View>
                                         <Text style={[styles.statusSubDetail, { color: theme.colors.tertiary, fontWeight: 'bold' }]}>
                                             {config?.hojaRepartoCodigo || 'H. PENDIENTE'}
@@ -299,7 +308,9 @@ const HomeScreen = ({ navigation }: any) => {
                                     </View>
                                 )}
                             </View>
-                            <IconButton icon="chevron-down" iconColor={theme.colors.outline} size={20} />
+                            {(!config?.hojasActivas || config.hojasActivas.length <= 1) && (
+                                <IconButton icon="chevron-down" iconColor={theme.colors.outline} size={20} />
+                            )}
                         </TouchableOpacity>
 
                         {/* BOTÓN CONFIRMAR CAMBIOS (Dentro de la card) */}

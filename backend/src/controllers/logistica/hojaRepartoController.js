@@ -839,6 +839,11 @@ const actualizarHoja = async (req, res) => {
 
         if (!hojaOriginal) return res.status(404).json({ error: "Hoja no encontrada" });
 
+        // ─── PROTECCIÓN DE HOJAS CERRADAS ───
+        if (hojaOriginal.estado === 'cerrada' && req.usuario?.rol !== 'admin') {
+            return res.status(403).json({ error: "Operación denegada. Solo los administradores pueden editar una hoja que ya está cerrada." });
+        }
+
         // ─── CAMBIO DE RUTA → Validación de Unicidad "Regla de Oro" ───
         if (ruta && ruta.toString() !== hojaOriginal.ruta?._id?.toString()) {
             const inicioDia = new Date(hojaOriginal.fecha);
@@ -897,32 +902,8 @@ const actualizarHoja = async (req, res) => {
                 accion: `[WEB] Chofer reasignado por ${usuarioAdmin?.nombre || 'Administrativo'}: "${nombreAnterior}" → "${nombreNuevo}"`
             });
 
-            // ── ADMIN SUPREMACY: limpiar la hoja del día del chofer removido ──
-            // Si había un chofer anterior asignado, buscamos su hoja activa de HOY
-            // y le quitamos la asignación para que la app le muestre pantalla vacía.
-            if (choferAnteriorId && hojaOriginal.estado !== 'cerrada') {
-                const hoy = new Date();
-                const inicioDia = new Date(hoy).setHours(0, 0, 0, 0);
-                const finDia = new Date(hoy).setHours(23, 59, 59, 999);
-
-                // Buscamos otras hojas del día donde el chofer removido siga asignado
-                // (puede ser esta misma u otras si fue reasignado antes)
-                const otrasHojasDelChofer = await HojaReparto.find({
-                    _id: { $ne: hojaOriginal._id }, // distinta a la que estamos editando
-                    chofer: choferAnteriorId,
-                    fecha: { $gte: inicioDia, $lte: finDia },
-                    estado: { $ne: 'cerrada' }
-                });
-
-                for (const otraHoja of otrasHojasDelChofer) {
-                    otraHoja.chofer = null;
-                    otraHoja.historialMovimientos.push({
-                        usuario: req.usuario?.id || null,
-                        accion: `[WEB - Admin Supremacy] Chofer "${nombreAnterior}" removido automáticamente por reasignación administrativa`
-                    });
-                    await otraHoja.save();
-                }
-            }
+            // ── ADMIN SUPREMACY DESACTIVADO ──
+            // Ahora permitimos que un mismo chofer mantenga múltiples hojas de ruta simultáneas
         }
 
         // ─── CAMBIO DE VEHÍCULO → Auditoría (solo para hojas cerradas, mantiene lógica original) ──
@@ -1111,6 +1092,99 @@ const reporteDiscrepancias = async (req, res) => {
     }
 };
 
+// 🆕 FASE 8: Hoja de Reparto Especial
+const crearHojaEspecial = async (req, res) => {
+    try {
+        const { fecha, ruta, chofer, vehiculo, observaciones, precioKm, kilometrosEstimados } = req.body;
+
+        if (!observaciones) {
+            return res.status(400).json({ error: 'Las observaciones son obligatorias para una hoja de reparto especial.' });
+        }
+
+        const fechaObj = new Date(fecha || new Date());
+
+        // Formato: SDA-ESPECIAL-20260221-001
+        const dateStr = `${fechaObj.getFullYear()}${String(fechaObj.getMonth() + 1).padStart(2, '0')}${String(fechaObj.getDate()).padStart(2, '0')}`;
+        const inicioDia = new Date(fechaObj);
+        inicioDia.setHours(0, 0, 0, 0);
+        const finDia = new Date(fechaObj);
+        finDia.setHours(23, 59, 59, 999);
+
+        const countHojas = await HojaReparto.countDocuments({
+            fecha: { $gte: inicioDia, $lte: finDia },
+            numeroHoja: { $regex: 'SDA-ESPECIAL' }
+        });
+
+        const secuencia = String(countHojas + 1).padStart(3, '0');
+        const numeroHojaEspecial = `SDA-ESPECIAL-${dateStr}-${secuencia}`;
+
+        const Usuario = require("../../models/Usuario");
+        const usuarioAdmin = req.usuario?.id ? await Usuario.findById(req.usuario.id).lean() : null;
+
+        const nuevaHoja = new HojaReparto({
+            numeroHoja: numeroHojaEspecial,
+            fecha: fechaObj,
+            ruta: ruta || null,
+            chofer: chofer || null,
+            vehiculo: vehiculo || null,
+            envios: [],
+            estado: 'pendiente',
+            observaciones,
+            kilometrosEstimados: kilometrosEstimados || 0,
+            precioKm: precioKm || 0,
+            historialMovimientos: [{
+                usuario: req.usuario?.id || null,
+                accion: `[WEB] Hoja ESPECIAL creada manualmente por ${usuarioAdmin?.nombre || 'Administrativo'}`
+            }]
+        });
+
+        await nuevaHoja.save();
+        logger.info(`✅ Hoja Especial generada: ${numeroHojaEspecial}`);
+
+        res.status(201).json({ msg: "Hoja especial creada exitosamente", hoja: nuevaHoja });
+    } catch (error) {
+        logger.error('❌ Error creando hoja especial:', error);
+        res.status(500).json({ error: 'Error al crear hoja especial' });
+    }
+};
+
+const reporteEspeciales = async (req, res) => {
+    try {
+        const { mes, anio } = req.query;
+
+        if (!mes || !anio) {
+            return res.status(400).json({ error: 'Debe proporcionar mes y año' });
+        }
+
+        const inicioMes = new Date(anio, mes - 1, 1);
+        const finMes = new Date(anio, mes, 0, 23, 59, 59);
+
+        const hojasEspeciales = await HojaReparto.find({
+            fecha: { $gte: inicioMes, $lte: finMes },
+            numeroHoja: { $regex: 'SDA-ESPECIAL', $options: 'i' }
+        }).populate('ruta').populate({ path: 'chofer', populate: { path: 'usuario' } }).populate('vehiculo').lean();
+
+        const dataReporte = hojasEspeciales.map(h => ({
+            fecha: h.fecha,
+            numeroHoja: h.numeroHoja,
+            rutaOriginal: h.ruta?.codigo || '---',
+            chofer: h.chofer?.usuario?.nombre || '---',
+            vehiculo: h.vehiculo?.patente || '---',
+            observaciones: h.observaciones,
+            kilometros: h.kilometrosEstimados || 0,
+            precioKm: h.precioKm || 0,
+            estado: h.estado
+        }));
+
+        logger.info(`📊 Reporte Especiales ${mes}/${anio}: ${dataReporte.length} encontradas`);
+
+        res.json({ total: dataReporte.length, especiales: dataReporte });
+    } catch (error) {
+        logger.error('❌ Error generando reporte especiales:', error);
+        res.status(500).json({ error: 'Error al generar reporte especiales' });
+    }
+};
+
 module.exports = {
     crearHojaPreliminar,
     confirmarHoja,
@@ -1126,5 +1200,7 @@ module.exports = {
     generarHojasAutomaticas,
     actualizarHoja,
     buscarHojaPorRutaFecha,  // 🆕 FASE 5
-    reporteDiscrepancias  // 🆕 FASE 7
+    reporteDiscrepancias,  // 🆕 FASE 7
+    crearHojaEspecial,
+    reporteEspeciales
 };

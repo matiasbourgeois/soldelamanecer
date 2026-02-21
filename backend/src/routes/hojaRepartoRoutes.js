@@ -15,7 +15,9 @@ const {
   generarHojasAutomaticas,
   actualizarHoja,
   buscarHojaPorRutaFecha,  // 🆕 FASE 5
-  reporteDiscrepancias  // 🆕 FASE 7
+  reporteDiscrepancias,  // 🆕 FASE 7
+  crearHojaEspecial,
+  reporteEspeciales
 } = require("../controllers/logistica/hojaRepartoController");
 
 // 🆕 FASE 5: Buscar hoja existente por ruta y fecha (para asignación de envíos)
@@ -23,6 +25,10 @@ router.get("/buscar-por-ruta-fecha", verificarToken, buscarHojaPorRutaFecha);
 
 // 🆕 FASE 7: Reporte mensual de discrepancias (chofer/vehículo plan vs real)
 router.get("/reporte-discrepancias", verificarToken, reporteDiscrepancias);
+
+// 🆕 FASE 8: Hoja Especial y Reportes
+router.post("/especial", verificarToken, crearHojaEspecial);
+router.get("/reporte-especiales", verificarToken, reporteEspeciales);
 
 // Crear hoja preliminar
 router.post("/preliminar", crearHojaPreliminar);
