@@ -1095,7 +1095,7 @@ const reporteDiscrepancias = async (req, res) => {
 // 🆕 FASE 8: Hoja de Reparto Especial
 const crearHojaEspecial = async (req, res) => {
     try {
-        const { fecha, ruta, chofer, vehiculo, observaciones, precioKm, kilometrosEstimados } = req.body;
+        const { fecha, ruta, chofer, vehiculo, observaciones, tipoPago, precioKm, kilometrosEstimados, cantidadVueltas, precioPorVuelta, montoFijo } = req.body;
 
         if (!observaciones) {
             return res.status(400).json({ error: 'Las observaciones son obligatorias para una hoja de reparto especial.' });
@@ -1130,8 +1130,12 @@ const crearHojaEspecial = async (req, res) => {
             envios: [],
             estado: 'pendiente',
             observaciones,
+            tipoPago: tipoPago || 'por_km',
             kilometrosEstimados: kilometrosEstimados || 0,
             precioKm: precioKm || 0,
+            cantidadVueltas: cantidadVueltas || 0,
+            precioPorVuelta: precioPorVuelta || 0,
+            montoFijo: montoFijo || 0,
             historialMovimientos: [{
                 usuario: req.usuario?.id || null,
                 accion: `[WEB] Hoja ESPECIAL creada manualmente por ${usuarioAdmin?.nombre || 'Administrativo'}`
@@ -1164,17 +1168,28 @@ const reporteEspeciales = async (req, res) => {
             numeroHoja: { $regex: 'SDA-ESPECIAL', $options: 'i' }
         }).populate('ruta').populate({ path: 'chofer', populate: { path: 'usuario' } }).populate('vehiculo').lean();
 
-        const dataReporte = hojasEspeciales.map(h => ({
-            fecha: h.fecha,
-            numeroHoja: h.numeroHoja,
-            rutaOriginal: h.ruta?.codigo || '---',
-            chofer: h.chofer?.usuario?.nombre || '---',
-            vehiculo: h.vehiculo?.patente || '---',
-            observaciones: h.observaciones,
-            kilometros: h.kilometrosEstimados || 0,
-            precioKm: h.precioKm || 0,
-            estado: h.estado
-        }));
+        const dataReporte = hojasEspeciales.map(h => {
+            let detalleCobro = '';
+            if (h.tipoPago === 'por_vuelta') {
+                detalleCobro = `${h.cantidadVueltas || 0} Vueltas a $${h.precioPorVuelta || 0}`;
+            } else if (h.tipoPago === 'fijo_viaje') {
+                detalleCobro = `Fijo: $${h.montoFijo || 0}`;
+            } else {
+                detalleCobro = `${h.kilometrosEstimados || 0} Km a $${h.precioKm || 0}`;
+            }
+
+            return {
+                fecha: h.fecha,
+                numeroHoja: h.numeroHoja,
+                rutaOriginal: h.ruta?.codigo || '---',
+                chofer: h.chofer?.usuario?.nombre || '---',
+                vehiculo: h.vehiculo?.patente || '---',
+                observaciones: h.observaciones,
+                tipoPago: h.tipoPago || 'por_km',
+                detalleCobro: detalleCobro,
+                estado: h.estado
+            };
+        });
 
         logger.info(`📊 Reporte Especiales ${mes}/${anio}: ${dataReporte.length} encontradas`);
 

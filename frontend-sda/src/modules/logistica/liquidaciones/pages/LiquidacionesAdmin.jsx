@@ -121,8 +121,10 @@ const LiquidacionesAdmin = () => {
 
     const cargarChoferes = async () => {
         try {
-            const { data } = await clienteAxios.get('/choferes/contratados');
-            const choferesActivos = data.filter(c => c.activo !== false);
+            const { data } = await clienteAxios.get('/choferes/contratados', { params: { limite: 1000 } });
+            // El backend devuelve paginación con { contratados: [...] }
+            const lista = data.contratados || [];
+            const choferesActivos = lista.filter(c => c.activo !== false);
             setChoferes(choferesActivos.map(c => ({
                 value: c._id,
                 label: `${c.usuario?.nombre || 'Sin nombre'} (${c.dni})`
@@ -161,6 +163,13 @@ const LiquidacionesAdmin = () => {
                 fechaInicio: fI,
                 fechaFin: fF
             });
+
+            if (!data.totales || data.hojasValidas.length === 0) {
+                mostrarAlerta('El chofer no tiene viajes a liquidar en este periodo.', 'info');
+                setSimulacion(null);
+                return;
+            }
+
             setSimulacion(data);
             setPaginaHojas(1); // Reset pagination on new simulation
         } catch (error) {
