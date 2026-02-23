@@ -331,6 +331,7 @@ const enviarConformidad = async (req, res) => {
         const periodoMesEnvio = txtMesEnvio.charAt(0).toUpperCase() + txtMesEnvio.slice(1);
 
         const dataPDF = {
+            pdfMargin: { top: '40px', bottom: '40px', left: '50px', right: '50px' },
             imagen_fondo: fondoBase64 ? `data:image/png;base64,${fondoBase64}` : "",
             periodoMes: periodoMesEnvio,
             fechaInicio: formateadorFecha.format(new Date(liquidacion.periodo.inicio)),
@@ -503,6 +504,7 @@ const descargarPDFLiquidacion = async (req, res) => {
         const periodoMesDesc = txtMesDesc.charAt(0).toUpperCase() + txtMesDesc.slice(1);
 
         const dataPDF = {
+            pdfMargin: { top: '40px', bottom: '40px', left: '50px', right: '50px' },
             imagen_fondo: fondoBase64 ? `data:image/png;base64,${fondoBase64}` : "",
             periodoMes: periodoMesDesc,
             fechaInicio: formateadorFecha.format(new Date(liquidacion.periodo.inicio)),
