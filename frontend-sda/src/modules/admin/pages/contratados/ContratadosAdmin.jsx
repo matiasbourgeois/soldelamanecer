@@ -201,11 +201,11 @@ const ContratadosAdmin = () => {
 
                                         {/* Columna 1: Nombre / Razón Social y Roles */}
                                         <Stack gap={2}>
-                                            <Group gap="xs" mb={0}>
-                                                <Text fw={800} size="md" c={c.activo ? "dark.6" : "gray.5"} lineClamp={1}>
+                                            <Group gap="xs" mb={0} wrap="nowrap">
+                                                <Text fw={800} size="md" c={c.activo ? "dark.6" : "gray.5"} lineClamp={1} style={{ flex: 1, wordBreak: 'break-word' }}>
                                                     {razonSocial || nombre}
                                                 </Text>
-                                                {!c.activo && <Badge size="9px" color="gray" variant="filled">INACTIVO</Badge>}
+                                                {!c.activo && <Badge size="9px" color="gray" variant="filled" style={{ flexShrink: 0 }}>INACTIVO</Badge>}
                                             </Group>
                                             {razonSocial && (
                                                 <Text size="xs" c="dimmed" lineClamp={1}>
