@@ -122,12 +122,7 @@ const login = async (req, res) => {
       const Chofer = require("../../models/Chofer");
       const choferPerfil = await Chofer.findOne({ usuario: usuario._id });
       if (choferPerfil) {
-        // 🔒 Bloqueo temporal: los contratados aún no tienen acceso a la app móvil
-        if (choferPerfil.tipoVinculo === 'contratado') {
-          return res.status(403).json({
-            error: "Su acceso a la app móvil no está habilitado aún. Comuníquese con la administración."
-          });
-        }
+        // 🔒 Bloqueo temporal REMOVIDO: Ahora los contratados SÍ tienen acceso a la app móvil
         datosChofer = {
           tipoContrato: choferPerfil.tipoVinculo, // Mapeamos tipoVinculo a tipoContrato para el frontend
           vehiculoAsignado: choferPerfil.vehiculoAsignado
@@ -208,11 +203,7 @@ const googleLogin = async (req, res) => {
       const Chofer = require("../../models/Chofer");
       const choferPerfil = await Chofer.findOne({ usuario: usuario._id });
       if (choferPerfil) {
-        if (choferPerfil.tipoVinculo === 'contratado') {
-          return res.status(403).json({
-            error: "Su acceso a la app móvil no está habilitado aún. Comuníquese con la administración."
-          });
-        }
+        // Bloqueo removido también en Google Auth
         datosChofer = {
           tipoContrato: choferPerfil.tipoVinculo,
           vehiculoAsignado: choferPerfil.vehiculoAsignado

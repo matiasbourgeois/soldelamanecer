@@ -6,9 +6,9 @@ const UsuarioSistema = require("../../models/Usuario");
 // Crear nuevo chofer
 const crearChofer = async (req, res) => {
   try {
-    const { usuario, dni, telefono, tipoVinculo } = req.body;
+    const { usuario, telefono, tipoVinculo } = req.body;
 
-    if (!usuario || !dni || !telefono || !tipoVinculo) {
+    if (!usuario || !telefono || !tipoVinculo) {
       return res.status(400).json({ msg: "Faltan campos obligatorios." });
     }
 
@@ -33,7 +33,6 @@ const crearChofer = async (req, res) => {
 
     if (existeChofer) {
       // UPSERT LOGIC: Update existing record
-      existeChofer.dni = dni;
       existeChofer.telefono = telefono;
       existeChofer.tipoVinculo = tipoVinculo;
       existeChofer.activo = true; // Ensure it's active
@@ -43,7 +42,6 @@ const crearChofer = async (req, res) => {
 
     const nuevoChofer = new Chofer({
       usuario,
-      dni,
       telefono,
       tipoVinculo,
     });
@@ -148,9 +146,8 @@ const editarChofer = async (req, res) => {
       return res.status(404).json({ msg: "Chofer no encontrado." });
     }
 
-    const { dni, telefono, tipoVinculo } = req.body;
+    const { telefono, tipoVinculo } = req.body;
 
-    if (dni) chofer.dni = dni;
     if (telefono) chofer.telefono = telefono;
     if (tipoVinculo) chofer.tipoVinculo = tipoVinculo;
 
@@ -349,7 +346,7 @@ const actualizarAsignacion = async (req, res) => {
       hoja.chofer = null;
       hoja.historialMovimientos.push({
         usuario: usuarioId,
-        accion: `Chofer ${chofer.usuario?.nombre || chofer.dni} dejó la ruta ${rutaAnterior?.codigo} desde app móvil`
+        accion: `Chofer ${chofer.usuario?.nombre || chofer.usuario?.dni} dejó la ruta ${rutaAnterior?.codigo} desde app móvil`
       });
       await hoja.save();
 

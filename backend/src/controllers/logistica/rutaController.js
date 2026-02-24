@@ -129,6 +129,49 @@ const actualizarRuta = async (req, res) => {
   }
 };
 
+// Edición masiva de tarifas (Tarifario Maestro)
+const actualizarTarifasMasivas = async (req, res) => {
+  try {
+    // Protección estricta: Solo administradores pueden hacer cambios masivos
+    if (req.usuario.rol !== "admin") {
+      return res.status(403).json({ error: "Acceso denegado. Se requiere nivel de Administrador." });
+    }
+
+    const { rutas } = req.body;
+
+    if (!Array.isArray(rutas) || rutas.length === 0) {
+      return res.status(400).json({ error: "No se proporcionaron rutas para actualizar." });
+    }
+
+    // Preparar las operaciones para bulkWrite
+    const operaciones = rutas.map((ruta) => {
+      // Validaciones básicas de seguridad
+      const updateData = {};
+      if (ruta.tipoPago) updateData.tipoPago = ruta.tipoPago;
+      if (ruta.precioKm !== undefined) updateData.precioKm = Number(ruta.precioKm);
+      if (ruta.montoPorDistribucion !== undefined) updateData.montoPorDistribucion = Number(ruta.montoPorDistribucion);
+      if (ruta.montoMensual !== undefined) updateData.montoMensual = Number(ruta.montoMensual);
+
+      return {
+        updateOne: {
+          filter: { _id: ruta.id },
+          update: { $set: updateData },
+        },
+      };
+    });
+
+    const resultado = await Ruta.bulkWrite(operaciones);
+
+    res.status(200).json({
+      mensaje: "Tarifas actualizadas correctamente",
+      modificados: resultado.modifiedCount,
+    });
+  } catch (error) {
+    console.error("Error al actualizar tarifas masivas:", error);
+    res.status(500).json({ error: "Error interno del servidor al procesar la actualización masiva." });
+  }
+};
+
 // Baja lógica
 const cambiarEstadoRuta = async (req, res) => {
   try {
@@ -230,4 +273,5 @@ module.exports = {
   agregarLocalidadesARuta,
   eliminarLocalidadDeRuta,
   eliminarRuta,
+  actualizarTarifasMasivas,
 };

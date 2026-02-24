@@ -7,7 +7,6 @@ const ChoferSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  dni: { type: String, required: true },
   telefono: { type: String, required: true },
   tipoVinculo: {
     type: String,

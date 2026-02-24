@@ -890,8 +890,8 @@ const actualizarHoja = async (req, res) => {
                 ? await Chofer.findById(choferNuevoId).populate("usuario")
                 : null;
 
-            const nombreAnterior = choferAnteriorDoc?.usuario?.nombre || choferAnteriorDoc?.dni || "Sin asignar";
-            const nombreNuevo = choferNuevoDoc?.usuario?.nombre || choferNuevoDoc?.dni || "Sin asignar";
+            const nombreAnterior = choferAnteriorDoc?.usuario?.nombre || choferAnteriorDoc?.usuario?.dni || "Sin asignar";
+            const nombreNuevo = choferNuevoDoc?.usuario?.nombre || choferNuevoDoc?.usuario?.dni || "Sin asignar";
 
             // Registrar en historial (aplica para CUALQUIER estado, no solo cerrada)
             const usuarioAdmin = req.usuario?.id

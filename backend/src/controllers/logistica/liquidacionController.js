@@ -337,7 +337,7 @@ const enviarConformidad = async (req, res) => {
             fechaInicio: formateadorFecha.format(new Date(liquidacion.periodo.inicio)),
             fechaFin: formateadorFecha.format(new Date(liquidacion.periodo.fin)),
             chofer: liquidacion.chofer.usuario.nombre,
-            dni: liquidacion.chofer.dni,
+            dni: liquidacion.chofer.usuario.dni,
             diasTrabajados: liquidacion.totales?.diasTrabajados || liquidacion.hojasReparto.length,
             totalKmBase: liquidacion.totales?.kmBaseAcumulados || totalKmBase,
             totalKmExtra: liquidacion.totales?.kmExtraAcumulados || totalKmExtra,
@@ -348,7 +348,7 @@ const enviarConformidad = async (req, res) => {
             hojas: hojasDetalladas
         };
 
-        const fileName = `Liquidacion_${liquidacion.chofer.dni}_${Date.now()}.pdf`;
+        const fileName = `Liquidacion_${liquidacion.chofer.usuario.dni}_${Date.now()}.pdf`;
         const outputPath = path.join(process.cwd(), "pdfs", "liquidaciones", fileName);
 
         // Crear carpeta si no existe
@@ -510,7 +510,7 @@ const descargarPDFLiquidacion = async (req, res) => {
             fechaInicio: formateadorFecha.format(new Date(liquidacion.periodo.inicio)),
             fechaFin: formateadorFecha.format(new Date(liquidacion.periodo.fin)),
             chofer: liquidacion.chofer.usuario.nombre,
-            dni: liquidacion.chofer.dni,
+            dni: liquidacion.chofer.usuario.dni,
             diasTrabajados: liquidacion.totales?.diasTrabajados || liquidacion.hojasReparto.length,
             totalKmBase: liquidacion.totales?.kmBaseAcumulados || totalKmBase,
             totalKmExtra: liquidacion.totales?.kmExtraAcumulados || totalKmExtra,
@@ -521,7 +521,7 @@ const descargarPDFLiquidacion = async (req, res) => {
             hojas: hojasDetalladas
         };
 
-        const fileName = `Liquidacion_${liquidacion.chofer.dni}_${Date.now()}.pdf`;
+        const fileName = `Liquidacion_${liquidacion.chofer.usuario.dni}_${Date.now()}.pdf`;
         const outputPath = path.join(process.cwd(), "pdfs", "liquidaciones", fileName);
 
         const outputDir = path.dirname(outputPath);

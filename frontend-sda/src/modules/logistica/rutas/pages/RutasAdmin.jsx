@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TablaRutas from "./TablaRutas";
-import FormularioRuta from "./FormularioRuta";
 import { apiSistema } from "../../../../core/api/apiSistema";
+import useAuth from "../../../../core/hooks/useAuth";
+import ModalTarifasMasivas from "../components/ModalTarifasMasivas";
 import { Container, Paper, Title, Group, Button, TextInput, Transition } from "@mantine/core";
 import { Plus, Map, Search } from "lucide-react";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
@@ -10,9 +11,12 @@ import { confirmarAccion } from "../../../../core/utils/confirmarAccion.jsx";
 
 const RutasAdmin = () => {
   const navigate = useNavigate();
+  const { auth } = useAuth(); // Autenticación para rol admin
+
   const [rutas, setRutas] = useState([]);
   const [localidades, setLocalidades] = useState([]);
   const [mostrarModal, setMostrarModal] = useState(false);
+  const [mostrarTarifario, setMostrarTarifario] = useState(false);
   const [rutaEditando, setRutaEditando] = useState(null);
   const [filtro, setFiltro] = useState("");
   const [totalRutas, setTotalRutas] = useState(0);
@@ -114,6 +118,18 @@ const RutasAdmin = () => {
             >
               Gestionar Localidades
             </Button>
+
+            {auth?.rol === "admin" && (
+              <Button
+                leftSection={<Map size={18} />}
+                color="violet"
+                variant="light"
+                onClick={() => setMostrarTarifario(true)}
+              >
+                Tarifario Maestro
+              </Button>
+            )}
+
             <Button
               leftSection={<Plus size={18} />}
               color="cyan"
@@ -156,6 +172,14 @@ const RutasAdmin = () => {
           ruta={rutaEditando}
           localidades={localidades}
           recargar={() => fetchRutas(paginaActual, filtro)}
+        />
+      )}
+
+      {mostrarTarifario && auth?.rol === "admin" && (
+        <ModalTarifasMasivas
+          abierto={mostrarTarifario}
+          onClose={() => setMostrarTarifario(false)}
+          recargarRutas={() => fetchRutas(paginaActual, filtro)}
         />
       )}
     </Container>

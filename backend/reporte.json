@@ -1,0 +1,115 @@
+{
+  "encontradosTotal": 19,
+  "reconocidos": [
+    {
+      "foto": "Aguirre Javier",
+      "enBaseDatos": "JAVIER AGUIRRE"
+    },
+    {
+      "foto": "Alba Emilio (hijo)",
+      "enBaseDatos": "EMILIO ALBA"
+    },
+    {
+      "foto": "Aldeco Alejandro",
+      "enBaseDatos": "ALEJANDRO ALDECO"
+    },
+    {
+      "foto": "Amaranto Trinidad",
+      "enBaseDatos": "TRINIDAD AMARANTO"
+    },
+    {
+      "foto": "Anchaval Diego",
+      "enBaseDatos": "DIEGO ANCHAVAL"
+    },
+    {
+      "foto": "Anchaval Federico",
+      "enBaseDatos": "LEANDRO FEDERICO NAHUEL ANCHAVAL"
+    },
+    {
+      "foto": "Anchaval Lucas",
+      "enBaseDatos": "LUCAS ANCHAVAL"
+    },
+    {
+      "foto": "Andrade Ruben",
+      "enBaseDatos": "RUBÉN ANDRADE"
+    },
+    {
+      "foto": "Anspach William",
+      "enBaseDatos": "WILLIAMS ENRIQUE RICHAR ANSPACH"
+    },
+    {
+      "foto": "Arias Lucas",
+      "enBaseDatos": "LUCAS ARIAS"
+    },
+    {
+      "foto": "Bray Alan",
+      "enBaseDatos": "ALAN BRAY"
+    },
+    {
+      "foto": "Cagnolo Diego",
+      "enBaseDatos": "DIEGO CAGNOLO"
+    },
+    {
+      "foto": "Castello Cristian",
+      "enBaseDatos": "CRISTIAN CASTELLO"
+    },
+    {
+      "foto": "Cescato Mariano",
+      "enBaseDatos": "MARIANO EZEQUIEL CESCATO"
+    },
+    {
+      "foto": "Galisia Matias Nahuel",
+      "enBaseDatos": "MATIAS GALISIA"
+    },
+    {
+      "foto": "Fernando Luis Maldonado",
+      "enBaseDatos": "FERNANDO MALDONADO"
+    },
+    {
+      "foto": "Torres Jorge",
+      "enBaseDatos": "JORGE TORRES"
+    },
+    {
+      "foto": "Vilatta Matias",
+      "enBaseDatos": "MATIAS MIGUEL VILATTA"
+    },
+    {
+      "foto": "Mauricio",
+      "enBaseDatos": "MAURICIO ERIC ZARATE"
+    }
+  ],
+  "NO_reconocidos_NUEVOS": [
+    {
+      "nombreC": "Marcelo",
+      "dni": "22772816",
+      "fechaIngreso": "12/1/2013"
+    },
+    {
+      "nombreC": "Galisia Jonathan Marcelo",
+      "dni": "35134302",
+      "fechaIngreso": "1/18/2016"
+    },
+    {
+      "nombreC": "GarciaJesus Emanuel",
+      "dni": "29759271",
+      "fechaIngreso": "7/5/2024"
+    }
+  ],
+  "estabanEnBD_NoEnFoto": [
+    "LUCAS JAVIER ALDECO BAUDONNET (contratado)",
+    "DIEGO MATIAS CALDERON (contratado)",
+    "ELIAS CESCATO (contratado)",
+    "LORENZO FERMANELLI (contratado)",
+    "FOS JONATAN GALISIA (contratado)",
+    "EMANUEL JESUS GARCIA (contratado)",
+    "LUCAS GORDILLO (contratado)",
+    "ERIC EUGENIO LINERA (contratado)",
+    "MARIANO LUJAN (contratado)",
+    "LUCAS ARIEL NAVONI (contratado)",
+    "ENZO PALLONI POGGI (contratado)",
+    "RAFAEL ROJAS (contratado)",
+    "GABRIEL VALINOTTO (contratado)",
+    "YOHANA MARIELA CANDELLERO VELOZO (relacionDependencia)",
+    "DARIO ADRIAN ORTIZ (relacionDependencia)"
+  ]
+}
