@@ -14,7 +14,12 @@ const crearRuta = async (req, res) => {
       localidades = [],
       choferAsignado,
       vehiculoAsignado,
-      contratistaTitular
+      contratistaTitular,
+      kilometrosEstimados,
+      precioKm,
+      tipoPago,
+      montoPorDistribucion,
+      montoMensual
     } = req.body;
 
     const nuevaRuta = new Ruta({
@@ -27,6 +32,11 @@ const crearRuta = async (req, res) => {
       choferAsignado: choferAsignado || null,
       vehiculoAsignado: vehiculoAsignado || null,
       contratistaTitular: contratistaTitular || null,
+      kilometrosEstimados: kilometrosEstimados || 0,
+      precioKm: precioKm || 0,
+      tipoPago: tipoPago || 'por_km',
+      montoPorDistribucion: montoPorDistribucion || 0,
+      montoMensual: montoMensual || 0,
     });
 
     await nuevaRuta.save();
@@ -149,6 +159,7 @@ const actualizarTarifasMasivas = async (req, res) => {
       const updateData = {};
       if (ruta.tipoPago) updateData.tipoPago = ruta.tipoPago;
       if (ruta.precioKm !== undefined) updateData.precioKm = Number(ruta.precioKm);
+      if (ruta.kilometrosEstimados !== undefined) updateData.kilometrosEstimados = Number(ruta.kilometrosEstimados);
       if (ruta.montoPorDistribucion !== undefined) updateData.montoPorDistribucion = Number(ruta.montoPorDistribucion);
       if (ruta.montoMensual !== undefined) updateData.montoMensual = Number(ruta.montoMensual);
 

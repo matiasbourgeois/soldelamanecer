@@ -105,12 +105,19 @@ const ModalTarifasMasivas = ({ abierto, onClose, recargarRutas }) => {
                     montoMensual: rutaCambiada.montoMensual !== undefined
                         ? rutaCambiada.montoMensual
                         : rutaOriginal.montoMensual,
+                    kilometrosEstimados: rutaCambiada.kilometrosEstimados !== undefined
+                        ? rutaCambiada.kilometrosEstimados
+                        : rutaOriginal.kilometrosEstimados,
                 };
             });
 
+            const token = localStorage.getItem("token");
             const res = await fetch(apiSistema("/rutas/tarifas-masivas"), {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({ rutas: payload }),
             });
 
@@ -165,6 +172,7 @@ const ModalTarifasMasivas = ({ abierto, onClose, recargarRutas }) => {
                             <Table.Th ta="center">Salida</Table.Th>
                             <Table.Th>Chofer (Modo Info)</Table.Th>
                             <Table.Th>Método de Pago</Table.Th>
+                            <Table.Th ta="right">Km Base</Table.Th>
                             <Table.Th ta="right">Monto ($)</Table.Th>
                         </Table.Tr>
                     </Table.Thead>
@@ -224,6 +232,20 @@ const ModalTarifasMasivas = ({ abierto, onClose, recargarRutas }) => {
                                                 size="xs"
                                                 w={150}
                                             />
+                                        </Table.Td>
+                                        <Table.Td ta="right">
+                                            {tipoPagoForm === "por_km" ? (
+                                                <NumberInput
+                                                    value={getValorActual(r, "kilometrosEstimados")}
+                                                    onChange={(val) => manejarCambio(r._id, "kilometrosEstimados", val)}
+                                                    size="xs"
+                                                    w={80}
+                                                    hideControls
+                                                    styles={{ input: { textAlign: 'right' } }}
+                                                />
+                                            ) : (
+                                                <Text size="xs" c="dimmed">-</Text>
+                                            )}
                                         </Table.Td>
                                         <Table.Td ta="right">
                                             <NumberInput

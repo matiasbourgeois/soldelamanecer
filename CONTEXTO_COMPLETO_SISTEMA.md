@@ -2497,5 +2497,49 @@ A pedido del Administrador del código, se revisó todo el árbol en busca de re
 
 ---
 
-**FIN DEL DOCUMENTO - CONTEXTO COMPLETO ACTUALIZADO**
+---
+
+## 🏗️ FASE 11 — SESIÓN 24/02/2026 — Tarifario Maestro, Normalización de Identidad y Gestión de Flota Externa
+
+### 📊 Tarifario Maestro de Rutas (Edición Ultra-Rápida)
+
+**Problema resuelto:** La actualización de las tarifas de las 82 rutas del sistema era una tarea tediosa que requería entrar una por una a cada formulario. Se implementó una herramienta de administración masiva para el control financiero ágil.
+
+#### Cambios en Backend
+- **`backend/src/routes/rutas.js`**: Nuevo endpoint `PATCH /tarifas-masivas` protegido por rol 'admin'.
+- **`backend/src/controllers/logistica/rutaController.js`**: Implementación de `actualizarTarifasMasivas` utilizando `Ruta.bulkWrite()`. Esta técnica permite realizar decenas de actualizaciones en una sola transacción a la base de datos, optimizando el rendimiento.
+- **Campos soportados**: `tipoPago`, `precioKm`, `kilometrosEstimados` (Km Base), `montoPorDistribucion` y `montoMensual`.
+
+#### Cambios en Frontend
+- **`ModalTarifasMasivas.jsx`**: Nuevo componente de tabla editable con validación condicional. Si la ruta es "Por Km", permite editar los kilómetros base y el precio; de lo contrario, bloquea los campos irrelevantes para evitar errores de carga.
+- **Acceso Directo**: Botón violeta ("Tarifario Maestro") inyectado en la cabecera de la Gestión de Rutas, visible únicamente para administradores.
+
+---
+
+### 🛡️ Consolidación de Identidad y Seguridad (DNI Único)
+
+**Problema resuelto:** Existía una redundancia crítica donde el DNI del chofer se guardaba tanto en la colección `Usuario` como en `Chofer`, lo que generaba inconsistencias y fallas en los reportes de liquidación.
+
+#### Refactorización de Datos:
+1. **Unificación de DNI**: Se eliminó el campo `dni` de la colección `Chofer`. Ahora el sistema utiliza exclusivamente el `dni` del `Usuario` vinculado.
+2. **Normalización de Nombres**: Se ejecutó un proceso de limpieza masiva que transformó todos los nombres de los empleados al formato estándar de la empresa: `APELLIDO, NOMBRE` (Ej: "ANDRADE, RUBÉN").
+3. **Arreglo de Login Admin**: Se detectó y resolvió un conflicto de credenciales donde el email del administrador (`matiasbourgeois@gmail.com`) se había duplicado en una cuenta de chofer de prueba. Se restauró el rol de `admin` y se habilitó una contraseña de rescate por base de datos.
+
+---
+
+### 🚐 Gestión de Flota y Organigrama Quirúrgico (Migración VPS)
+
+**Acción realizada:** Se automatizó el reflejo de la estructura organizativa real de la empresa en el sistema local.
+
+- **Migración de Vehículos**: Se importaron 18 perfiles de vehículos externos (Contratados) directamente desde la base de producción del VPS localizando patentes, marcas y modelos.
+- **Asignación por Mapa**: Basado en el organigrama oficial, se actualizaron mediante script:
+    - Las **frecuencias reales** de 56 rutas (Lunes a Sábado, Lunes a Viernes, etc.).
+    - La **asignación de choferes y vehículos** a cada recorrido, vinculando los IDs de MongoDB de forma exacta.
+- **Km Base**: Se habilitó la persistencia de los kilómetros base tanto en la edición masiva como en la creación de nuevas rutas (antes se perdían al guardar).
+
+---
+
+**FIN DEL DOCUMENTO - CONTEXTO COMPLETO ACTUALIZADO (24/02/2026)**
+
+---
 
