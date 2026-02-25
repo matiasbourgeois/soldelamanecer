@@ -249,6 +249,7 @@ const agregarTipoMantenimiento = async (req, res) => {
 
     vehiculo.configuracionMantenimiento.push({
       nombre,
+      codigo: tipoExistenteGlobal.codigo || null,
       frecuenciaKm,
       ultimoKm: finalUltimoKm
     });

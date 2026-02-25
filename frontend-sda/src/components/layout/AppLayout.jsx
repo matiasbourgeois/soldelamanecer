@@ -270,11 +270,23 @@ export function AppLayout({ children, auth, handleLogout }) {
                         </NavLink>
 
                         <NavLink
-                            label="Reportes y Métricas"
+                            label="Reportes y Exportaciones"
                             leftSection={<IconChartBar size={20} stroke={1.5} />}
-                            rightSection={isActive('/admin/reportes') && <IconChevronRight size={14} />}
-                            {...getLinkProps('/admin/reportes')}
-                        />
+                            childrenOffset={28}
+                            defaultOpened={isParentActive(['/admin/reportes'])}
+                            style={{ borderRadius: theme.radius.md, fontWeight: 600, color: theme.colors.gray[7] }}
+                        >
+                            <NavLink
+                                label="Dashboard General"
+                                leftSection={<IconChartBar size={18} />}
+                                {...getLinkProps('/admin/reportes')}
+                            />
+                            <NavLink
+                                label="Logística y Rutas"
+                                leftSection={<IconMapPin size={18} />}
+                                {...getLinkProps('/admin/reportes/logistica')}
+                            />
+                        </NavLink>
                     </>
                 )}
 

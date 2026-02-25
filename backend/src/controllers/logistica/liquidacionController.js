@@ -84,33 +84,37 @@ const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
             kmExtraAcumulados += extra;
 
             const esEspecial = hoja.numeroHoja && hoja.numeroHoja.includes('SDA-ESPECIAL');
-            const tipoPagoEval = esEspecial ? (hoja.tipoPago || 'por_km') : (ruta?.tipoPago || 'por_km');
+            // Cortamos el fallback: Ahora todo lee obligatoriamente desde la hoja congelada o el especial
+            const tipoPagoEval = hoja.tipoPago || 'por_km';
+
+            // Funcion auxiliar para formatear los números eliminando decimales en cero y truncando a 2 max
+            const truncarMonto = (num) => parseFloat(num.toFixed(2));
 
             if (tipoPagoEval === 'por_km') {
-                const precio = esEspecial ? (hoja.precioKm || 0) : (hoja.precioKm || ruta?.precioKm || 0);
-                pagoHoja = (kmBase + extra) * precio;
+                const precio = hoja.precioKm || 0;
+                pagoHoja = truncarMonto((kmBase + extra) * precio);
                 montoTotalViajes += pagoHoja;
                 hoja.detallePago = `Por KM (${kmBase + extra} km): $${pagoHoja}`;
                 hoja.subtotal = pagoHoja;
             } else if (tipoPagoEval === 'por_distribucion') {
-                pagoHoja = esEspecial ? 0 : (ruta?.montoPorDistribucion || 0);
+                pagoHoja = truncarMonto(hoja.montoPorDistribucion || 0);
                 montoTotalViajes += pagoHoja;
                 hoja.detallePago = `Por Distribución: $${pagoHoja}`;
                 hoja.subtotal = pagoHoja;
             } else if (tipoPagoEval === 'por_mes') {
-                hoja.detallePago = esEspecial ? 'Mes Fijo (Especial)' : `Mes Fijo ($${ruta?.montoMensual || 0})`;
+                hoja.detallePago = esEspecial ? 'Mes Fijo (Especial)' : `Mes Fijo ($${truncarMonto(hoja.montoMensual || 0)})`;
                 hoja.subtotal = 0;
                 if (!tieneMesFijo && !esEspecial) {
                     tieneMesFijo = true;
-                    montoMesAdicional = ruta?.montoMensual || 0;
+                    montoMesAdicional = truncarMonto(hoja.montoMensual || 0);
                 }
             } else if (tipoPagoEval === 'por_vuelta') {
-                pagoHoja = (hoja.cantidadVueltas || 0) * (hoja.precioPorVuelta || 0);
+                pagoHoja = truncarMonto((hoja.cantidadVueltas || 0) * (hoja.precioPorVuelta || 0));
                 montoTotalViajes += pagoHoja;
                 hoja.detallePago = `Por Vuelta (${hoja.cantidadVueltas} vnts): $${pagoHoja}`;
                 hoja.subtotal = pagoHoja;
             } else if (tipoPagoEval === 'fijo_viaje') {
-                pagoHoja = hoja.montoFijo || 0;
+                pagoHoja = truncarMonto(hoja.montoFijo || 0);
                 montoTotalViajes += pagoHoja;
                 hoja.detallePago = `Fijo Viaje: $${pagoHoja}`;
                 hoja.subtotal = pagoHoja;
@@ -281,21 +285,31 @@ const enviarConformidad = async (req, res) => {
                 totalKmBase += kmBase;
                 totalKmExtra += extra;
 
-                if (h.ruta?.tipoPago === 'por_km') {
-                    const precio = h.precioKm || h.ruta?.precioKm || 0;
+                const tipoPagoEval = h.tipoPago || 'por_km';
+
+                if (tipoPagoEval === 'por_km') {
+                    const precio = h.precioKm || 0;
                     const pago = (kmBase + extra) * precio;
                     montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
                     subtotalViajes += pago;
-                } else if (h.ruta?.tipoPago === 'por_distribucion') {
-                    const pago = h.ruta?.montoPorDistribucion || 0;
+                } else if (tipoPagoEval === 'por_distribucion') {
+                    const pago = h.montoPorDistribucion || 0;
                     montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
                     subtotalViajes += pago;
-                } else if (h.ruta?.tipoPago === 'por_mes') {
+                } else if (tipoPagoEval === 'por_mes') {
                     montoStr = "-";
                     if (!tieneMesFijo) {
                         tieneMesFijo = true;
-                        montoMesAdicional = h.ruta?.montoMensual || liquidacion.chofer.datosContratado?.tarifaMensualAdicional || 0;
+                        montoMesAdicional = h.montoMensual || liquidacion.chofer.datosContratado?.tarifaMensualAdicional || 0;
                     }
+                } else if (tipoPagoEval === 'por_vuelta') {
+                    const pago = (h.cantidadVueltas || 0) * (h.precioPorVuelta || 0);
+                    montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+                    subtotalViajes += pago;
+                } else if (tipoPagoEval === 'fijo_viaje') {
+                    const pago = h.montoFijo || 0;
+                    montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+                    subtotalViajes += pago;
                 }
             }
 
@@ -444,23 +458,22 @@ const descargarPDFLiquidacion = async (req, res) => {
                 totalKmBase += kmBase;
                 totalKmExtra += extra;
 
-                const esEspecial = h.numeroHoja && h.numeroHoja.includes('SDA-ESPECIAL');
-                const tipoPagoEval = esEspecial ? (h.tipoPago || 'por_km') : (h.ruta?.tipoPago || 'por_km');
+                const tipoPagoEval = h.tipoPago || 'por_km';
 
                 if (tipoPagoEval === 'por_km') {
-                    const precio = esEspecial ? (h.precioKm || 0) : (h.precioKm || h.ruta?.precioKm || 0);
+                    const precio = h.precioKm || 0;
                     const pago = (kmBase + extra) * precio;
                     montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
                     subtotalViajes += pago;
                 } else if (tipoPagoEval === 'por_distribucion') {
-                    const pago = esEspecial ? 0 : (h.ruta?.montoPorDistribucion || 0);
+                    const pago = h.montoPorDistribucion || 0;
                     montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
                     subtotalViajes += pago;
                 } else if (tipoPagoEval === 'por_mes') {
                     montoStr = "-";
-                    if (!tieneMesFijo && !esEspecial) {
+                    if (!tieneMesFijo) {
                         tieneMesFijo = true;
-                        montoMesAdicional = h.ruta?.montoMensual || liquidacion.chofer.datosContratado?.tarifaMensualAdicional || 0;
+                        montoMesAdicional = h.montoMensual || liquidacion.chofer.datosContratado?.tarifaMensualAdicional || 0;
                     }
                 } else if (tipoPagoEval === 'por_vuelta') {
                     const pago = (h.cantidadVueltas || 0) * (h.precioPorVuelta || 0);

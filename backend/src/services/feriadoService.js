@@ -42,9 +42,21 @@ const obtenerFeriados = async (anio) => {
 
         return fechasFeriados;
     } catch (error) {
-        logger.error(`❌ Error obteniendo feriados de ${anio}:`, error.message);
-        // Devolver array vacío en caso de error para no bloquear el sistema
-        return [];
+        logger.error(`❌ Error obteniendo feriados de ${anio}: ${error.message}. Usando padrón fijo de respaldo.`);
+
+        // Padrón fijo nivel Dios de feriados inamovibles argentinos
+        const feriadosDuros = [
+            `${anio}-01-01`, // Año Nuevo
+            `${anio}-03-24`, // Día de la Memoria
+            `${anio}-04-02`, // Malvinas
+            `${anio}-05-01`, // Día del Trabajador
+            `${anio}-05-25`, // Rev. Mayo
+            `${anio}-06-20`, // Belgrano
+            `${anio}-07-09`, // Independencia
+            `${anio}-12-08`, // Inmaculada Concepción
+            `${anio}-12-25`  // Navidad
+        ];
+        return feriadosDuros;
     }
 };
 
@@ -54,11 +66,19 @@ const obtenerFeriados = async (anio) => {
  * @returns {Promise<boolean>} true si es feriado, false si no
  */
 const esFeriado = async (fecha) => {
-    const anio = fecha.getFullYear();
-    const feriados = await obtenerFeriados(anio);
+    // Parche Nivel Dios: Si la fecha entra como `Date` (ej. 24 de Mayo a las 23hs) 
+    // y aplicás toISOString(), la manda a UTC (que la tira a 25 de Mayo a las 02hs).
+    // Rompería todo. Hay que sacar la fecha EXACTA en Argentina.
 
-    // Convertir la fecha a formato 'YYYY-MM-DD'
-    const fechaStr = fecha.toISOString().split('T')[0];
+    // Obtener la fecha local forzando Argentina
+    const fnLocal = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+    const anio = fnLocal.getFullYear();
+    const mes = String(fnLocal.getMonth() + 1).padStart(2, '0');
+    const dia = String(fnLocal.getDate()).padStart(2, '0');
+
+    const fechaStr = `${anio}-${mes}-${dia}`;
+
+    const feriados = await obtenerFeriados(anio);
 
     const resultado = feriados.includes(fechaStr);
 

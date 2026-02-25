@@ -686,7 +686,7 @@ const MantenimientoAdmin = () => {
                                         placeholder="Buscá por nombre o código"
                                         data={tiposMantenimiento.map(t => ({
                                             value: t.nombre,
-                                            label: `[${t.codigo}] ${t.nombre}`
+                                            label: `[${t.codigo || 'S/C'}] ${t.nombre}`
                                         }))}
                                         searchable
                                         nothingFoundMessage="No se encontró el mantenimiento"
@@ -750,16 +750,16 @@ const MantenimientoAdmin = () => {
                     <Paper withBorder p="md" radius="md">
                         <Text fw={700} size="xs" mb="md" c="indigo">+ Nuevo Tipo de Mantenimiento</Text>
                         <Grid align="flex-end" gutter="xs">
-                            <Grid.Col span={4}>
+                            <Grid.Col span={3}>
                                 <TextInput
                                     label="Código"
-                                    placeholder="Ej: MANT-01"
+                                    placeholder="Ej: MNT-1"
                                     value={nuevoTipoBase.codigo}
                                     onChange={(e) => setNuevoTipoBase({ ...nuevoTipoBase, codigo: e.currentTarget.value.toUpperCase() })}
                                     error={tiposMantenimiento.some(t => t.codigo === nuevoTipoBase.codigo) ? "Código repetido" : null}
                                 />
                             </Grid.Col>
-                            <Grid.Col span={4}>
+                            <Grid.Col span={5}>
                                 <TextInput
                                     label="Nombre"
                                     placeholder="Ej: Correa de Distribución"
@@ -778,9 +778,16 @@ const MantenimientoAdmin = () => {
                                 />
                             </Grid.Col>
                             <Grid.Col span={1}>
-                                <Button fullWidth color="indigo" onClick={handleAddTipoBase} disabled={!nuevoTipoBase.nombre || !nuevoTipoBase.codigo}>
-                                    Crear
-                                </Button>
+                                <ActionIcon
+                                    size={36}
+                                    color="indigo"
+                                    variant="filled"
+                                    onClick={handleAddTipoBase}
+                                    disabled={!nuevoTipoBase.nombre || !nuevoTipoBase.codigo}
+                                    title="Agregar Tipo"
+                                >
+                                    <IconPlus size={20} />
+                                </ActionIcon>
                             </Grid.Col>
                         </Grid>
                     </Paper>
@@ -788,7 +795,7 @@ const MantenimientoAdmin = () => {
                     <Table verticalSpacing="xs">
                         <Table.Thead>
                             <Table.Tr>
-                                <Table.Th style={{ width: 100 }}>Código</Table.Th>
+                                <Table.Th style={{ width: 140 }}>Código</Table.Th>
                                 <Table.Th>Nombre</Table.Th>
                                 <Table.Th>Frecuencia Sugerida</Table.Th>
                                 <Table.Th style={{ textAlign: 'right' }}>Acciones</Table.Th>
@@ -806,7 +813,7 @@ const MantenimientoAdmin = () => {
                                                 error={tiposMantenimiento.some(item => item._id !== t._id && item.codigo === editandoTipoBase.codigo) ? "Ya existe" : null}
                                             />
                                         ) : (
-                                            <Badge variant="outline" color="gray">{t.codigo}</Badge>
+                                            <Badge variant="outline" color={t.codigo ? "gray" : "red"}>{t.codigo || 'SIN CÓDIGO'}</Badge>
                                         )}
                                     </Table.Td>
                                     <Table.Td>

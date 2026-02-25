@@ -104,6 +104,33 @@ const RutasAdmin = () => {
     }
   };
 
+  const exportarExcel = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(apiSistema('/rutas/excel'), {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) throw new Error("Error al descargar");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reporte_Rutas_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      mostrarAlerta("✅ Excel exportado exitosamente", "success");
+    } catch (error) {
+      console.error("Error al exportar:", error);
+      mostrarAlerta("❌ No se pudo exportar el Excel", "danger");
+    }
+  };
+
   return (
     <Container size="xl" py="md">
       <Paper p="md" radius="md" shadow="sm" withBorder mb="lg">

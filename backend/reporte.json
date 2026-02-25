@@ -1,115 +1,111 @@
 {
-  "encontradosTotal": 19,
+  "encontradosTotal": 22,
   "reconocidos": [
     {
       "foto": "Aguirre Javier",
-      "enBaseDatos": "JAVIER AGUIRRE"
+      "enBaseDatos": "AGUIRRE, JAVIER"
     },
     {
       "foto": "Alba Emilio (hijo)",
-      "enBaseDatos": "EMILIO ALBA"
+      "enBaseDatos": "ALBA, EMILIO"
     },
     {
       "foto": "Aldeco Alejandro",
-      "enBaseDatos": "ALEJANDRO ALDECO"
+      "enBaseDatos": "ALDECO, ALEJANDRO"
     },
     {
       "foto": "Amaranto Trinidad",
-      "enBaseDatos": "TRINIDAD AMARANTO"
+      "enBaseDatos": "AMARANTO, TRINIDAD"
     },
     {
       "foto": "Anchaval Diego",
-      "enBaseDatos": "DIEGO ANCHAVAL"
+      "enBaseDatos": "ANCHAVAL, DIEGO"
     },
     {
       "foto": "Anchaval Federico",
-      "enBaseDatos": "LEANDRO FEDERICO NAHUEL ANCHAVAL"
+      "enBaseDatos": "ANCHAVAL, LEANDRO FEDERICO NAHUEL"
     },
     {
       "foto": "Anchaval Lucas",
-      "enBaseDatos": "LUCAS ANCHAVAL"
+      "enBaseDatos": "ANCHAVAL, LUCAS"
     },
     {
       "foto": "Andrade Ruben",
-      "enBaseDatos": "RUBÉN ANDRADE"
+      "enBaseDatos": "ANDRADE, RUBÉN"
     },
     {
       "foto": "Anspach William",
-      "enBaseDatos": "WILLIAMS ENRIQUE RICHAR ANSPACH"
+      "enBaseDatos": "ANSPACH, WILLIAMS ENRIQUE RICHAR"
     },
     {
       "foto": "Arias Lucas",
-      "enBaseDatos": "LUCAS ARIAS"
+      "enBaseDatos": "ARIAS, LUCAS"
     },
     {
       "foto": "Bray Alan",
-      "enBaseDatos": "ALAN BRAY"
+      "enBaseDatos": "BRAY, ALAN"
+    },
+    {
+      "foto": "Marcelo",
+      "enBaseDatos": "BURGOS, MARCELO HECTOR"
     },
     {
       "foto": "Cagnolo Diego",
-      "enBaseDatos": "DIEGO CAGNOLO"
+      "enBaseDatos": "CAGNOLO, DIEGO"
     },
     {
       "foto": "Castello Cristian",
-      "enBaseDatos": "CRISTIAN CASTELLO"
+      "enBaseDatos": "CASTELLO, CRISTIAN"
     },
     {
       "foto": "Cescato Mariano",
-      "enBaseDatos": "MARIANO EZEQUIEL CESCATO"
+      "enBaseDatos": "CESCATO, MARIANO EZEQUIEL"
+    },
+    {
+      "foto": "Galisia Jonathan Marcelo",
+      "enBaseDatos": "GALISIA, FOS JONATAN"
     },
     {
       "foto": "Galisia Matias Nahuel",
-      "enBaseDatos": "MATIAS GALISIA"
+      "enBaseDatos": "GALISIA, MATIAS"
+    },
+    {
+      "foto": "GarciaJesus Emanuel",
+      "enBaseDatos": "GARCIA, EMANUEL JESUS"
     },
     {
       "foto": "Fernando Luis Maldonado",
-      "enBaseDatos": "FERNANDO MALDONADO"
+      "enBaseDatos": "MALDONADO, FERNANDO"
     },
     {
       "foto": "Torres Jorge",
-      "enBaseDatos": "JORGE TORRES"
+      "enBaseDatos": "TORRES, JORGE"
     },
     {
       "foto": "Vilatta Matias",
-      "enBaseDatos": "MATIAS MIGUEL VILATTA"
+      "enBaseDatos": "VILATTA, MATIAS MIGUEL"
     },
     {
       "foto": "Mauricio",
-      "enBaseDatos": "MAURICIO ERIC ZARATE"
+      "enBaseDatos": "ZARATE, MAURICIO ERIC"
     }
   ],
-  "NO_reconocidos_NUEVOS": [
-    {
-      "nombreC": "Marcelo",
-      "dni": "22772816",
-      "fechaIngreso": "12/1/2013"
-    },
-    {
-      "nombreC": "Galisia Jonathan Marcelo",
-      "dni": "35134302",
-      "fechaIngreso": "1/18/2016"
-    },
-    {
-      "nombreC": "GarciaJesus Emanuel",
-      "dni": "29759271",
-      "fechaIngreso": "7/5/2024"
-    }
-  ],
+  "NO_reconocidos_NUEVOS": [],
   "estabanEnBD_NoEnFoto": [
-    "LUCAS JAVIER ALDECO BAUDONNET (contratado)",
-    "DIEGO MATIAS CALDERON (contratado)",
-    "ELIAS CESCATO (contratado)",
-    "LORENZO FERMANELLI (contratado)",
-    "FOS JONATAN GALISIA (contratado)",
-    "EMANUEL JESUS GARCIA (contratado)",
-    "LUCAS GORDILLO (contratado)",
-    "ERIC EUGENIO LINERA (contratado)",
-    "MARIANO LUJAN (contratado)",
-    "LUCAS ARIEL NAVONI (contratado)",
-    "ENZO PALLONI POGGI (contratado)",
-    "RAFAEL ROJAS (contratado)",
-    "GABRIEL VALINOTTO (contratado)",
-    "YOHANA MARIELA CANDELLERO VELOZO (relacionDependencia)",
-    "DARIO ADRIAN ORTIZ (relacionDependencia)"
+    "ALDECO BAUDONNET, LUCAS JAVIER (contratado)",
+    "CESCATO, ELIAS (contratado)",
+    "FERMANELLI, LORENZO (contratado)",
+    "GORDILLO, LUCAS (contratado)",
+    "LINERA, ERIC EUGENIO (contratado)",
+    "LUJAN, MARIANO (contratado)",
+    "NAVONI, LUCAS ARIEL (contratado)",
+    "PALLONI POGGI, ENZO (contratado)",
+    "ROJAS, RAFAEL (contratado)",
+    "VALINOTTO, GABRIEL (contratado)",
+    "CANDELLERO VELOZO, YOHANA MARIELA (relacionDependencia)",
+    "ORTIZ, DARIO ADRIAN (relacionDependencia)",
+    "MORETTI, JOSE DANIEL (contratado)",
+    "ZARATE, ALAN DIEGO (contratado)",
+    "VILATTA, PABLO FEDERICO (contratado)"
   ]
 }

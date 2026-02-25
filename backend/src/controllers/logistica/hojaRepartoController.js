@@ -122,8 +122,11 @@ const crearHojaPreliminar = async (req, res) => {
             estado: 'pendiente',
             observaciones,
             // Snapshot de precios y KMs (Fase 1 Plan Maestro)
+            tipoPago: ruta.tipoPago || 'por_km',
             kilometrosEstimados: ruta.kilometrosEstimados || 0,
             precioKm: ruta.precioKm || 0,
+            montoPorDistribucion: ruta.montoPorDistribucion || 0,
+            montoMensual: ruta.montoMensual || 0,
             proveedor: ruta.proveedorAsignado || null,
             historialMovimientos: [
                 {
@@ -801,8 +804,11 @@ const generarHojasAutomaticas = async (fechaReferencia, esFeriadoNacional = fals
                     estado: 'pendiente',
                     observaciones: `Generada automáticamente por el sistema (Motor Silencioso).`,
                     // Snapshot de precios y KMs (Fase 1 Plan Maestro)
+                    tipoPago: ruta.tipoPago || 'por_km',
                     kilometrosEstimados: ruta.kilometrosEstimados || 0,
                     precioKm: ruta.precioKm || 0,
+                    montoPorDistribucion: ruta.montoPorDistribucion || 0,
+                    montoMensual: ruta.montoMensual || 0,
                     proveedor: ruta.proveedorAsignado || null,
                     historialMovimientos: [{
                         usuario: null, // Sistema

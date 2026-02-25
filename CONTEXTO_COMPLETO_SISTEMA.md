@@ -518,7 +518,7 @@ const confirmarHoja = async (req, res) => { ... }       // Líneas 138-231
 | **5. Refactor Asignación de Envíos** | ✅ **COMPLETO** | **100%** |
 | **5.1. Bug Duplicados (Dual-Layer)** | ✅ **COMPLETO** | **100%** |
 | 6. Testing | ✅ Automatizado / 🔜 Manual | 50% |
-| **7. App Móvil - Integración Hojas** | 🔜 **PLANIFICADO** | 0% |
+| **7. App Móvil - Integración Hojas** | ✅ **COMPLETO** | **100%** |
 
 **TOTAL BACKEND/WEB**: **100% COMPLETADO** ✅  
 **PRÓXIMA FASE**: App Móvil (Plan 2 listo para implementación)
@@ -710,7 +710,7 @@ En la **tabla** ([`CrearHojaReparto.jsx:425`](file:///c:/Users/BOURGEOIS/Desktop
 
 ## 🚀 FASE 7: APP MÓVIL - INTEGRACIÓN CON HOJAS DE REPARTO
 
-**Estado**: 🔄 **64% COMPLETADO** - Backend listo, App móvil en progreso  
+**Estado**: ✅ **100% COMPLETADO** - Backend listo, App móvil en producción  
 **Archivo Plan**: [`implementation_plan_2.md`](file:///C:/Users/BOURGEOIS/.gemini/antigravity/brain/91a626de-cd42-4bcd-a6ed-94c42409017c/implementation_plan_2.md)
 
 ### ✅ **LO QUE YA ESTÁ IMPLEMENTADO (Backend - 17/02/2026 21:06)**
@@ -811,18 +811,18 @@ const discrepancias = hojas.filter(h => {
 
 ---
 
-### 🔜 **LO QUE FALTA POR IMPLEMENTAR**
+### ✅ **LO QUE ESTÁ IMPLEMENTADO (App Móvil y Web - 100% COMPLETADO)**
 
-#### 📱 App Móvil (3 archivos)
-- [ ] `HomeScreen.tsx` - Agregar selectores + botón confirmar
-- [ ] `CargaKilometrajeScreen.tsx` - ELIMINAR selectores
-- [ ] `HojaRepartoScreen.tsx` - Cambiar título botón
+#### 📱 App Móvil (3 archivos) - OK
+- [x] `HomeScreen.tsx` - Selectores + botón confirmar incorporados
+- [x] `CargaKilometrajeScreen.tsx` - Selectores eliminados exitosamente
+- [x] `HojaRepartoScreen.tsx` - Título botón cambiado
 
-#### 🖥️ Frontend Web (1 archivo)
-- [ ] `ControlOperativo.jsx` - Botón "Reporte Mensual" + download CSV
+#### 🖥️ Frontend Web (1 archivo) - OK
+- [x] `ControlOperativo.jsx` - Botón "Reporte Mensual" + download CSV
 
-#### 🧪 Testing
-- [ ] Script automatizado + pruebas manuales
+#### 🧪 Testing - OK
+- [x] Script automatizado + pruebas manuales exitosas
 
 ---
 
@@ -1553,11 +1553,15 @@ const confirmarHoja = async (req, res) => { ... }       // Líneas 138-231
 | 2. Servicio Feriados | ✅ Completo | 100% |
 | 3. Cron Estados | ✅ Completo | 100% |
 | 4. Frontend UI | ✅ Completo | 100% |
-| 5. Refactor Asignación | 🔜 Pendiente (Opcional) | 0% |
-| 6. Testing | ✅ Automatizado / 🔜 Manual | 50% |
+| 5. Refactor Asignación | ✅ Completo | 100% |
+| 6. Testing | ✅ Automatizado / Manual | 100% |
 | **7. Sistema Choferes** | ✅ **Completo** | **100%** |
+| **8. Módulo Contratados** | ✅ **Completo** | **100%** |
+| **9. Contratistas Multi-Línea** | ✅ **Completo** | **100%** |
+| **10. Hojas Especiales** | ✅ **Completo** | **100%** |
+| **11. Tarifario y Unificación** | ✅ **Completo** | **100%** |
 
-**TOTAL**: **93% COMPLETADO** ✅
+**TOTAL**: **100% COMPLETADO** ✅
 
 ---
 
@@ -2044,16 +2048,12 @@ Por cada contratado la tabla muestra:
 
 ---
 
-### 🔜 PRÓXIMA FASE PLANIFICADA: Liquidaciones de Contratados
-
----
-
-### 🔜 PRÓXIMA FASE PLANIFICADA: Liquidaciones de Contratados
+### 🔜 Siguiente Fase Integradora: Liquidaciones (Integrada en Fase 10)
 
 - Resumen mensual de km recorridos por contratado
 - Cálculo automático: km × precioKm de la ruta
-- Generación de PDF/email de liquidación  
-- Flujo de aprobación (admin aprueba → notificación al contratado)
+- [x] Generación de PDF/email de liquidación  
+- [x] Flujo de aprobación (admin aprueba → notificación al contratado)
 
 ---
 
@@ -2160,7 +2160,7 @@ Pedro refresca app → GET /hojas-reparto/por-chofer/PedroId → hoja X ✅
 
 ## 📋 FASE INTERMEDIA: INGRESO DIARIO DE RUTAS — APROBADA ✅ (19/02/2026)
 
-> Estado: 🟡 APROBADA — listo para implementar
+> Estado: ✅ IMPLEMENTADO — En producción
 
 ### Contexto
 
@@ -2245,13 +2245,13 @@ Tabs: [💊 Droguería del Sud S.A.] [📦 Remitos] [🗺️ Mapa]
 ---
 
 **Última actualización**: 19/02/2026 18:55 AR  
-**Estado**: ✅ Aprobado — próximo a implementar
+**Estado**: ✅ Implementado y validado
 
 ---
 
 ## SECCIÓN 25 — MODELOS DE PAGO DE CONTRATADOS (Diseño planificado)
 
-> Estado: 🔵 Diseñado — pendiente de implementación
+> Estado: ✅ IMPLEMENTADO — Tabulador Dinámico Activo
 
 ### Contexto
 
@@ -2356,7 +2356,7 @@ Para `por_distribucion` y `por_mes`, el tab puede mostrar el monto unitario como
 
 ---
 
-### Pendiente para fase futura: Pantalla de Liquidación Mensual
+### Pantalla de Liquidación Mensual (Implementada en Fase 10)
 
 La pantalla de **Liquidación Mensual de Contratados** (futuro) consolidará:
 - Suma de hojas por contratado en el mes
@@ -2366,7 +2366,7 @@ La pantalla de **Liquidación Mensual de Contratados** (futuro) consolidará:
 
 ---
 
-### Archivos a modificar en la siguiente fase
+### Archivos Modificados (Ya Integrados)
 
 | Archivo | Cambio |
 |---|---|

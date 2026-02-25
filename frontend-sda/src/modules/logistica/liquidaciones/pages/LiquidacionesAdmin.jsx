@@ -76,9 +76,13 @@ const LiquidacionesAdmin = () => {
     };
 
     const formatearYYYYMMDDLocal = (dateOb) => {
-        const year = dateOb.getFullYear();
-        const month = String(dateOb.getMonth() + 1).padStart(2, '0');
-        const day = String(dateOb.getDate()).padStart(2, '0');
+        if (!dateOb) return '';
+        const d = new Date(dateOb); // Forzamos parseo seguro por si entra como String ISO
+        if (isNaN(d.getTime())) return ''; // Proteccion extra
+
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     };
 

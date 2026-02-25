@@ -1,6 +1,7 @@
 const Chofer = require("../../models/Chofer");
 const Vehiculo = require("../../models/Vehiculo");
 const UsuarioSistema = require("../../models/Usuario");
+const excelJS = require("exceljs");
 
 
 // Crear nuevo chofer
@@ -533,6 +534,85 @@ const subirDocumentoContratado = async (req, res) => {
   }
 };
 
+// Exportar a Excel (Reporte de Choferes)
+const reporteExcelChoferes = async (req, res) => {
+  try {
+    const choferes = await Chofer.find()
+      .populate("usuario", "nombre apellido dni email verificado activo")
+      .lean();
+
+    const workbook = new excelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Padrón Choferes");
+
+    worksheet.columns = [
+      { header: "NOMBRE Y APELLIDO", key: "nombre", width: 35 },
+      { header: "DNI", key: "dni", width: 15 },
+      { header: "TELÉFONO", key: "telefono", width: 15 },
+      { header: "VÍNCULO", key: "vinculo", width: 20 },
+      { header: "CUIT", key: "cuit", width: 20 },
+      { header: "INGRESO", key: "ingreso", width: 15 },
+      { header: "ESTADO", key: "estado", width: 15 },
+    ];
+
+    // Style Header
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4C6EF5" } };
+      cell.alignment = { horizontal: "center" };
+    });
+
+    choferes.forEach((chofer) => {
+      let nombreTexto = "Sin Usuario Asignado";
+      let dniTexto = "-";
+      let estadoTexto = chofer.activo ? "ACTIVO" : "INACTIVO";
+
+      if (chofer.usuario) {
+        nombreTexto = `${chofer.usuario.nombre || ''} ${chofer.usuario.apellido || ''}`.trim();
+        dniTexto = chofer.usuario.dni || "-";
+
+        if (!chofer.usuario.activo) estadoTexto = "USUARIO BLOQUEADO";
+      }
+
+      let cuitTexto = "-";
+      let ingresoTexto = "-";
+
+      if (chofer.tipoVinculo === 'contratado' && chofer.datosContratado) {
+        cuitTexto = chofer.datosContratado.cuit || "S/C";
+        if (chofer.datosContratado.fechaIngreso) {
+          const f = new Date(chofer.datosContratado.fechaIngreso);
+          ingresoTexto = `${f.getDate().toString().padStart(2, '0')}/${(f.getMonth() + 1).toString().padStart(2, '0')}/${f.getFullYear()}`;
+        }
+      }
+
+      worksheet.addRow({
+        nombre: nombreTexto,
+        dni: dniTexto,
+        telefono: chofer.telefono || "-",
+        vinculo: chofer.tipoVinculo.toUpperCase(),
+        cuit: cuitTexto,
+        ingreso: ingresoTexto,
+        estado: estadoTexto,
+      });
+    });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=Padron_Choferes.xlsx"
+    );
+
+    await workbook.xlsx.write(res);
+    res.status(200).end();
+
+  } catch (error) {
+    console.error("Error al generar Excel de choferes:", error);
+    res.status(500).json({ error: "Error al generar el reporte Excel" });
+  }
+};
+
 module.exports = {
   crearChofer,
   obtenerChoferes,
@@ -546,5 +626,6 @@ module.exports = {
   // Contratados
   obtenerContratados,
   editarContratado,
-  subirDocumentoContratado
+  subirDocumentoContratado,
+  reporteExcelChoferes
 };

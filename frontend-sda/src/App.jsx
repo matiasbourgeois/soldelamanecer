@@ -30,6 +30,7 @@ import DashboardAdmin from "./modules/admin/pages/DashboardAdmin";
 const AdminArcade = lazy(() => import("./modules/admin/pages/AdminArcade"));
 import ChoferesAdmin from "./modules/admin/pages/ChoferesAdmin";
 import Reportes from "./modules/admin/pages/reportes/Reportes"; // Assuming subfolder moved
+import ReportesLogistica from "./modules/admin/pages/reportes/ReportesLogistica";
 import ContratadosAdmin from "./modules/admin/pages/contratados/ContratadosAdmin";
 
 // Pages - Logistica (Envios)
@@ -176,6 +177,14 @@ function App() {
               element={
                 <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
                   <Reportes />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/reportes/logistica"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <ReportesLogistica />
                 </ProtectedByRole>
               }
             />

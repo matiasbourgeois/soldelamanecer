@@ -11,17 +11,26 @@ import {
     ScrollArea,
     ActionIcon,
     Tooltip,
+    TextInput,
 } from "@mantine/core";
-import { RefreshCw, Save } from "lucide-react";
+import { RefreshCw, Save, Search } from "lucide-react";
 import { apiSistema } from "../../../../core/api/apiSistema";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal";
 import { confirmarAccion } from "../../../../core/utils/confirmarAccion";
+import { Calendar, AlertTriangle } from "lucide-react";
 
 const ModalTarifasMasivas = ({ abierto, onClose, recargarRutas }) => {
     const [rutas, setRutas] = useState([]);
     const [cambios, setCambios] = useState({});
     const [loading, setLoading] = useState(false);
     const [guardando, setGuardando] = useState(false);
+    const [busqueda, setBusqueda] = useState("");
+
+    // Sincronizador Retroactivo
+    const mesActual = (new Date().getMonth() + 1).toString();
+    const [syncMes, setSyncMes] = useState(mesActual);
+    const [syncAnio, setSyncAnio] = useState(new Date().getFullYear());
+    const [sincronizando, setSincronizando] = useState(false);
 
     // Opciones permitidas en Backend
     const opcionesPago = [
@@ -138,6 +147,41 @@ const ModalTarifasMasivas = ({ abierto, onClose, recargarRutas }) => {
         }
     };
 
+    const sincronizarMes = async () => {
+        const confirmar = await confirmarAccion(
+            "⚠️ ¡Atención! Sincronización Retroactiva",
+            `¿Estás seguro de que deseas APLICAR A LA FUERZA los precios actuales a TODAS las hojas de reparto del mes de ${syncMes}/${syncAnio}? Esta acción no se puede deshacer y alterará el historial contable de ese mes para reflejar la inflación.`
+        );
+
+        if (!confirmar) return;
+        setSincronizando(true);
+
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(apiSistema("/rutas/sincronizar-mes"), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ mes: syncMes, anio: syncAnio }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                mostrarAlerta(`✅ Éxito: ${data.estadisticas.actualizadasExitosamente} viajes actualizados a la tarifa de hoy.`, "success");
+            } else {
+                mostrarAlerta(data.error || data.mensaje || "Error al sincronizar", "danger");
+            }
+        } catch (error) {
+            console.error(error);
+            mostrarAlerta("❌ Error de comunicación con el servidor.", "danger");
+        } finally {
+            setSincronizando(false);
+        }
+    };
+
     return (
         <Modal
             opened={abierto}
@@ -155,15 +199,24 @@ const ModalTarifasMasivas = ({ abierto, onClose, recargarRutas }) => {
             <Group justify="space-between" mb="sm">
                 <Text size="sm" c="dimmed">
                     Modifique los valores de pago. Sólo se guardarán las rutas que usted haya alterado.
-                </Text>
-                <Tooltip label="Recargar datos originales">
-                    <ActionIcon variant="light" color="gray" onClick={cargarTodasLasRutas} loading={loading}>
-                        <RefreshCw size={18} />
-                    </ActionIcon>
-                </Tooltip>
+                </Text>  <Group>
+                    <TextInput
+                        placeholder="Buscar ruta o chofer..."
+                        value={busqueda}
+                        onChange={(e) => setBusqueda(e.currentTarget.value)}
+                        leftSection={<Search size={16} />}
+                        w={240}
+                        disabled={loading}
+                    />
+                    <Tooltip label="Recargar datos originales">
+                        <ActionIcon variant="light" color="gray" onClick={cargarTodasLasRutas} loading={loading} size="lg">
+                            <RefreshCw size={18} />
+                        </ActionIcon>
+                    </Tooltip>
+                </Group>
             </Group>
 
-            <ScrollArea h={500}>
+            <ScrollArea h={450}>
                 <Table striped highlightOnHover stickyHeader>
                     <Table.Thead>
                         <Table.Tr>
@@ -190,97 +243,148 @@ const ModalTarifasMasivas = ({ abierto, onClose, recargarRutas }) => {
                                 </Table.Td>
                             </Table.Tr>
                         ) : (
-                            rutas.map((r) => {
-                                const tipoPagoForm = getValorActual(r, "tipoPago");
+                            rutas
+                                .filter((r) => {
+                                    if (!busqueda) return true;
+                                    const text = busqueda.toLowerCase();
+                                    const codigo = (r.codigo || "").toLowerCase();
+                                    const salida = (r.horaSalida || "").toLowerCase();
+                                    const chofer = (r.choferAsignado?.usuario?.nombre || "").toLowerCase();
+                                    return codigo.includes(text) || salida.includes(text) || chofer.includes(text);
+                                })
+                                .map((r) => {
+                                    const tipoPagoForm = getValorActual(r, "tipoPago");
 
-                                // Determinar qué campo numérico mostrar basado en el tipoPago seleccionado
-                                let propMonto = "precioKm";
-                                if (tipoPagoForm === "por_distribucion") propMonto = "montoPorDistribucion";
-                                if (tipoPagoForm === "por_mes") propMonto = "montoMensual";
+                                    // Determinar qué campo numérico mostrar basado en el tipoPago seleccionado
+                                    let propMonto = "precioKm";
+                                    if (tipoPagoForm === "por_distribucion") propMonto = "montoPorDistribucion";
+                                    if (tipoPagoForm === "por_mes") propMonto = "montoMensual";
 
-                                const valorMontoForm = getValorActual(r, propMonto);
-                                const isCambiado = !!cambios[r._id];
+                                    const valorMontoForm = getValorActual(r, propMonto);
+                                    const isCambiado = !!cambios[r._id];
 
-                                return (
-                                    <Table.Tr key={r._id} style={{ backgroundColor: isCambiado ? 'rgba(56, 217, 169, 0.1)' : undefined }}>
-                                        <Table.Td>
-                                            <Badge color="dark" variant="outline">{r.codigo}</Badge>
-                                        </Table.Td>
-                                        <Table.Td>
-                                            <Text size="sm" lineClamp={1} w={150} title={r.descripcion}>
-                                                {r.descripcion || "-"}
-                                            </Text>
-                                        </Table.Td>
-                                        <Table.Td ta="center">
-                                            <Badge color="violet" variant="light">{r.horaSalida}</Badge>
-                                        </Table.Td>
-                                        <Table.Td>
-                                            {r.choferAsignado ? (
-                                                <Text size="sm" fw={500} c="blue.7">
-                                                    {r.choferAsignado.usuario?.nombre || "Sin Asignar"}
+                                    return (
+                                        <Table.Tr key={r._id} style={{ backgroundColor: isCambiado ? 'rgba(56, 217, 169, 0.1)' : undefined }}>
+                                            <Table.Td>
+                                                <Badge color="dark" variant="outline">{r.codigo}</Badge>
+                                            </Table.Td>
+                                            <Table.Td>
+                                                <Text size="sm" lineClamp={1} w={150} title={r.descripcion}>
+                                                    {r.descripcion || "-"}
                                                 </Text>
-                                            ) : (
-                                                <Text size="xs" c="dimmed">Libre / Pool</Text>
-                                            )}
-                                        </Table.Td>
-                                        <Table.Td>
-                                            <Select
-                                                data={opcionesPago}
-                                                value={tipoPagoForm}
-                                                allowDeselect={false}
-                                                onChange={(val) => manejarCambio(r._id, "tipoPago", val)}
-                                                size="xs"
-                                                w={150}
-                                            />
-                                        </Table.Td>
-                                        <Table.Td ta="right">
-                                            {tipoPagoForm === "por_km" ? (
-                                                <NumberInput
-                                                    value={getValorActual(r, "kilometrosEstimados")}
-                                                    onChange={(val) => manejarCambio(r._id, "kilometrosEstimados", val)}
+                                            </Table.Td>
+                                            <Table.Td ta="center">
+                                                <Badge color="violet" variant="light">{r.horaSalida}</Badge>
+                                            </Table.Td>
+                                            <Table.Td>
+                                                {r.choferAsignado ? (
+                                                    <Text size="sm" fw={500} c="blue.7">
+                                                        {r.choferAsignado.usuario?.nombre || "Sin Asignar"}
+                                                    </Text>
+                                                ) : (
+                                                    <Text size="xs" c="dimmed">Libre / Pool</Text>
+                                                )}
+                                            </Table.Td>
+                                            <Table.Td>
+                                                <Select
+                                                    data={opcionesPago}
+                                                    value={tipoPagoForm}
+                                                    allowDeselect={false}
+                                                    onChange={(val) => manejarCambio(r._id, "tipoPago", val)}
                                                     size="xs"
-                                                    w={80}
+                                                    w={150}
+                                                />
+                                            </Table.Td>
+                                            <Table.Td ta="right">
+                                                {tipoPagoForm === "por_km" ? (
+                                                    <NumberInput
+                                                        value={getValorActual(r, "kilometrosEstimados")}
+                                                        onChange={(val) => manejarCambio(r._id, "kilometrosEstimados", val)}
+                                                        size="xs"
+                                                        w={80}
+                                                        hideControls
+                                                        styles={{ input: { textAlign: 'right' } }}
+                                                    />
+                                                ) : (
+                                                    <Text size="xs" c="dimmed">-</Text>
+                                                )}
+                                            </Table.Td>
+                                            <Table.Td ta="right">
+                                                <NumberInput
+                                                    value={valorMontoForm}
+                                                    onChange={(val) => manejarCambio(r._id, propMonto, val)}
+                                                    prefix="$ "
+                                                    thousandSeparator="."
+                                                    decimalSeparator=","
+                                                    size="xs"
+                                                    w={110}
                                                     hideControls
                                                     styles={{ input: { textAlign: 'right' } }}
                                                 />
-                                            ) : (
-                                                <Text size="xs" c="dimmed">-</Text>
-                                            )}
-                                        </Table.Td>
-                                        <Table.Td ta="right">
-                                            <NumberInput
-                                                value={valorMontoForm}
-                                                onChange={(val) => manejarCambio(r._id, propMonto, val)}
-                                                prefix="$ "
-                                                thousandSeparator="."
-                                                decimalSeparator=","
-                                                size="xs"
-                                                w={110}
-                                                hideControls
-                                                styles={{ input: { textAlign: 'right' } }}
-                                            />
-                                        </Table.Td>
-                                    </Table.Tr>
-                                );
-                            })
+                                            </Table.Td>
+                                        </Table.Tr>
+                                    );
+                                })
                         )}
                     </Table.Tbody>
                 </Table>
             </ScrollArea>
 
-            <Group justify="flex-end" mt="md" pt="md" style={{ borderTop: "1px solid #eaeaea" }}>
-                <Button variant="default" onClick={onClose} disabled={guardando}>
-                    Cancelar
-                </Button>
-                <Button
-                    color="green"
-                    leftSection={<Save size={18} />}
-                    onClick={guardarCambios}
-                    loading={guardando}
-                    disabled={Object.keys(cambios).length === 0}
-                >
-                    Guardar {Object.keys(cambios).length > 0 ? `(${Object.keys(cambios).length}) ` : ""}Cambios
-                </Button>
+            <Group justify="space-between" mt="lg" pt="md" style={{ borderTop: "1px solid #eaeaea", alignItems: 'flex-start' }}>
+                <div style={{ flex: 1, border: '1px solid #ffc078', backgroundColor: '#fff4e6', padding: '15px', borderRadius: 10, maxWidth: '60%', boxShadow: '0 2px 4px rgba(255, 146, 43, 0.1)' }}>
+                    <Group justify="space-between" align="center">
+                        <div style={{ flex: 1 }}>
+                            <Text size="md" fw={700} c="orange.9" display="flex" style={{ alignItems: 'center', gap: 8 }}>
+                                <AlertTriangle size={18} fill="currentColor" c="orange.5" style={{ color: "var(--mantine-color-orange-9)" }} />
+                                Sincronizador Retroactivo de Tarifas
+                            </Text>
+                            <Text size="sm" c="orange.8" mt={4} lh={1.3}>
+                                Seleccione un mes pasado para <b>sobrescribir masivamente</b> todas sus hojas de reparto con las tarifas actuales de esta tabla. Usar sólo para ajustes inflacionarios a mes vencido.
+                            </Text>
+                        </div>
+                        <Group mt="xs">
+                            <Select
+                                data={[
+                                    { value: "1", label: "Enero" }, { value: "2", label: "Febrero" }, { value: "3", label: "Marzo" },
+                                    { value: "4", label: "Abril" }, { value: "5", label: "Mayo" }, { value: "6", label: "Junio" },
+                                    { value: "7", label: "Julio" }, { value: "8", label: "Agosto" }, { value: "9", label: "Septiembre" },
+                                    { value: "10", label: "Octubre" }, { value: "11", label: "Noviembre" }, { value: "12", label: "Diciembre" }
+                                ]}
+                                value={syncMes}
+                                onChange={setSyncMes}
+                                size="sm"
+                                w={120}
+                            />
+                            <NumberInput
+                                value={syncAnio}
+                                onChange={setSyncAnio}
+                                size="sm"
+                                w={80}
+                                hideControls
+                            />
+                            <Button size="sm" color="orange.6" variant="filled" onClick={sincronizarMes} loading={sincronizando} leftSection={<Calendar size={16} />} style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                                Sincronizar Mes
+                            </Button>
+                        </Group>
+                    </Group>
+                </div>
+
+                <Group mt={10} style={{ alignSelf: 'flex-end' }}>
+                    <Button variant="default" onClick={onClose} disabled={guardando} size="md">
+                        Cancelar
+                    </Button>
+                    <Button
+                        color="green"
+                        leftSection={<Save size={18} />}
+                        onClick={guardarCambios}
+                        loading={guardando}
+                        disabled={Object.keys(cambios).length === 0}
+                        size="md"
+                        style={{ boxShadow: '0 4px 6px rgba(40, 167, 69, 0.2)' }}
+                    >
+                        Guardar {Object.keys(cambios).length > 0 ? `(${Object.keys(cambios).length}) ` : ""}Cambios
+                    </Button>
+                </Group>
             </Group>
         </Modal>
     );

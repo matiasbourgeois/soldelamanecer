@@ -77,10 +77,10 @@ const cambiarEstadosSegunHora = async () => {
 
 /**
  * Inicializa el cron de cambio automático de estados
- * Se ejecuta cada 15 minutos para verificar horarios de salida
+ * Se ejecuta cada 5 minutos para verificar horarios de salida
  */
 const iniciarCambioAutomaticoEstados = () => {
-    cron.schedule("*/15 * * * *", cambiarEstadosSegunHora, {
+    cron.schedule("*/5 * * * *", cambiarEstadosSegunHora, {
         timezone: "America/Argentina/Cordoba"
     });
 

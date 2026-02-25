@@ -37,6 +37,7 @@ const VehiculoSchema = new mongoose.Schema({
   },
   configuracionMantenimiento: [{
     nombre: { type: String, required: true }, // Ej: "Aceite", "Frenos"
+    codigo: { type: String, default: null }, // Mapeo con Base de Conocimiento
     frecuenciaKm: { type: Number, required: true }, // Ej: 10000
     ultimoKm: { type: Number, default: 0 } // Cuándo se hizo por última vez
   }],

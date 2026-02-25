@@ -18,10 +18,14 @@ const {
   // Contratados
   obtenerContratados,
   editarContratado,
-  subirDocumentoContratado
+  subirDocumentoContratado,
+  reporteExcelChoferes
 } = require("../controllers/logistica/choferController");
 
 // Ruta base: /api/choferes
+
+// Reporte de Choferes a Excel (Protegida)
+router.get("/excel", auth, reporteExcelChoferes);
 
 // Crear chofer
 router.post("/", crearChofer);

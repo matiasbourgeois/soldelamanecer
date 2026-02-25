@@ -365,7 +365,7 @@ const ContratadosAdmin = () => {
                         <Divider />
                         <Group justify="center" p="md" style={{ backgroundColor: '#f8f9fa' }}>
                             <Pagination
-                                page={pagina}
+                                value={pagina}
                                 onChange={setPagina}
                                 total={totalPaginas}
                                 color="cyan"
