@@ -74,7 +74,7 @@ const ControlOperativo = () => {
     const [formEspecial, setFormEspecial] = useState({
         fecha: new Date(), rutaId: null, choferId: null, vehiculoId: null,
         tipoPago: 'por_km', kilometros: 0, precioKm: 0,
-        cantidadVueltas: 0, precioPorVuelta: 0, montoFijo: 0,
+        montoFijo: 0,
         observaciones: ''
     });
     const [creandoEspecial, setCreandoEspecial] = useState(false);
@@ -376,8 +376,6 @@ const ControlOperativo = () => {
                 tipoPago: formEspecial.tipoPago,
                 kilometrosEstimados: Number(formEspecial.kilometros) || 0,
                 precioKm: Number(formEspecial.precioKm) || 0,
-                cantidadVueltas: Number(formEspecial.cantidadVueltas) || 0,
-                precioPorVuelta: Number(formEspecial.precioPorVuelta) || 0,
                 montoFijo: Number(formEspecial.montoFijo) || 0,
                 observaciones: formEspecial.observaciones
             });
@@ -386,7 +384,7 @@ const ControlOperativo = () => {
             setFormEspecial({
                 fecha: new Date(), rutaId: null, choferId: null, vehiculoId: null,
                 tipoPago: 'por_km', kilometros: 0, precioKm: 0,
-                cantidadVueltas: 0, precioPorVuelta: 0, montoFijo: 0,
+                montoFijo: 0,
                 observaciones: ''
             });
             obtenerHojas();
@@ -933,11 +931,11 @@ const ControlOperativo = () => {
                         placeholder="Elija modalidad"
                         data={[
                             { value: 'por_km', label: 'Por Kilómetro' },
-                            { value: 'por_vuelta', label: 'Por Vuelta' },
-                            { value: 'fijo_viaje', label: 'Precio Fijo / Estático' }
+                            { value: 'por_distribucion', label: 'Por Distribución / Viaje Fijo' },
+                            { value: 'por_mes', label: 'Mensual' }
                         ]}
                         value={formEspecial.tipoPago}
-                        onChange={(val) => setFormEspecial({ ...formEspecial, tipoPago: val, kilometros: 0, precioKm: 0, cantidadVueltas: 0, precioPorVuelta: 0, montoFijo: 0 })}
+                        onChange={(val) => setFormEspecial({ ...formEspecial, tipoPago: val, kilometros: 0, precioKm: 0, montoFijo: 0 })}
                     />
 
                     {formEspecial.tipoPago === 'por_km' && (
@@ -957,24 +955,7 @@ const ControlOperativo = () => {
                         </SimpleGrid>
                     )}
 
-                    {formEspecial.tipoPago === 'por_vuelta' && (
-                        <SimpleGrid cols={2}>
-                            <NumberInput
-                                label="Cantidad de Vueltas"
-                                value={formEspecial.cantidadVueltas}
-                                onChange={(val) => setFormEspecial({ ...formEspecial, cantidadVueltas: val })}
-                                min={0}
-                            />
-                            <NumberInput
-                                label="Precio por Vuelta ($)"
-                                value={formEspecial.precioPorVuelta}
-                                onChange={(val) => setFormEspecial({ ...formEspecial, precioPorVuelta: val })}
-                                min={0}
-                            />
-                        </SimpleGrid>
-                    )}
-
-                    {formEspecial.tipoPago === 'fijo_viaje' && (
+                    {(formEspecial.tipoPago === 'por_distribucion' || formEspecial.tipoPago === 'por_mes') && (
                         <NumberInput
                             label="Monto Fijo Total ($)"
                             value={formEspecial.montoFijo}

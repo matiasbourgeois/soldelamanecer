@@ -52,12 +52,10 @@ const hojaRepartoSchema = new mongoose.Schema({
   // --- SNAPSHOTS (Fase 1 Plan Maestro) ---
   kilometrosEstimados: { type: Number, default: 0 },
   precioKm: { type: Number, default: 0 },
-  cantidadVueltas: { type: Number, default: 0 },
-  precioPorVuelta: { type: Number, default: 0 },
   montoFijo: { type: Number, default: 0 },
   tipoPago: {
     type: String,
-    enum: ['por_km', 'por_vuelta', 'fijo_viaje'],
+    enum: ['por_km', 'por_mes', 'por_distribucion'],
     default: 'por_km'
   },
   proveedor: { type: mongoose.Schema.Types.ObjectId, ref: 'Proveedor', default: null },

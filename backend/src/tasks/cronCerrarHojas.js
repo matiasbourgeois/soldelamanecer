@@ -9,25 +9,21 @@ const iniciarCierreAutomatico = () => {
 
     logger.info("🕐 Ejecutando tarea programada: cierre automático de hojas vencidas");
 
-    const ahora = new Date();
+    const moment = require('moment-timezone');
 
-    // Ajustamos la fecha para obtener el "ayer" en hora ARGENTINA (GMT-3)
-    const offsetHoraArgentina = -3; // GMT-3
-    const ayerUTC = new Date(Date.UTC(
-      ahora.getUTCFullYear(),
-      ahora.getUTCMonth(),
-      ahora.getUTCDate() - 1,
-      -offsetHoraArgentina // compensar para que sea el "ayer" en Argentina
-    ));
+    // Calcular "Ayer" con la precisión absoluta de Buenos Aires, independientemente de dónde corra el node server
+    const ayerArg = moment().tz('America/Argentina/Buenos_Aires').subtract(1, 'days').toDate();
 
-    logger.info("📆 Fecha calculada como AYER (Argentina -> UTC): %s", ayerUTC.toISOString());
+    logger.info("📆 Fecha calculada como AYER (Argentina): %s", ayerArg.toISOString());
 
     try {
-      await cerrarHojasVencidas(ayerUTC);
+      await cerrarHojasVencidas(ayerArg);
       logger.info("✅ Cierre automático de hojas completado exitosamente.");
     } catch (error) {
       logger.error("❌ Error en tarea programada de cierre automático:", error);
     }
+  }, {
+    timezone: "America/Argentina/Cordoba"
   });
 };
 

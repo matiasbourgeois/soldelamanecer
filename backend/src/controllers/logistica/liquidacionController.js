@@ -4,10 +4,11 @@ const Chofer = require("../../models/Chofer");
 const logger = require("../../utils/logger");
 
 const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
-    const fnInicio = new Date(fechaInicio);
-    fnInicio.setHours(0, 0, 0, 0);
-    const fnFin = new Date(fechaFin);
-    fnFin.setHours(23, 59, 59, 999);
+    const moment = require('moment-timezone');
+
+    // Parseo seguro a GMT-3 para asegurar que el día inicia a las 00:00 y termina a las 23:59 de Argentina
+    const fnInicio = moment(fechaInicio).tz('America/Argentina/Buenos_Aires').startOf('day').toDate();
+    const fnFin = moment(fechaFin).tz('America/Argentina/Buenos_Aires').endOf('day').toDate();
 
     // Buscar Hojas del periodo donde:
     // - chofer == choferId (el titular maneja él mismo)
@@ -108,16 +109,6 @@ const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
                     tieneMesFijo = true;
                     montoMesAdicional = truncarMonto(hoja.montoMensual || 0);
                 }
-            } else if (tipoPagoEval === 'por_vuelta') {
-                pagoHoja = truncarMonto((hoja.cantidadVueltas || 0) * (hoja.precioPorVuelta || 0));
-                montoTotalViajes += pagoHoja;
-                hoja.detallePago = `Por Vuelta (${hoja.cantidadVueltas} vnts): $${pagoHoja}`;
-                hoja.subtotal = pagoHoja;
-            } else if (tipoPagoEval === 'fijo_viaje') {
-                pagoHoja = truncarMonto(hoja.montoFijo || 0);
-                montoTotalViajes += pagoHoja;
-                hoja.detallePago = `Fijo Viaje: $${pagoHoja}`;
-                hoja.subtotal = pagoHoja;
             } else {
                 hoja.detallePago = `Sin tipoPago`;
                 hoja.subtotal = 0;
@@ -302,14 +293,6 @@ const enviarConformidad = async (req, res) => {
                         tieneMesFijo = true;
                         montoMesAdicional = h.montoMensual || liquidacion.chofer.datosContratado?.tarifaMensualAdicional || 0;
                     }
-                } else if (tipoPagoEval === 'por_vuelta') {
-                    const pago = (h.cantidadVueltas || 0) * (h.precioPorVuelta || 0);
-                    montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-                    subtotalViajes += pago;
-                } else if (tipoPagoEval === 'fijo_viaje') {
-                    const pago = h.montoFijo || 0;
-                    montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-                    subtotalViajes += pago;
                 }
             }
 
@@ -475,14 +458,6 @@ const descargarPDFLiquidacion = async (req, res) => {
                         tieneMesFijo = true;
                         montoMesAdicional = h.montoMensual || liquidacion.chofer.datosContratado?.tarifaMensualAdicional || 0;
                     }
-                } else if (tipoPagoEval === 'por_vuelta') {
-                    const pago = (h.cantidadVueltas || 0) * (h.precioPorVuelta || 0);
-                    montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-                    subtotalViajes += pago;
-                } else if (tipoPagoEval === 'fijo_viaje') {
-                    const pago = h.montoFijo || 0;
-                    montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-                    subtotalViajes += pago;
                 }
             }
 
@@ -678,6 +653,7 @@ const anularLiquidacion = async (req, res) => {
 };
 
 module.exports = {
+    calcularTotalesLiquidacion,
     generarReporteSimulado,
     guardarLiquidacion,
     obtenerLiquidaciones,

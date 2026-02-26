@@ -8,25 +8,17 @@ const logger = require("../utils/logger");
  */
 const cambiarEstadosSegunHora = async () => {
     try {
-        const ahora = new Date();
-        // ⚠️ IMPORTANTE: usar toLocaleTimeString con TZ Argentina.
-        // getHours() devuelve hora UTC del servidor, no hora Argentina (UTC-3).
-        // Eso causaba que hojas pasaran a 'en reparto' 3 horas antes de su horaSalida.
-        const horaActual = ahora.toLocaleTimeString('es-AR', {
-            timeZone: 'America/Argentina/Buenos_Aires',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        });
+        const moment = require('moment-timezone');
+        const ahoraArg = moment().tz('America/Argentina/Buenos_Aires');
 
+        // Obtener "horaSalida" compatible con el formato estricto de la base de datos (HH:mm)
+        const horaActual = ahoraArg.format('HH:mm');
 
-        logger.info(`⏰ Verificando hojas pendientes (hora actual: ${horaActual})...`);
+        logger.info(`⏰ Verificando hojas pendientes (hora actual de Argentina: ${horaActual})...`);
 
-        // Buscar hojas pendientes de hoy
-        const inicioDia = new Date();
-        inicioDia.setHours(0, 0, 0, 0);
-        const finDia = new Date();
-        finDia.setHours(23, 59, 59, 999);
+        // Buscar hojas pendientes creadas específicamente "HOY" en Argentina
+        const inicioDia = ahoraArg.clone().startOf('day').toDate();
+        const finDia = ahoraArg.clone().endOf('day').toDate();
 
         const hojasPendientes = await HojaReparto.find({
             estado: 'pendiente',

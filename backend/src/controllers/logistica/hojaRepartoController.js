@@ -10,10 +10,12 @@ const Chofer = require("../../models/Chofer"); // Agregar arriba si no está
 
 // Generador de número de hoja al confirmar (Formato: HR-SDA-YYYY-MM-DD-XXX)
 const generarNumeroHoja = async () => {
-    const hoy = new Date();
-    const anio = hoy.getFullYear();
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-    const dia = String(hoy.getDate()).padStart(2, '0');
+    const moment = require('moment-timezone');
+    const hoy = moment().tz('America/Argentina/Buenos_Aires');
+
+    const anio = hoy.format('YYYY');
+    const mes = hoy.format('MM');
+    const dia = hoy.format('DD');
 
     // Prefijo base de hoy: HR-SDA-2026-02-17
     const prefijoHoy = `HR-SDA-${anio}-${mes}-${dia}`;
@@ -62,10 +64,12 @@ const crearHojaPreliminar = async (req, res) => {
             choferSeleccionado = ruta.choferAsignado._id;
         }
 
-        // --- VALIDACIÓN DE UNICIDAD (Fase 1 God Level) ---
-        const hoy = new Date();
-        const inicioDia = new Date(hoy).setHours(0, 0, 0, 0);
-        const finDia = new Date(hoy).setHours(23, 59, 59, 999);
+        // --- VALIDACIÓN DE UNICIDAD (Fase 1 God Level + Timezone M2) ---
+        const moment = require('moment-timezone');
+        const hoyArg = moment().tz('America/Argentina/Buenos_Aires');
+
+        const inicioDia = hoyArg.startOf('day').toDate();
+        const finDia = hoyArg.endOf('day').toDate();
 
         const existe = await HojaReparto.findOne({
             ruta: rutaId,
@@ -450,12 +454,12 @@ const obtenerHojaRepartoDeHoy = async (req, res) => {
         }
 
 
-        // Definir rango de hoy
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
+        // Definir rango de hoy estructurado a GMT-3
+        const moment = require('moment-timezone');
+        const hoyArg = moment().tz('America/Argentina/Buenos_Aires');
 
-        const manana = new Date();
-        manana.setHours(23, 59, 59, 999);
+        const hoy = hoyArg.clone().startOf('day').toDate();
+        const manana = hoyArg.clone().endOf('day').toDate();
 
         // Buscar hoja de reparto para ese chofer en el día de hoy
         const hoja = await HojaReparto.findOne({
@@ -497,12 +501,12 @@ const obtenerHojasPorChofer = async (req, res) => {
             return res.status(404).json({ msg: "Chofer no encontrado para este usuario." });
         }
 
-        // Definir rango del día de hoy
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
+        // Definir rango estructurado a GMT-3 para "hoy" de Argentina
+        const moment = require('moment-timezone');
+        const hoyArg = moment().tz('America/Argentina/Buenos_Aires');
 
-        const manana = new Date();
-        manana.setHours(23, 59, 59, 999);
+        const hoy = hoyArg.clone().startOf('day').toDate();
+        const manana = hoyArg.clone().endOf('day').toDate();
 
         // Buscar hojas de reparto asignadas al chofer para hoy
         const hojas = await HojaReparto.find({
@@ -765,10 +769,11 @@ const generarHojasAutomaticas = async (fechaReferencia, esFeriadoNacional = fals
         for (const ruta of rutas) {
             try {
                 // 2. Definir "Hoy" en formato Date (00:00:00) para la comparación
-                const inicioDia = new Date(fechaReferencia);
-                inicioDia.setHours(0, 0, 0, 0);
-                const finDia = new Date(fechaReferencia);
-                finDia.setHours(23, 59, 59, 999);
+                const moment = require('moment-timezone');
+                const fechaBase = moment(fechaReferencia).tz('America/Argentina/Buenos_Aires');
+
+                const inicioDia = fechaBase.clone().startOf('day').toDate();
+                const finDia = fechaBase.clone().endOf('day').toDate();
 
                 // 3. Verificar si ya existe una hoja para esta ruta y esta fecha
                 const existe = await HojaReparto.findOne({
@@ -852,10 +857,9 @@ const actualizarHoja = async (req, res) => {
 
         // ─── CAMBIO DE RUTA → Validación de Unicidad "Regla de Oro" ───
         if (ruta && ruta.toString() !== hojaOriginal.ruta?._id?.toString()) {
-            const inicioDia = new Date(hojaOriginal.fecha);
-            inicioDia.setHours(0, 0, 0, 0);
-            const finDia = new Date(hojaOriginal.fecha);
-            finDia.setHours(23, 59, 59, 999);
+            const moment = require('moment-timezone');
+            const inicioDia = moment(hojaOriginal.fecha).tz('America/Argentina/Buenos_Aires').startOf('day').toDate();
+            const finDia = moment(hojaOriginal.fecha).tz('America/Argentina/Buenos_Aires').endOf('day').toDate();
 
             const existeOtra = await HojaReparto.findOne({
                 _id: { $ne: hojaOriginal._id },
@@ -1101,7 +1105,7 @@ const reporteDiscrepancias = async (req, res) => {
 // 🆕 FASE 8: Hoja de Reparto Especial
 const crearHojaEspecial = async (req, res) => {
     try {
-        const { fecha, ruta, chofer, vehiculo, observaciones, tipoPago, precioKm, kilometrosEstimados, cantidadVueltas, precioPorVuelta, montoFijo } = req.body;
+        const { fecha, ruta, chofer, vehiculo, observaciones, tipoPago, precioKm, kilometrosEstimados, montoFijo } = req.body;
 
         if (!observaciones) {
             return res.status(400).json({ error: 'Las observaciones son obligatorias para una hoja de reparto especial.' });
@@ -1139,8 +1143,6 @@ const crearHojaEspecial = async (req, res) => {
             tipoPago: tipoPago || 'por_km',
             kilometrosEstimados: kilometrosEstimados || 0,
             precioKm: precioKm || 0,
-            cantidadVueltas: cantidadVueltas || 0,
-            precioPorVuelta: precioPorVuelta || 0,
             montoFijo: montoFijo || 0,
             historialMovimientos: [{
                 usuario: req.usuario?.id || null,
@@ -1176,10 +1178,8 @@ const reporteEspeciales = async (req, res) => {
 
         const dataReporte = hojasEspeciales.map(h => {
             let detalleCobro = '';
-            if (h.tipoPago === 'por_vuelta') {
-                detalleCobro = `${h.cantidadVueltas || 0} Vueltas a $${h.precioPorVuelta || 0}`;
-            } else if (h.tipoPago === 'fijo_viaje') {
-                detalleCobro = `Fijo: $${h.montoFijo || 0}`;
+            if (h.tipoPago === 'por_distribucion' || h.tipoPago === 'por_mes') {
+                detalleCobro = `Monto Fijo: $${h.montoFijo || 0}`;
             } else {
                 detalleCobro = `${h.kilometrosEstimados || 0} Km a $${h.precioKm || 0}`;
             }

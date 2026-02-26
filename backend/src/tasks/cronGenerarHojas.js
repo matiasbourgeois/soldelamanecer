@@ -13,7 +13,9 @@ const iniciarGeneracionAutomatica = () => {
     cron.schedule("1 0 * * *", async () => {
         logger.info("🕐 Ejecutando tarea programada: Generación Silenciosa de Hojas (00:01 AR)");
 
-        const hoy = new Date();
+        // Parsear hora estricta de Argentina para evitar saltos de día en hosts UTC
+        const moment = require('moment-timezone');
+        const hoy = moment().tz('America/Argentina/Buenos_Aires').toDate();
 
         // Verificar si es feriado nacional
         const esFeriadoNacional = await esFeriado(hoy);
