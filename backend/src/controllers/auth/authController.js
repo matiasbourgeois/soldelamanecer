@@ -19,16 +19,52 @@ const register = async (req, res) => {
     const { nombre, email, contrasena } = req.body;
 
     const usuarioExistente = await Usuario.findOne({ email });
+
+    // FASE 11: Lógica de Reclamo Transparente (Sobrescritura Segura de Cuenta "Placeholder")
     if (usuarioExistente) {
-      return res.status(400).json({ error: "El email ya está registrado" });
+      if (usuarioExistente.creadoPorAdmin) {
+        // RECLAMO MÁGICO: El admin lo dio de alta rápido, ahora el cliente real viene a buscar su imperio
+        logger.info(`🔄 Reclamo de Cuenta Detectado: ${email}. Transfiriendo dominio al cliente.`);
+
+        const tokenVerificacion = crypto.randomBytes(32).toString("hex");
+
+        // Sobreescribimos datos clave del Placeholder de Management
+        usuarioExistente.nombre = nombre; // El nombre que el usuario mismo se puso ahora al registrarse
+        usuarioExistente.contrasena = await bcrypt.hash(contrasena, 10);
+        usuarioExistente.creadoPorAdmin = false; // FLAG APAGADO (es suyo ahora)
+        usuarioExistente.verificado = false; // Le forzamos a verificar el correo real
+        usuarioExistente.tokenVerificacion = tokenVerificacion;
+
+        await usuarioExistente.save();
+
+        const apiBaseUrl = process.env.API_URL || "https://api-choferes.cotizadorlogistico.site";
+        const enlaceVerificacion = `${apiBaseUrl}/api/usuarios/verify/${tokenVerificacion}`;
+
+        try {
+          await enviarEmailVerificacion(email, nombre, enlaceVerificacion);
+        } catch (emailError) {
+          logger.warn("⚠️ Advertencia: No se pudo enviar el email de Reclamo/Verificación:", { error: emailError.message });
+        }
+
+        return res.status(200).json({
+          mensaje: "Cuenta recuperada exitosamente. " + (process.env.EMAIL_USER ? "Verifica tu correo electrónico." : "(Simulado)"),
+        });
+
+      } else {
+        // Choque Normal: Ya se había registrado orgánicamente él mismo
+        return res.status(400).json({ error: "El email ya está registrado y activo por el propietario" });
+      }
     }
 
+    // Lógica Original de Alta desde Cero
     const tokenVerificacion = crypto.randomBytes(32).toString("hex");
+
+    const contrasenaHeasheada = await bcrypt.hash(contrasena, 10);
 
     const nuevoUsuario = new Usuario({
       nombre,
       email,
-      contrasena,
+      contrasena: contrasenaHeasheada,
       rol: "cliente",
       verificado: false,
       tokenVerificacion,
@@ -230,9 +266,58 @@ const googleLogin = async (req, res) => {
   }
 };
 
+// FASE 11: Alta Rápida de Clientes desde el BackOffice (Admin y Administrativos)
+const crearClienteRapido = async (req, res) => {
+  try {
+    // 🛡️ CONTROL DE ACCESO
+    if (!req.usuario || (req.usuario.rol !== 'admin' && req.usuario.rol !== 'administrativo' && req.usuario.rol !== 'gestion')) {
+      return res.status(403).json({ error: "No tienes permiso para registrar clientes al vuelo." });
+    }
+
+    const { nombre, email, telefono, dni } = req.body;
+
+    if (!nombre || !email) {
+      return res.status(400).json({ error: "Nombre y Email son obligatorios para el crear el cliente" });
+    }
+
+    // Verificar si el email ya existe (hasta como admin chocado)
+    const existe = await Usuario.findOne({ email });
+    if (existe) {
+      return res.status(400).json({ error: "El email ya se encuentra registrado en la base de datos." });
+    }
+
+    // Hash aleatorio infumable ya que el cliente no lo sabe
+    const contrasenaRandom = crypto.randomBytes(16).toString("hex");
+
+    const nuevoCliente = new Usuario({
+      nombre,
+      email,
+      telefono,
+      dni,
+      contrasena: contrasenaRandom,
+      rol: "cliente",
+      verificado: true, // No lo obligamos a que se demore al enviar paquetes
+      creadoPorAdmin: true, // ESTE FLAG ES ORO PARA QUE RECUPERE LA CUENTA LUEGO
+      activo: true
+    });
+
+    await nuevoCliente.save();
+
+    res.status(201).json({
+      mensaje: "Cliente generado exitosamente al vuelo",
+      cliente: { _id: nuevoCliente._id, nombre: nuevoCliente.nombre, email: nuevoCliente.email, dni: nuevoCliente.dni }
+    });
+
+  } catch (error) {
+    logger.error("❌ Error en Alta Rápida de Cliente:", error);
+    res.status(500).json({ error: "Error en el servidor al intentar registrar el cliente rápido" });
+  }
+};
+
 module.exports = {
   register,
   verificarCuenta,
   login,
   googleLogin,
+  crearClienteRapido
 };

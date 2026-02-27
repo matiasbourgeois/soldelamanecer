@@ -12,7 +12,16 @@ const UsuarioSchema = new mongoose.Schema({
   },
   fechaRegistro: { type: Date, default: Date.now },
   verificado: { type: Boolean, default: false },
-  tokenVerificacion: { type: String },
+  tokenVerificacion: {
+    type: String, // NULL cuando está verificado, o token para email
+    default: null,
+  },
+  creadoPorAdmin: {
+    type: Boolean,
+    default: false, // FLAG Fase 11: true si lo dio de alta Gestión/Admin sin pedirle clave real al cliente
+  },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
   activo: { type: Boolean, default: true },
   authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
 

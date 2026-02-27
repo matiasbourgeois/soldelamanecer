@@ -465,7 +465,7 @@ const editarContratado = async (req, res) => {
       return res.status(400).json({ msg: "Este chofer no es de tipo contratado." });
     }
 
-    const { razonSocial, cuit, email, fechaIngreso, fechaEgreso, vehiculoDefault, rutaDefault, activo } = req.body;
+    const { razonSocial, cuit, email, fechaIngreso, fechaEgreso, vehiculoDefault, rutaDefault, activo, montoChoferDia } = req.body;
 
     // Actualizar campos de datosContratado
     if (razonSocial !== undefined) chofer.datosContratado.razonSocial = razonSocial;
@@ -476,6 +476,15 @@ const editarContratado = async (req, res) => {
     if (vehiculoDefault !== undefined) chofer.datosContratado.vehiculoDefault = vehiculoDefault || null;
     if (rutaDefault !== undefined) chofer.datosContratado.rutaDefault = rutaDefault || null;
     if (activo !== undefined) chofer.activo = activo;
+
+    // 🛡️ BÓVEDA DE SEGURIDAD PARA TARIFA PRIVADA 🛡️
+    if (montoChoferDia !== undefined) {
+      if (req.usuario && req.usuario.roles && req.usuario.roles.includes('admin') || req.usuario?.rol === 'admin') {
+        chofer.datosContratado.montoChoferDia = montoChoferDia;
+      } else {
+        console.warn(`[SEGURIDAD] Intento bloqueado: Usuario ${req.usuario?.id} intentó mutar la tarifa del chofer ${chofer._id} sin ser admin`);
+      }
+    }
 
     await chofer.save();
 

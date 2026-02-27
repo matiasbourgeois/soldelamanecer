@@ -28,6 +28,7 @@ import Perfil from "./modules/auth/pages/Perfil"; // Moved to Auth
 import UsuariosAdmin from "./modules/admin/pages/UsuariosAdmin";
 import DashboardAdmin from "./modules/admin/pages/DashboardAdmin";
 const AdminArcade = lazy(() => import("./modules/admin/pages/AdminArcade"));
+import ConfiguracionAdmin from "./modules/admin/pages/ConfiguracionAdmin";
 import ChoferesAdmin from "./modules/admin/pages/ChoferesAdmin";
 import Reportes from "./modules/admin/pages/reportes/Reportes"; // Assuming subfolder moved
 import ReportesLogistica from "./modules/admin/pages/reportes/ReportesLogistica";
@@ -129,6 +130,14 @@ function App() {
                   <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: 'white' }}>Cargando Zona Arcade...</div>}>
                     <AdminArcade />
                   </Suspense>
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/configuracion"
+              element={
+                <ProtectedByRole allowedRoles="admin">
+                  <ConfiguracionAdmin />
                 </ProtectedByRole>
               }
             />

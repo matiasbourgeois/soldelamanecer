@@ -2,7 +2,7 @@ const router = require("express").Router();
 
 // Auth & Users
 router.use("/usuarios", require("./auth.routes"));
-router.use("/usuarios", require("./clientes.routes")); // Revertido intencionalmente
+router.use("/clientes", require("./clientes.routes")); // Revertido a su nombre original para el Buscador
 router.get("/auth/verify/:token", require("../controllers/auth/authController").verificarCuenta);
 
 // Logistics System
@@ -21,5 +21,8 @@ router.use("/proveedores", require("./proveedores"));
 
 // Rutas de Reportes
 router.use("/reportes", require("./reportes.routes"));
+
+// Sistema Global
+router.use("/configuracion", require("./configuracion"));
 
 module.exports = router;

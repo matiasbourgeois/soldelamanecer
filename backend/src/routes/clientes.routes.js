@@ -41,6 +41,4 @@ router.get("/buscar-clientes", async (req, res) => {
   }
 });
 
-
-
 module.exports = router;

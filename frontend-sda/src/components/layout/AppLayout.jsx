@@ -42,7 +42,8 @@ import {
     Briefcase as IconBriefcase,
     Banknote as IconBanknote,
     Shield as IconShield,
-    MapPin as IconMapPin
+    MapPin as IconMapPin,
+    Settings as IconSettings
 } from 'lucide-react';
 import { apiSistema, apiUsuarios, apiEstaticos } from '../../core/api/apiSistema';
 import clienteAxios from '../../core/api/clienteAxios';
@@ -298,6 +299,12 @@ export function AppLayout({ children, auth, handleLogout }) {
                             Sistema
                         </Text>
 
+                        <NavLink
+                            label="Configuración General"
+                            leftSection={<IconSettings size={20} stroke={1.5} />}
+                            rightSection={isActive('/admin/configuracion') && <IconChevronRight size={14} />}
+                            {...getLinkProps('/admin/configuracion')}
+                        />
                         <NavLink
                             label="Usuarios del Sistema"
                             leftSection={<IconShield size={20} stroke={1.5} />}

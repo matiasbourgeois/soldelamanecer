@@ -1,6 +1,7 @@
 const LiquidacionContratado = require("../../models/LiquidacionContratado");
 const HojaReparto = require("../../models/HojaReparto");
 const Chofer = require("../../models/Chofer");
+const Configuracion = require("../../models/Configuracion");
 const logger = require("../../utils/logger");
 
 const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
@@ -56,6 +57,9 @@ const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
 
     const choferData = await Chofer.findById(choferId).populate("usuario");
 
+    // Obtener configuración global para el Triángulo de Herencia Híbrido
+    const configuracionGlobal = await Configuracion.findOne() || { tarifaGlobalSDA: 0 };
+
     let diasTrabajados = 0;
     let kmBaseAcumulados = 0;
     let kmExtraAcumulados = 0;
@@ -72,9 +76,14 @@ const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
         const usaVehiculoSDA = hoja.vehiculo && hoja.vehiculo.tipoPropiedad === 'propio';
 
         if (usaVehiculoSDA) {
-            pagoHoja = choferData.datosContratado?.montoChoferDia || 0;
+            // Regla del Máximo: Garantizamos que nadie con acuerdo viejo quede por debajo de la nueva Tarifa Global
+            const tarifaPersonal = choferData.datosContratado?.montoChoferDia || 0;
+            const tarifaGlobal = configuracionGlobal.tarifaGlobalSDA || 0;
+
+            pagoHoja = Math.max(tarifaPersonal, tarifaGlobal);
             montoTotalViajes += pagoHoja;
-            hoja.detallePago = `Vehículo SDA: $${pagoHoja}`;
+
+            hoja.detallePago = `Vehículo Provisto por Empresa: $${pagoHoja}`;
             hoja.subtotal = pagoHoja;
         } else {
             const ruta = hoja.ruta;

@@ -48,6 +48,14 @@ const NuevoEnvio = () => {
   const [remitenteSugerencias, setRemitenteSugerencias] = useState([]);
   const [remitenteInfo, setRemitenteInfo] = useState(null);
 
+  const [showModalCliente, setShowModalCliente] = useState(false);
+  const [nuevoCliente, setNuevoCliente] = useState({
+    nombre: "",
+    email: "",
+    dni: "",
+    telefono: ""
+  });
+
 
   const navigate = useNavigate();
 
@@ -94,7 +102,7 @@ const NuevoEnvio = () => {
             limite: 10,
           },
         });
-        setRemitenteSugerencias(res.data.resultados);
+        setRemitenteSugerencias(res.data.resultados || []);
       } catch (error) {
         console.error("Error al buscar remitentes:", error);
       }
@@ -189,6 +197,35 @@ const NuevoEnvio = () => {
     }
   };
 
+  const handleGuardarClienteRapido = async () => {
+    if (!nuevoCliente.nombre || !nuevoCliente.email) {
+      mostrarAlerta("El nombre y correo electrónico son obligatorios para crear el cliente.");
+      return;
+    }
+
+    try {
+      // El endpoint /rapido se movió a auth.routes (bajo /api/usuarios) para que funcionara la validación de Reclamos
+      const { data } = await axios.post(apiSistema("/usuarios/rapido"), nuevoCliente, {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      });
+
+      // Auto-Seleccionamos al cliente tras crearlo
+      setClienteRemitenteId(data.cliente._id);
+      setRemitenteInfo(data.cliente);
+      setBusquedaRemitente(`${data.cliente.nombre} (${data.cliente.email})`);
+      setShowModalCliente(false); // Cerramos el modal
+      mostrarAlerta("¡Cliente generado exitosamente al vuelo!", "success");
+
+      // Limpiamos el form
+      setNuevoCliente({ nombre: "", email: "", dni: "", telefono: "" });
+    } catch (error) {
+      if (error.response && error.response.data?.error) {
+        mostrarAlerta(`Error: ${error.response.data.error}`);
+      } else {
+        mostrarAlerta("Error inesperado al crear el cliente rápido.");
+      }
+    }
+  };
 
   // Helper Styled Render Function
   // Helper Styled Render Function
@@ -255,14 +292,19 @@ const NuevoEnvio = () => {
             <Stack gap="lg">
               {/* CARD REMITENTE (CYAN) */}
               <Card shadow="sm" radius="lg" padding="xl" withBorder style={{ borderColor: 'var(--mantine-color-cyan-2)', overflow: 'visible' }}>
-                <Group mb="lg">
-                  <ThemeIcon size={42} radius="md" color="cyan" variant="light">
-                    <User size={24} />
-                  </ThemeIcon>
-                  <div>
-                    <Text size="lg" fw={800} c="dark.4">Remitente</Text>
-                    <Text size="sm" c="dimmed">¿Quién envía el paquete?</Text>
-                  </div>
+                <Group justify="space-between" mb="lg">
+                  <Group>
+                    <ThemeIcon size={42} radius="md" color="cyan" variant="light">
+                      <User size={24} />
+                    </ThemeIcon>
+                    <div>
+                      <Text size="lg" fw={800} c="dark.4">Remitente</Text>
+                      <Text size="sm" c="dimmed">¿Quién envía el paquete?</Text>
+                    </div>
+                  </Group>
+                  <Button size="xs" radius="md" variant="light" color="cyan" leftSection={<Plus size={14} />} onClick={() => setShowModalCliente(true)}>
+                    Nuevo Cliente
+                  </Button>
                 </Group>
 
                 <Box pos="relative">
@@ -290,7 +332,7 @@ const NuevoEnvio = () => {
                     )}
                   />
 
-                  {remitenteSugerencias.length > 0 && (
+                  {remitenteSugerencias && remitenteSugerencias.length > 0 && (
                     <Paper withBorder shadow="xl" pos="absolute" w="100%" radius="md" style={{ zIndex: 10, marginTop: 5, overflow: 'hidden' }}>
                       <ScrollArea.Autosize mah={250}>
                         {remitenteSugerencias.map((usuario) => (
@@ -540,6 +582,38 @@ const NuevoEnvio = () => {
           <Group justify="flex-end" mt="lg">
             <Button variant="subtle" color="gray" onClick={() => setShowModal(false)}>Cancelar</Button>
             <Button color="blue" variant="filled" onClick={handleGuardarDestinatario}>Guardar Destinatario</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* MODAL NUEVO CLIENTE (RÁPIDO) */}
+      <Modal
+        opened={showModalCliente}
+        onClose={() => setShowModalCliente(false)}
+        title={<Text fw={700} c="cyan.9">Alta Rápida de Cliente</Text>}
+        centered
+        radius="lg"
+        padding="lg"
+        overlayProps={{ blur: 3 }}
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed" mb="xs">
+            Registre un remitente al vuelo. El sistema le reservará la cuenta para que pueda reclamarla más adelante.
+          </Text>
+          <TextInput label="Razón Social / Nombre" placeholder="Ej: Empresa SRL o Juan Perez" variant="filled" radius="md" required value={nuevoCliente.nombre} onChange={(e) => setNuevoCliente({ ...nuevoCliente, nombre: e.target.value })} />
+          <TextInput label="Email (Obligatorio)" placeholder="cliente@correo.com" type="email" variant="filled" radius="md" required value={nuevoCliente.email} onChange={(e) => setNuevoCliente({ ...nuevoCliente, email: e.target.value })} />
+          <Grid gutter="sm">
+            <Grid.Col span={6}>
+              <TextInput label="DNI / CUIT" placeholder="Sin guiones" variant="filled" radius="md" value={nuevoCliente.dni} onChange={(e) => setNuevoCliente({ ...nuevoCliente, dni: e.target.value })} />
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <TextInput label="Teléfono" placeholder="Ej: 351..." variant="filled" radius="md" value={nuevoCliente.telefono} onChange={(e) => setNuevoCliente({ ...nuevoCliente, telefono: e.target.value })} />
+            </Grid.Col>
+          </Grid>
+
+          <Group justify="flex-end" mt="lg">
+            <Button variant="subtle" color="gray" onClick={() => setShowModalCliente(false)}>Cancelar</Button>
+            <Button color="cyan" variant="filled" onClick={handleGuardarClienteRapido}>Generar Cliente</Button>
           </Group>
         </Stack>
       </Modal>
