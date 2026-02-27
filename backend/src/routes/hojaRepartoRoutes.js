@@ -17,7 +17,8 @@ const {
   buscarHojaPorRutaFecha,  // 🆕 FASE 5
   reporteDiscrepancias,  // 🆕 FASE 7
   crearHojaEspecial,
-  reporteEspeciales
+  reporteEspeciales,
+  eliminarHoja
 } = require("../controllers/logistica/hojaRepartoController");
 
 // 🆕 FASE 5: Buscar hoja existente por ruta y fecha (para asignación de envíos)
@@ -51,6 +52,9 @@ router.get("/:id", obtenerHojaPorId);
 
 // Actualizar hoja (Quick Edit) - PROTEGIDO CON VERIFICACIÓN DE ROL
 router.put("/:id", verificarToken, verificarGestion, actualizarHoja);
+
+// 🆕 FASE 12: Eliminar/Cancelar Hoja Lógicamente - PROTEGIDO CON ROL
+router.delete("/:id", verificarToken, verificarGestion, eliminarHoja);
 
 router.get('/mi-hoja/:choferId', obtenerHojaRepartoDeHoy);
 

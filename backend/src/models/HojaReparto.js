@@ -38,7 +38,7 @@ const hojaRepartoSchema = new mongoose.Schema({
   }],
   estado: {
     type: String,
-    enum: ['pendiente', 'en reparto', 'cerrada'],
+    enum: ['pendiente', 'en reparto', 'cerrada', 'cancelada'],
     default: 'pendiente',
   },
   cerradaAutomaticamente: {

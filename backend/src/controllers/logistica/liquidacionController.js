@@ -26,7 +26,7 @@ const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
 
     const queryHojas = {
         fecha: { $gte: fnInicio, $lte: fnFin },
-        estado: { $ne: 'pendiente' }, // Solo hojas confirmadas/cerradas
+        estado: { $in: ['cerrada', 'en reparto'] }, // Blindaje total: Solo Hojas Activas/Auditadas (ignora 'pendiente' y 'cancelada')
         $or: [
             { chofer: choferId, ruta: { $nin: idsRutasConOtroTitular } },  // Maneja él mismo y la ruta no es de otro
             { ruta: { $in: idsRutasComoTitular } }                         // Es el titular de la ruta aunque maneje otro

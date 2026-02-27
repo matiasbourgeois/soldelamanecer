@@ -1206,6 +1206,58 @@ const reporteEspeciales = async (req, res) => {
     }
 };
 
+const eliminarHoja = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const usuarioId = req.usuario._id; // Viene del token
+
+        const hoja = await HojaReparto.findById(id);
+        if (!hoja) {
+            return res.status(404).json({ error: "Hoja de reparto no encontrada" });
+        }
+
+        if (hoja.estado === 'cancelada') {
+            return res.status(400).json({ error: "La hoja ya se encuentra cancelada" });
+        }
+
+        const Envio = require("../../models/Envio");
+
+        // Liberar todos los envíos asociados en cascada
+        await Envio.updateMany(
+            { hojaReparto: id },
+            {
+                $set: { estado: 'pendiente' },
+                $unset: { hojaReparto: "" },
+                $push: {
+                    historialEstados: {
+                        estado: "pendiente",
+                        motivo: "Hoja de reparto anulada por administración",
+                        fecha: Date.now()
+                    }
+                }
+            }
+        );
+
+        // Vaciar envíos de la hoja y cancelarla lógicamente
+        hoja.envios = [];
+        hoja.estado = "cancelada";
+
+        hoja.historialMovimientos.push({
+            usuario: usuarioId,
+            accion: "cancelación de hoja"
+        });
+
+        await hoja.save();
+
+        logger.info(`✅ Hoja de Reparto ${hoja.numeroHoja} cancelada exitosamente por usuario ${usuarioId}`);
+
+        res.json({ mensaje: "Hoja de reparto cancelada exitosamente", hoja });
+    } catch (error) {
+        logger.error("❌ Error al cancelar hoja de reparto:", error);
+        res.status(500).json({ error: "Error al cancelar la hoja de reparto" });
+    }
+};
+
 module.exports = {
     crearHojaPreliminar,
     confirmarHoja,
@@ -1223,5 +1275,6 @@ module.exports = {
     buscarHojaPorRutaFecha,  // 🆕 FASE 5
     reporteDiscrepancias,  // 🆕 FASE 7
     crearHojaEspecial,
-    reporteEspeciales
+    reporteEspeciales,
+    eliminarHoja
 };

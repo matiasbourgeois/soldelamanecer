@@ -6,6 +6,33 @@ const { crearRemito } = require("./remitoController");
 const { generarRemitoPDF } = require("./remitoController");
 const { enviarNotificacionEstado } = require("../../utils/emailService");
 
+const intentarAutoCerrarHoja = async (hojaId) => {
+  if (!hojaId) return;
+  try {
+    const HojaReparto = require("../../models/HojaReparto");
+
+    // Cargar hoja con envíos populateados
+    const hoja = await HojaReparto.findById(hojaId).populate('envios');
+
+    if (hoja && hoja.estado === "en reparto") {
+      // Verificar si queda ALGÚN envío "en reparto"
+      const quedanPendientes = hoja.envios.some(e => e.estado === "en reparto");
+
+      if (!quedanPendientes) {
+        hoja.estado = "cerrada";
+        hoja.cerradaAutomaticamente = true;
+        hoja.historialMovimientos.push({
+          usuario: null,
+          accion: "Cierre Automático Reactivo: El chofer completó todos los envíos de la hoja."
+        });
+        await hoja.save();
+        logger.info(`✅ Hoja ${hoja.numeroHoja} auto-cerrada exitosamente tras procesar el último paquete.`);
+      }
+    }
+  } catch (error) {
+    logger.error("❌ Error al intentar auto-cerrar hoja:", error);
+  }
+};
 
 // 📦 POST: Crear Envío y Remito
 const crearEnvio = async (req, res) => {
@@ -215,6 +242,9 @@ const marcarEnvioEntregado = async (req, res) => {
       console.error("❌ Error enviando notificación de entrega:", err);
     });
 
+    // FASE 13: Auto-Cierre Reactivo
+    await intentarAutoCerrarHoja(envio.hojaReparto);
+
     res.json({ mensaje: "Envío marcado como entregado correctamente", envio });
   } catch (error) {
     console.error("❌ Error al marcar envío como entregado:", error);
@@ -326,6 +356,9 @@ const marcarEnvioDevuelto = async (req, res) => {
       console.error("❌ Error enviando notificación de devolución:", err);
     });
 
+    // FASE 13: Auto-Cierre Reactivo
+    await intentarAutoCerrarHoja(envio.hojaReparto);
+
     res.json({ mensaje: "Envío marcado como devuelto correctamente", envio });
   } catch (error) {
     console.error("❌ Error al marcar envío como devuelto:", error);
@@ -383,6 +416,9 @@ const marcarIntentoFallido = async (req, res) => {
     enviarNotificacionEstado(envio, nuevoEstado).catch((err) => {
       console.error("❌ Error enviando notificación de intento fallido:", err);
     });
+
+    // FASE 13: Auto-Cierre Reactivo
+    await intentarAutoCerrarHoja(envio.hojaReparto);
 
     res.json({ mensaje: `Intento fallido registrado: ${nuevoEstado}`, envio });
 

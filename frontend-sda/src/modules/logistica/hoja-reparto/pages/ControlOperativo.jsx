@@ -7,11 +7,13 @@ import {
     SimpleGrid, Card, RingProgress, Center, ThemeIcon, Tabs, Box,
     Menu, Modal, NumberInput, Textarea
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { DatePickerInput } from "@mantine/dates";
 import {
     Search, FileText, Eye, Truck, User, Calendar, RefreshCcw,
     CheckCircle2, AlertCircle, XCircle, Plus, FilterX, Play, Zap, Clock, ListTodo,
-    Smartphone, BookOpen, FileDown, Star
+    CheckCircle2, AlertCircle, XCircle, Plus, FilterX, Play, Zap, Clock, ListTodo,
+    Smartphone, BookOpen, FileDown, Star, Trash2
 } from "lucide-react";
 import clienteAxios from "../../../../core/api/clienteAxios";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
@@ -264,6 +266,32 @@ const ControlOperativo = () => {
             console.error("Error al cerrar hoja:", error);
             mostrarAlerta("Error al cerrar la hoja", "error");
         }
+    };
+
+    const handleEliminarHoja = (hojaId, numeroHoja) => {
+        modals.openConfirmModal({
+            title: 'Anulación de Hoja de Reparto (Modo Dios)',
+            centered: true,
+            children: (
+                <Text size="sm">
+                    ¿Está <strong>absolutamente seguro</strong> de que desea cancelar la hoja <strong>{numeroHoja || 'S/N'}</strong>?
+                    <br /><br />
+                    Esta acción liberará todos los envíos asociados de vuelta a la cola de "Pendientes" para que puedan ser reasignados. La hoja quedará en el historial como "Cancelada" y <strong>no generará pagos</strong> de liquidación.
+                </Text>
+            ),
+            labels: { confirm: 'Sí, Cancelar Hoja', cancel: 'Atrás' },
+            confirmProps: { color: 'red' },
+            onConfirm: async () => {
+                try {
+                    await clienteAxios.delete(`/hojas-reparto/${hojaId}`);
+                    mostrarAlerta(`Hoja ${numeroHoja || ''} anulada con éxito`, 'success');
+                    obtenerHojas();
+                } catch (error) {
+                    console.error("Error al anular hoja:", error);
+                    mostrarAlerta(error.response?.data?.error || "Error al anular la hoja", 'error');
+                }
+            },
+        });
     };
 
     // FASE 7: Descargar reporte mensual de discrepancias
@@ -695,9 +723,13 @@ const ControlOperativo = () => {
                                         rowBg = '#fff8e6'; // Amber pálido
                                     } else if (esDuplicada) {
                                         rowBg = '#fff0f6'; // Pink pálido
+                                    } else if (hoja.estado === 'cancelada') {
+                                        rowBg = '#f8f9fa'; // Gris apagado
                                     } else if (hoja.estado === 'en reparto' || hoja.estado === 'cerrada') {
                                         rowBg = tieneDiscrepancia ? '#fff9db' : '#ebfbee'; // Naranja suave vs Verde suave
                                     }
+
+                                    const estiloCancelada = hoja.estado === 'cancelada' ? { opacity: 0.6, textDecoration: 'line-through', pointerEvents: 'none' } : {};
 
                                     return (
                                         <Table.Tr
@@ -828,22 +860,34 @@ const ControlOperativo = () => {
                                                     {hoja.estado?.toUpperCase()}
                                                 </Badge>
                                             </Table.Td>
-                                            <Table.Td>
+                                            <Table.Td style={estiloCancelada}>
                                                 <Group justify="flex-end" gap={4}>
                                                     <Tooltip label="Ver Detalle">
                                                         <ActionIcon variant="light" color="cyan" onClick={() => navigate(`/hojas-reparto/${hoja._id}`)}>
                                                             <Eye size={18} />
                                                         </ActionIcon>
                                                     </Tooltip>
-                                                    <Tooltip label="Exportar PDF">
-                                                        <ActionIcon variant="light" color="red" onClick={() => descargarPDF(hoja._id, hoja.numeroHoja)}>
-                                                            <FileText size={18} />
-                                                        </ActionIcon>
-                                                    </Tooltip>
+
+                                                    {hoja.estado !== 'cancelada' && (
+                                                        <Tooltip label="Exportar PDF">
+                                                            <ActionIcon variant="light" color="red" onClick={() => descargarPDF(hoja._id, hoja.numeroHoja)}>
+                                                                <FileText size={18} />
+                                                            </ActionIcon>
+                                                        </Tooltip>
+                                                    )}
+
                                                     {hoja.estado === 'en reparto' && (
                                                         <Tooltip label="Cierre Forzado">
                                                             <ActionIcon variant="light" color="orange" onClick={() => cerrarHoja(hoja._id)}>
                                                                 <XCircle size={18} />
+                                                            </ActionIcon>
+                                                        </Tooltip>
+                                                    )}
+
+                                                    {hoja.estado !== 'cancelada' && esAdmin() && (
+                                                        <Tooltip label="Cancelar Hoja (Modo Dios)">
+                                                            <ActionIcon variant="light" color="red" onClick={() => handleEliminarHoja(hoja._id, hoja.numeroHoja)}>
+                                                                <Trash2 size={18} />
                                                             </ActionIcon>
                                                         </Tooltip>
                                                     )}
