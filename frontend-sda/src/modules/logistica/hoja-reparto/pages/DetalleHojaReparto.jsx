@@ -115,7 +115,7 @@ const DetalleHojaReparto = () => {
                             lineHeight: 1.1
                         }}
                     >
-                        Hoja {hoja.numeroHoja}
+                        Hoja {hoja.numeroHoja || "S/N"}
                     </Title>
                     <Text c="dimmed" size="lg" mt="xs">
                         Operación asignada al chofer {hoja.chofer?.usuario?.nombre}.

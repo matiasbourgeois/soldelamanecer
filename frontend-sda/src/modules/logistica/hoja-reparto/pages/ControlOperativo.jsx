@@ -12,7 +12,6 @@ import { DatePickerInput } from "@mantine/dates";
 import {
     Search, FileText, Eye, Truck, User, Calendar, RefreshCcw,
     CheckCircle2, AlertCircle, XCircle, Plus, FilterX, Play, Zap, Clock, ListTodo,
-    CheckCircle2, AlertCircle, XCircle, Plus, FilterX, Play, Zap, Clock, ListTodo,
     Smartphone, BookOpen, FileDown, Star, Trash2
 } from "lucide-react";
 import clienteAxios from "../../../../core/api/clienteAxios";
@@ -268,13 +267,13 @@ const ControlOperativo = () => {
         }
     };
 
-    const handleEliminarHoja = (hojaId, numeroHoja) => {
+    const handleEliminarHoja = (hojaId, numeroHoja, codigoRuta) => {
         modals.openConfirmModal({
-            title: 'Anulación de Hoja de Reparto (Modo Dios)',
+            title: `Anulación de Hoja de Reparto ${numeroHoja || ''}`,
             centered: true,
             children: (
                 <Text size="sm">
-                    ¿Está <strong>absolutamente seguro</strong> de que desea cancelar la hoja <strong>{numeroHoja || 'S/N'}</strong>?
+                    ¿Está <strong>absolutamente seguro</strong> de que desea cancelar la hoja <strong>{numeroHoja || 'S/N'}</strong> de la ruta <strong>{codigoRuta || 'S/R'}</strong>?
                     <br /><br />
                     Esta acción liberará todos los envíos asociados de vuelta a la cola de "Pendientes" para que puedan ser reasignados. La hoja quedará en el historial como "Cancelada" y <strong>no generará pagos</strong> de liquidación.
                 </Text>
@@ -760,7 +759,7 @@ const ControlOperativo = () => {
                                                 <Stack gap={2}>
                                                     <Group gap={4}>
                                                         <Text size="xs" c={esEspecial ? "orange.8" : "cyan.9"} fw={800} tt="uppercase">
-                                                            {hoja.ruta?.codigo || (esEspecial ? "ESPECIAL (SIN RUTA)" : "ESPECIAL")}
+                                                            {hoja.numeroHoja || "S/N"} - {hoja.ruta?.codigo || (esEspecial ? "ESPECIAL (SIN RUTA)" : "ESPECIAL")}
                                                         </Text>
                                                         {esEspecial && (
                                                             <Tooltip label="Hoja de Reparto Especial">
@@ -853,9 +852,9 @@ const ControlOperativo = () => {
                                             <Table.Td ta="center">
                                                 <Badge
                                                     variant="dot"
-                                                    color={hoja.estado === 'cerrada' ? 'green' : hoja.estado === 'en reparto' ? 'blue' : 'gray'}
+                                                    color={hoja.estado === 'cerrada' ? 'green' : hoja.estado === 'en reparto' ? 'blue' : hoja.estado === 'cancelada' ? 'red' : 'gray'}
                                                     size="sm"
-                                                    styles={{ root: { backgroundColor: 'white' } }}
+                                                    styles={{ root: { backgroundColor: hoja.estado === 'cancelada' ? '#ffe3e3' : 'white' } }}
                                                 >
                                                     {hoja.estado?.toUpperCase()}
                                                 </Badge>
@@ -885,8 +884,8 @@ const ControlOperativo = () => {
                                                     )}
 
                                                     {hoja.estado !== 'cancelada' && esAdmin() && (
-                                                        <Tooltip label="Cancelar Hoja (Modo Dios)">
-                                                            <ActionIcon variant="light" color="red" onClick={() => handleEliminarHoja(hoja._id, hoja.numeroHoja)}>
+                                                        <Tooltip label="Cancelar Hoja">
+                                                            <ActionIcon variant="light" color="red" onClick={() => handleEliminarHoja(hoja._id, hoja.numeroHoja, hoja.ruta?.codigo)}>
                                                                 <Trash2 size={18} />
                                                             </ActionIcon>
                                                         </Tooltip>

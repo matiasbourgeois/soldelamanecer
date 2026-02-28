@@ -8,8 +8,8 @@ const Chofer = require("../../models/Chofer"); // Agregar arriba si no está
 
 
 
-// Generador de número de hoja al confirmar (Formato: HR-SDA-YYYY-MM-DD-XXX)
-const generarNumeroHoja = async () => {
+// Generador de número de hoja al crear o confirmar (Formato: HR-[RUTA]-YYYY-MM-DD-XXX)
+const generarNumeroHoja = async (codigoRuta) => {
     const moment = require('moment-timezone');
     const hoy = moment().tz('America/Argentina/Buenos_Aires');
 
@@ -17,31 +17,29 @@ const generarNumeroHoja = async () => {
     const mes = hoy.format('MM');
     const dia = hoy.format('DD');
 
-    // Prefijo base de hoy: HR-SDA-2026-02-17
-    const prefijoHoy = `HR-SDA-${anio}-${mes}-${dia}`;
+    // 🛡️ Si no viene ruta (ej: Hojas Especiales sin ruta definida), usamos SDA
+    const prefixRuta = codigoRuta || "SDA";
 
-    // Buscar la última hoja creada HOY que tenga este prefijo
-    // Usamos regex para buscar flexiblemente cualquier secuencia final
-    const ultimaHoy = await HojaReparto.findOne({
-        numeroHoja: { $regex: new RegExp(`^${prefijoHoy}`) }
-    })
-        .sort({ numeroHoja: -1 }) // Orden descendente para obtener el número más alto
-        .limit(1);
+    // Prefijo base de hoy: HR-CGE-2026-02-17
+    const prefijoHoy = `HR-${prefixRuta}-${anio}-${mes}-${dia}`;
 
-    let secuencia = 1;
+    // Buscar cuántas hojas nacieron HOY con este prefijo para esa ruta
+    const inicioDia = hoy.clone().startOf('day').toDate();
+    const finDia = hoy.clone().endOf('day').toDate();
 
-    if (ultimaHoy && ultimaHoy.numeroHoja) {
-        // Extraer la parte final del número (los últimos dígitos después del último guion)
-        const partes = ultimaHoy.numeroHoja.split("-");
-        const ultimoNumero = parseInt(partes[partes.length - 1]);
+    const count = await HojaReparto.countDocuments({
+        numeroHoja: { $regex: new RegExp(`^${prefijoHoy}`) },
+        fecha: { $gte: inicioDia, $lte: finDia }
+    });
 
-        if (!isNaN(ultimoNumero)) {
-            secuencia = ultimoNumero + 1;
-        }
+    // La secuencia evalúa si hay duplicados
+    if (count === 0) {
+        // Viaje único del día: HR-CGE-2026-02-17
+        return prefijoHoy;
+    } else {
+        // Viaje repetido: HR-CGE-2026-02-17-2
+        return `${prefijoHoy}-${count + 1}`;
     }
-
-    // Retorna: HR-SDA-2026-02-17-001
-    return `${prefijoHoy}-${String(secuencia).padStart(3, "0")}`;
 };
 
 const extraerNumero = (numeroHoja) => {
@@ -198,9 +196,12 @@ const confirmarHoja = async (req, res) => {
             }
         }
 
-        // Asignar número único (Nuevo formato SDA-[RUTA]-YYYYMMDD)
+        // Asignar número único SOLO si no tiene uno previo (ej: creadas por cron)
         const ruta = await Ruta.findById(hoja.ruta);
-        hoja.numeroHoja = await generarNumeroHoja(ruta.codigo);
+        if (!hoja.numeroHoja) {
+            hoja.numeroHoja = await generarNumeroHoja(ruta.codigo);
+        }
+
         hoja.estado = 'en reparto';
         hoja.envios = envios;
 
@@ -799,8 +800,10 @@ const generarHojasAutomaticas = async (fechaReferencia, esFeriadoNacional = fals
                 }
 
                 // 5. Crear la Hoja de Reparto (Solo Estructura, sin envíos automáticos)
+                const nuevoNumeroHoja = await generarNumeroHoja(ruta.codigo);
+
                 const nuevaHoja = new HojaReparto({
-                    numeroHoja: null, // Se asigna al confirmar manualmente
+                    numeroHoja: nuevoNumeroHoja, // ✅ Ahora el generador automático lo bautiza
                     fecha: inicioDia,
                     ruta: ruta._id,
                     chofer: ruta.choferAsignado,
