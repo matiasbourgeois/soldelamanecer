@@ -8,38 +8,25 @@ const Chofer = require("../../models/Chofer"); // Agregar arriba si no está
 
 
 
-// Generador de número de hoja al crear o confirmar (Formato: HR-[RUTA]-YYYY-MM-DD-XXX)
-const generarNumeroHoja = async (codigoRuta) => {
+// Generador de número de hoja al crear o confirmar (Formato: RUTA-SEC-YYYYMMDD)
+const generarNumeroHoja = async (codigoRuta, fecha = null) => {
     const moment = require('moment-timezone');
-    const hoy = moment().tz('America/Argentina/Buenos_Aires');
+    const fechaBase = fecha ? moment(fecha).tz('America/Argentina/Buenos_Aires') : moment().tz('America/Argentina/Buenos_Aires');
 
-    const anio = hoy.format('YYYY');
-    const mes = hoy.format('MM');
-    const dia = hoy.format('DD');
+    const anio = fechaBase.format('YYYY');
+    const mes = fechaBase.format('MM');
+    const dia = fechaBase.format('DD');
 
-    // 🛡️ Si no viene ruta (ej: Hojas Especiales sin ruta definida), usamos SDA
-    const prefixRuta = codigoRuta || "SDA";
+    let prefixRuta = codigoRuta || "SDA";
 
-    // Prefijo base de hoy: HR-CGE-2026-02-17
-    const prefijoHoy = `HR-${prefixRuta}-${anio}-${mes}-${dia}`;
-
-    // Buscar cuántas hojas nacieron HOY con este prefijo para esa ruta
-    const inicioDia = hoy.clone().startOf('day').toDate();
-    const finDia = hoy.clone().endOf('day').toDate();
-
-    const count = await HojaReparto.countDocuments({
-        numeroHoja: { $regex: new RegExp(`^${prefijoHoy}`) },
-        fecha: { $gte: inicioDia, $lte: finDia }
-    });
-
-    // La secuencia evalúa si hay duplicados
-    if (count === 0) {
-        // Viaje único del día: HR-CGE-2026-02-17
-        return prefijoHoy;
-    } else {
-        // Viaje repetido: HR-CGE-2026-02-17-2
-        return `${prefijoHoy}-${count + 1}`;
+    // 🛡️ Limpieza de nombre de Ruta:
+    // Convierte "L-CEJE-1" a "CEJE-1" o "L-R36T-1" a "R36T-1"
+    if (prefixRuta.toUpperCase().startsWith('L-') || prefixRuta.toUpperCase().startsWith('R-') || prefixRuta.toUpperCase().startsWith('M-')) {
+        prefixRuta = prefixRuta.substring(2);
     }
+
+    // Retorna: CEJE-1-20260226
+    return `${prefixRuta}-${anio}${mes}${dia}`;
 };
 
 const extraerNumero = (numeroHoja) => {
@@ -199,7 +186,7 @@ const confirmarHoja = async (req, res) => {
         // Asignar número único SOLO si no tiene uno previo (ej: creadas por cron)
         const ruta = await Ruta.findById(hoja.ruta);
         if (!hoja.numeroHoja) {
-            hoja.numeroHoja = await generarNumeroHoja(ruta.codigo);
+            hoja.numeroHoja = await generarNumeroHoja(ruta.codigo, hoja.fecha);
         }
 
         hoja.estado = 'en reparto';
@@ -800,7 +787,7 @@ const generarHojasAutomaticas = async (fechaReferencia, esFeriadoNacional = fals
                 }
 
                 // 5. Crear la Hoja de Reparto (Solo Estructura, sin envíos automáticos)
-                const nuevoNumeroHoja = await generarNumeroHoja(ruta.codigo);
+                const nuevoNumeroHoja = await generarNumeroHoja(ruta.codigo, inicioDia);
 
                 const nuevaHoja = new HojaReparto({
                     numeroHoja: nuevoNumeroHoja, // ✅ Ahora el generador automático lo bautiza

@@ -759,7 +759,7 @@ const ControlOperativo = () => {
                                                 <Stack gap={2}>
                                                     <Group gap={4}>
                                                         <Text size="xs" c={esEspecial ? "orange.8" : "cyan.9"} fw={800} tt="uppercase">
-                                                            {hoja.numeroHoja || "S/N"} - {hoja.ruta?.codigo || (esEspecial ? "ESPECIAL (SIN RUTA)" : "ESPECIAL")}
+                                                            {hoja.numeroHoja ? hoja.numeroHoja : (esEspecial ? "ESPECIAL (SIN RUTA)" : "S/N")}
                                                         </Text>
                                                         {esEspecial && (
                                                             <Tooltip label="Hoja de Reparto Especial">
