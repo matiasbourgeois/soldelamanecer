@@ -167,6 +167,25 @@ const guardarLiquidacion = async (req, res) => {
             return res.status(400).json({ error: "Faltan parámetros" });
         }
 
+        // ─── GUARD: No permitir doble liquidación activa para el mismo chofer y período ───
+        // Estados activos: borrador (en proceso), enviado (esperando conformidad), aceptado (ya aprobada)
+        const moment = require('moment-timezone');
+        const inicioPeriodo = moment(fechaInicio).tz('America/Argentina/Buenos_Aires').startOf('day').toDate();
+        const finPeriodo = moment(fechaFin).tz('America/Argentina/Buenos_Aires').endOf('day').toDate();
+
+        const liquidacionExistente = await LiquidacionContratado.findOne({
+            chofer: choferId,
+            estado: { $nin: ['anulado', 'rechazado'] },
+            'periodo.inicio': { $lte: finPeriodo },
+            'periodo.fin': { $gte: inicioPeriodo }
+        });
+
+        if (liquidacionExistente) {
+            return res.status(409).json({
+                error: `Ya existe una liquidación activa (estado: "${liquidacionExistente.estado}") para este chofer que cubre ese período (ID: ${liquidacionExistente._id}). Anulá la existente antes de crear una nueva.`
+            });
+        }
+
         // Se vuelve a calcular firmemente en backend por seguridad
         const { hojasValidas, totales } = await calcularTotalesLiquidacion(choferId, fechaInicio, fechaFin);
 
@@ -216,7 +235,7 @@ const crypto = require("crypto");
 const { generatePDF } = require("../../utils/pdfService");
 const path = require("path");
 const fs = require("fs");
-const { enviarNotificacionEstado } = require("../../utils/emailService"); // We can use transporter directly if we need attachments
+const { enviarNotificacionEstado } = require("../../utils/emailService");
 const nodemailer = require("nodemailer");
 
 // Usa la misma config de transporter que en emailService
@@ -229,6 +248,114 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS,
     },
 });
+
+/**
+ * buildPDFData: Construye el objeto de datos para la plantilla de liquidación.
+ * Centraliza la lógica de cálculo del PDF, evitando código duplicado entre
+ * `enviarConformidad` y `descargarPDFLiquidacion`.
+ * @param {object} liquidacion - Documento LiquidacionContratado populado con chofer.usuario, hojasReparto.ruta y hojasReparto.vehiculo.
+ * @returns {{ dataPDF: object, outputPath: string, fileName: string }}
+ */
+const buildPDFData = (liquidacion) => {
+    const fondoPath = path.join(process.cwd(), "templates", "Copia de HOJADEREPARTO.png");
+    let fondoBase64 = "";
+    if (fs.existsSync(fondoPath)) {
+        fondoBase64 = fs.readFileSync(fondoPath, "base64");
+    }
+
+    let totalKmBase = 0;
+    let totalKmExtra = 0;
+    let tieneMesFijo = false;
+    let montoMesAdicional = 0;
+    let subtotalViajes = 0;
+
+    const hojasDetalladas = liquidacion.hojasReparto.map(h => {
+        const esVehiculoSDA = h.vehiculo && h.vehiculo.propiedadExterna === false;
+        let kmBase = 0;
+        let extra = 0;
+        let montoStr = "-";
+
+        if (esVehiculoSDA) {
+            const pagoFijo = liquidacion.chofer.datosContratado?.pagoPorDiaSDA || liquidacion.chofer.datosContratado?.montoChoferDia || 0;
+            montoStr = pagoFijo.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+            subtotalViajes += pagoFijo;
+        } else {
+            kmBase = h.kilometrosEstimados || h.ruta?.kilometrosEstimados || 0;
+            extra = h.datosDrogueria?.kmExtra || 0;
+            totalKmBase += kmBase;
+            totalKmExtra += extra;
+
+            const tipoPagoEval = h.tipoPago || 'por_km';
+
+            if (tipoPagoEval === 'por_km') {
+                const precio = h.precioKm || 0;
+                const pago = (kmBase + extra) * precio;
+                montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+                subtotalViajes += pago;
+            } else if (tipoPagoEval === 'por_distribucion') {
+                const pago = h.montoPorDistribucion || 0;
+                montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+                subtotalViajes += pago;
+            } else if (tipoPagoEval === 'por_mes') {
+                montoStr = "-";
+                if (!tieneMesFijo) {
+                    tieneMesFijo = true;
+                    montoMesAdicional = h.montoMensual || liquidacion.chofer.datosContratado?.tarifaMensualAdicional || 0;
+                }
+            }
+        }
+
+        // Filtrar texto interno del motor de generación automática — no debe aparecer en PDFs al contratado
+        const obsRaw = h.cierre?.observaciones || h.observaciones || "";
+        const TEXTO_SISTEMA = /generada\s+autom[aá]ticamente|motor\s+silencioso/i;
+        const observaciones = obsRaw && !TEXTO_SISTEMA.test(obsRaw) ? obsRaw : "-";
+
+        return {
+            fecha: new Date(h.fecha).toLocaleDateString("es-AR"),
+            ruta: h.ruta?.codigo || "-",
+            descripcion: h.ruta?.descripcion || "-",
+            horaSalida: h.ruta?.horaSalida || "-",
+            vehiculo: h.vehiculo?.patente || "-",
+            kmBase: kmBase > 0 ? kmBase : "-",
+            kmExtra: extra > 0 ? extra : "-",
+            observaciones,
+            monto: montoStr
+        };
+    });
+
+    const totalPagarCalculadoDb = liquidacion.totales?.montoTotalViajes || 0;
+
+    const formateadorFecha = new Intl.DateTimeFormat('es-AR', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const formateadorMes = new Intl.DateTimeFormat('es-AR', { timeZone: 'UTC', month: 'long', year: 'numeric' });
+    const txtMes = formateadorMes.format(new Date(liquidacion.periodo.inicio));
+    const periodoMes = txtMes.charAt(0).toUpperCase() + txtMes.slice(1);
+
+    const dataPDF = {
+        pdfMargin: { top: '40px', bottom: '40px', left: '50px', right: '50px' },
+        imagen_fondo: fondoBase64 ? `data:image/png;base64,${fondoBase64}` : "",
+        periodoMes,
+        fechaInicio: formateadorFecha.format(new Date(liquidacion.periodo.inicio)),
+        fechaFin: formateadorFecha.format(new Date(liquidacion.periodo.fin)),
+        chofer: liquidacion.chofer.usuario.nombre,
+        dni: liquidacion.chofer.usuario.dni,
+        diasTrabajados: liquidacion.totales?.diasTrabajados || liquidacion.hojasReparto.length,
+        totalKmBase: liquidacion.totales?.kmBaseAcumulados || totalKmBase,
+        totalKmExtra: liquidacion.totales?.kmExtraAcumulados || totalKmExtra,
+        montoTotalViajesFormat: subtotalViajes.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }),
+        montoMesAdicional: tieneMesFijo || montoMesAdicional > 0,
+        montoMesAdicionalFormat: montoMesAdicional.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }),
+        montoTotal: totalPagarCalculadoDb.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }),
+        hojas: hojasDetalladas
+    };
+
+    const dni = liquidacion.chofer.usuario.dni || 'SINDNI';
+    const fileName = `Liquidacion_${dni}_${Date.now()}.pdf`;
+    const outputPath = path.join(process.cwd(), "pdfs", "liquidaciones", fileName);
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+
+    return { dataPDF, outputPath, fileName };
+};
 
 const enviarConformidad = async (req, res) => {
     try {
@@ -257,112 +384,7 @@ const enviarConformidad = async (req, res) => {
         await liquidacion.save();
 
         // ─── 1. PREPARAR DATOS PARA EL PDF ───
-        const fondoPath = path.join(process.cwd(), "templates", "Copia de HOJADEREPARTO.png"); // Reusamos el fondo de SDA
-        let fondoBase64 = "";
-        if (fs.existsSync(fondoPath)) {
-            fondoBase64 = fs.readFileSync(fondoPath, "base64");
-        }
-
-        let totalKmBase = 0;
-        let totalKmExtra = 0;
-        let tieneMesFijo = false;
-        let montoMesAdicional = 0;
-        let subtotalViajes = 0;
-
-        const hojasDetalladas = liquidacion.hojasReparto.map(h => {
-            const esVehiculoSDA = h.vehiculo && h.vehiculo.propiedadExterna === false;
-            let kmBase = 0;
-            let extra = 0;
-            let montoStr = "-";
-
-            if (esVehiculoSDA) {
-                const pagoFijo = liquidacion.chofer.datosContratado?.pagoPorDiaSDA || liquidacion.chofer.datosContratado?.montoChoferDia || 0;
-                montoStr = pagoFijo.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-                subtotalViajes += pagoFijo;
-            } else {
-                kmBase = h.kilometrosEstimados || h.ruta?.kilometrosEstimados || 0;
-                extra = h.datosDrogueria?.kmExtra || 0;
-                totalKmBase += kmBase;
-                totalKmExtra += extra;
-
-                const tipoPagoEval = h.tipoPago || 'por_km';
-
-                if (tipoPagoEval === 'por_km') {
-                    const precio = h.precioKm || 0;
-                    const pago = (kmBase + extra) * precio;
-                    montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-                    subtotalViajes += pago;
-                } else if (tipoPagoEval === 'por_distribucion') {
-                    const pago = h.montoPorDistribucion || 0;
-                    montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-                    subtotalViajes += pago;
-                } else if (tipoPagoEval === 'por_mes') {
-                    montoStr = "-";
-                    if (!tieneMesFijo) {
-                        tieneMesFijo = true;
-                        montoMesAdicional = h.montoMensual || liquidacion.chofer.datosContratado?.tarifaMensualAdicional || 0;
-                    }
-                }
-            }
-
-            return {
-                fecha: new Date(h.fecha).toLocaleDateString("es-AR"),
-                ruta: h.ruta?.codigo || "-",
-                descripcion: h.ruta?.descripcion || "-",
-                horaSalida: h.ruta?.horaSalida || "-",
-                vehiculo: h.vehiculo?.patente || "-",
-                kmBase: kmBase > 0 ? kmBase : "-",
-                kmExtra: extra > 0 ? extra : "-",
-                observaciones: h.cierre?.observaciones || h.observaciones || "-",
-                monto: montoStr
-            };
-        });
-
-        // Asegurarse de que total a pagar no quede dessincronizado de DB
-        const totalPagarCalculadoDb = liquidacion.totales?.montoTotalViajes || 0;
-
-        const formateadorFecha = new Intl.DateTimeFormat('es-AR', {
-            timeZone: 'UTC',
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-
-        const formateadorMes = new Intl.DateTimeFormat('es-AR', {
-            timeZone: 'UTC',
-            month: 'long',
-            year: 'numeric'
-        });
-        const txtMesEnvio = formateadorMes.format(new Date(liquidacion.periodo.inicio));
-        const periodoMesEnvio = txtMesEnvio.charAt(0).toUpperCase() + txtMesEnvio.slice(1);
-
-        const dataPDF = {
-            pdfMargin: { top: '40px', bottom: '40px', left: '50px', right: '50px' },
-            imagen_fondo: fondoBase64 ? `data:image/png;base64,${fondoBase64}` : "",
-            periodoMes: periodoMesEnvio,
-            fechaInicio: formateadorFecha.format(new Date(liquidacion.periodo.inicio)),
-            fechaFin: formateadorFecha.format(new Date(liquidacion.periodo.fin)),
-            chofer: liquidacion.chofer.usuario.nombre,
-            dni: liquidacion.chofer.usuario.dni,
-            diasTrabajados: liquidacion.totales?.diasTrabajados || liquidacion.hojasReparto.length,
-            totalKmBase: liquidacion.totales?.kmBaseAcumulados || totalKmBase,
-            totalKmExtra: liquidacion.totales?.kmExtraAcumulados || totalKmExtra,
-            montoTotalViajesFormat: subtotalViajes.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }),
-            montoMesAdicional: tieneMesFijo || montoMesAdicional > 0,
-            montoMesAdicionalFormat: montoMesAdicional.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }),
-            montoTotal: totalPagarCalculadoDb.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }),
-            hojas: hojasDetalladas
-        };
-
-        const fileName = `Liquidacion_${liquidacion.chofer.usuario.dni}_${Date.now()}.pdf`;
-        const outputPath = path.join(process.cwd(), "pdfs", "liquidaciones", fileName);
-
-        // Crear carpeta si no existe
-        const outputDir = path.dirname(outputPath);
-        if (!fs.existsSync(outputDir)) {
-            fs.mkdirSync(outputDir, { recursive: true });
-        }
-
+        const { dataPDF, outputPath } = buildPDFData(liquidacion);
         await generatePDF("liquidacion_contratado.html", dataPDF, outputPath);
 
         // ─── 2. ENVIAR EMAIL ───
@@ -421,120 +443,11 @@ const descargarPDFLiquidacion = async (req, res) => {
 
         if (!liquidacion) return res.status(404).json({ error: "Liquidación no encontrada" });
 
-        // ─── 1. PREPARAR DATOS PARA EL PDF ───
-        const fondoPath = path.join(process.cwd(), "templates", "Copia de HOJADEREPARTO.png");
-        let fondoBase64 = "";
-        if (fs.existsSync(fondoPath)) {
-            fondoBase64 = fs.readFileSync(fondoPath, "base64");
-        }
-
-        let totalKmBase = 0;
-        let totalKmExtra = 0;
-        let tieneMesFijo = false;
-        let montoMesAdicional = 0;
-        let subtotalViajes = 0;
-
-        const hojasDetalladas = liquidacion.hojasReparto.map(h => {
-            const esVehiculoSDA = h.vehiculo && h.vehiculo.propiedadExterna === false;
-            let kmBase = 0;
-            let extra = 0;
-            let montoStr = "-";
-
-            if (esVehiculoSDA) {
-                const pagoFijo = liquidacion.chofer.datosContratado?.pagoPorDiaSDA || liquidacion.chofer.datosContratado?.montoChoferDia || 0;
-                montoStr = pagoFijo.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-                subtotalViajes += pagoFijo;
-            } else {
-                kmBase = h.kilometrosEstimados || h.ruta?.kilometrosEstimados || 0;
-                extra = h.datosDrogueria?.kmExtra || 0;
-                totalKmBase += kmBase;
-                totalKmExtra += extra;
-
-                const tipoPagoEval = h.tipoPago || 'por_km';
-
-                if (tipoPagoEval === 'por_km') {
-                    const precio = h.precioKm || 0;
-                    const pago = (kmBase + extra) * precio;
-                    montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-                    subtotalViajes += pago;
-                } else if (tipoPagoEval === 'por_distribucion') {
-                    const pago = h.montoPorDistribucion || 0;
-                    montoStr = pago.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-                    subtotalViajes += pago;
-                } else if (tipoPagoEval === 'por_mes') {
-                    montoStr = "-";
-                    if (!tieneMesFijo) {
-                        tieneMesFijo = true;
-                        montoMesAdicional = h.montoMensual || liquidacion.chofer.datosContratado?.tarifaMensualAdicional || 0;
-                    }
-                }
-            }
-
-            return {
-                fecha: new Date(h.fecha).toLocaleDateString("es-AR"),
-                ruta: h.ruta?.codigo || "-",
-                descripcion: h.ruta?.descripcion || "-",
-                horaSalida: h.ruta?.horaSalida || "-",
-                vehiculo: h.vehiculo?.patente || "-",
-                kmBase: kmBase > 0 ? kmBase : "-",
-                kmExtra: extra > 0 ? extra : "-",
-                observaciones: h.cierre?.observaciones || h.observaciones || "-",
-                monto: montoStr
-            };
-        });
-
-        const totalPagarCalculadoDb = liquidacion.totales?.montoTotalViajes || 0;
-
-        const formateadorFecha = new Intl.DateTimeFormat('es-AR', {
-            timeZone: 'UTC',
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-
-        const formateadorMes = new Intl.DateTimeFormat('es-AR', {
-            timeZone: 'UTC',
-            month: 'long',
-            year: 'numeric'
-        });
-        const txtMesDesc = formateadorMes.format(new Date(liquidacion.periodo.inicio));
-        const periodoMesDesc = txtMesDesc.charAt(0).toUpperCase() + txtMesDesc.slice(1);
-
-        const dataPDF = {
-            pdfMargin: { top: '40px', bottom: '40px', left: '50px', right: '50px' },
-            imagen_fondo: fondoBase64 ? `data:image/png;base64,${fondoBase64}` : "",
-            periodoMes: periodoMesDesc,
-            fechaInicio: formateadorFecha.format(new Date(liquidacion.periodo.inicio)),
-            fechaFin: formateadorFecha.format(new Date(liquidacion.periodo.fin)),
-            chofer: liquidacion.chofer.usuario.nombre,
-            dni: liquidacion.chofer.usuario.dni,
-            diasTrabajados: liquidacion.totales?.diasTrabajados || liquidacion.hojasReparto.length,
-            totalKmBase: liquidacion.totales?.kmBaseAcumulados || totalKmBase,
-            totalKmExtra: liquidacion.totales?.kmExtraAcumulados || totalKmExtra,
-            montoTotalViajesFormat: subtotalViajes.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }),
-            montoMesAdicional: tieneMesFijo || montoMesAdicional > 0,
-            montoMesAdicionalFormat: montoMesAdicional.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }),
-            montoTotal: totalPagarCalculadoDb.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }),
-            hojas: hojasDetalladas
-        };
-
-        const fileName = `Liquidacion_${liquidacion.chofer.usuario.dni}_${Date.now()}.pdf`;
-        const outputPath = path.join(process.cwd(), "pdfs", "liquidaciones", fileName);
-
-        const outputDir = path.dirname(outputPath);
-        if (!fs.existsSync(outputDir)) {
-            fs.mkdirSync(outputDir, { recursive: true });
-        }
-
+        const { dataPDF, outputPath, fileName } = buildPDFData(liquidacion);
         await generatePDF("liquidacion_contratado.html", dataPDF, outputPath);
 
-        // Send PDF for download
         res.download(outputPath, fileName, (err) => {
-            if (err) {
-                logger.error(`Error enviando archivo PDF: ${err.message}`);
-            }
-            // Opcional: eliminar el archivo pdf temporal después de descargarlo
-            // fs.unlinkSync(outputPath);
+            if (err) logger.error(`Error enviando archivo PDF: ${err.message}`);
         });
 
     } catch (error) {
@@ -547,16 +460,45 @@ const obtenerLiquidacionPublica = async (req, res) => {
     try {
         const { token } = req.params;
         const liquidacion = await LiquidacionContratado.findOne({ tokenAceptacion: token })
-            .populate({ path: "chofer", populate: { path: "usuario", select: "nombre" } });
+            .populate({ path: "chofer", populate: { path: "usuario", select: "nombre dni" } })
+            .populate({
+                path: "hojasReparto",
+                populate: [{ path: "ruta" }, { path: "vehiculo" }]
+            });
 
         if (!liquidacion) return res.status(404).json({ error: "Enlace inválido o expirado" });
 
+        const TEXTO_SISTEMA = /generada\s+autom[aá]ticamente|motor\s+silencioso/i;
+
+        const hojas = liquidacion.hojasReparto.map(h => {
+            const obsRaw = h.cierre?.observaciones || h.observaciones || "";
+            const obs = obsRaw && !TEXTO_SISTEMA.test(obsRaw) ? obsRaw : "-";
+
+            return {
+                fecha: new Date(h.fecha).toLocaleDateString("es-AR"),
+                ruta: h.ruta?.codigo || "-",
+                descripcion: h.ruta?.descripcion || "-",
+                horaSalida: h.ruta?.horaSalida || "-",
+                vehiculo: h.vehiculo?.patente || "-",
+                kmBase: h.kilometrosEstimados || h.ruta?.kilometrosEstimados || 0,
+                kmExtra: h.datosDrogueria?.kmExtra || 0,
+                observaciones: obs,
+                subtotal: h.subtotal || 0,
+                detallePago: h.detallePago || "-"
+            };
+        });
+
         res.json({
-            choferNombre: liquidacion.chofer?.usuario?.nombre || 'Chofer',
+            choferNombre: liquidacion.chofer?.usuario?.nombre || "Chofer",
+            choferDni: liquidacion.chofer?.usuario?.dni || "-",
             fechaInicio: liquidacion.periodo.inicio,
             fechaFin: liquidacion.periodo.fin,
-            montoTotal: liquidacion.totales.montoTotalViajes,
-            estado: liquidacion.estado
+            diasTrabajados: liquidacion.totales?.diasTrabajados || hojas.length,
+            kmBaseTotal: liquidacion.totales?.kmBaseAcumulados || 0,
+            kmExtraTotal: liquidacion.totales?.kmExtraAcumulados || 0,
+            montoTotal: liquidacion.totales?.montoTotalViajes || 0,
+            estado: liquidacion.estado,
+            hojas
         });
     } catch (error) {
         logger.error("❌ Error obteniendo liquidacion publica:", error);

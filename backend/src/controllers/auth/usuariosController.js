@@ -104,7 +104,7 @@ const obtenerUsuarios = async (req, res) => {
       return res.status(403).json({ error: "Acceso denegado" });
     }
 
-    const usuarios = await Usuario.find().select("-contrasena");
+    const usuarios = await Usuario.find({ activo: { $ne: false } }).select("-contrasena");
     res.json(usuarios);
   } catch (error) {
     console.error("Error al obtener usuarios:", error);
@@ -138,13 +138,17 @@ const eliminarUsuario = async (req, res) => {
       return res.status(403).json({ error: "Acceso denegado. Se requiere rol admin." });
     }
 
-    const usuarioEliminado = await Usuario.findByIdAndDelete(idUsuario);
+    const usuarioAEliminar = await Usuario.findById(idUsuario);
 
-    if (!usuarioEliminado) {
+    if (!usuarioAEliminar) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    res.json({ mensaje: "Usuario eliminado correctamente" });
+    // SOFT DELETE: Archivado Lógico
+    usuarioAEliminar.activo = false;
+    await usuarioAEliminar.save();
+
+    res.json({ mensaje: "Usuario desactivado correctamente" });
   } catch (error) {
     console.error("Error al eliminar usuario:", error);
     res.status(500).json({ error: "Error en el servidor" });
@@ -239,7 +243,11 @@ const obtenerUsuariosPaginados = async (req, res) => {
     const limite = parseInt(req.query.limite) || 10;
     const busqueda = req.query.busqueda?.trim().toLowerCase() || "";
 
-    const filtro = {};
+    // 🛡️ BARRERA COMERCIAL Y SOFT-DELETE: Excluir estrictamente a los clientes y a los inactivos
+    const filtro = {
+      rol: { $ne: 'cliente' },
+      activo: { $ne: false }
+    };
 
     if (busqueda) {
       filtro.$or = [
@@ -263,6 +271,49 @@ const obtenerUsuariosPaginados = async (req, res) => {
   } catch (error) {
     console.error("Error al obtener usuarios paginados:", error);
     res.status(500).json({ error: "Error al obtener usuarios" });
+  }
+};
+
+// Obtener solo clientes paginados (Dominio Comercial)
+const obtenerClientesPaginados = async (req, res) => {
+  try {
+    if (req.usuario.rol !== "admin" && req.usuario.rol !== "administrativo") {
+      return res.status(403).json({ error: "Acceso denegado" });
+    }
+
+    const pagina = parseInt(req.query.pagina) || 0;
+    const limite = parseInt(req.query.limite) || 10;
+    const busqueda = req.query.busqueda?.trim().toLowerCase() || "";
+
+    // 🎯 DOMINIO COMERCIAL Y SOFT-DELETE: Traer estrictamente a los clientes activos
+    const filtro = {
+      rol: 'cliente',
+      activo: { $ne: false }
+    };
+
+    if (busqueda) {
+      filtro.$or = [
+        { nombre: { $regex: busqueda, $options: "i" } },
+        { email: { $regex: busqueda, $options: "i" } },
+        { dni: { $regex: busqueda, $options: "i" } },
+      ];
+    }
+
+    const total = await Usuario.countDocuments(filtro);
+
+    const clientes = await Usuario.find(filtro)
+      .select("-contrasena")
+      .skip(pagina * limite)
+      .limit(limite)
+      .sort({ createdAt: -1 });
+
+    res.json({
+      total,
+      resultados: clientes,
+    });
+  } catch (error) {
+    console.error("Error al obtener clientes paginados:", error);
+    res.status(500).json({ error: "Error al obtener clientes" });
   }
 };
 
@@ -311,5 +362,6 @@ module.exports = {
   actualizarUsuarioDesdeAdmin,
   obtenerUsuarioPorId,
   obtenerUsuariosPaginados,
+  obtenerClientesPaginados,
   cambiarPassword
 };

@@ -4,7 +4,7 @@ const Usuario = require("../models/Usuario");
 
 router.get("/", async (req, res) => {
   try {
-    const clientes = await Usuario.find({ rol: "cliente" }).select("nombre email dni");
+    const clientes = await Usuario.find({ rol: "cliente", activo: { $ne: false } }).select("nombre email dni");
     res.json(clientes);
   } catch (error) {
     console.error("❌ Error al obtener clientes:", error);
@@ -20,6 +20,7 @@ router.get("/buscar-clientes", async (req, res) => {
 
     const filtro = {
       rol: "cliente",
+      activo: { $ne: false },
       $or: [
         { nombre: { $regex: busqueda, $options: "i" } },
         { email: { $regex: busqueda, $options: "i" } },

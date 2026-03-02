@@ -161,6 +161,20 @@ export function AppLayout({ children, auth, handleLogout }) {
                     <>
                         <Divider my="md" color="gray.2" />
 
+                        {/* DOMINIO: COMERCIAL & CLIENTES */}
+                        <Text size="xs" fw={700} c="dimmed" mb="xs" pl={4} tt="uppercase" style={{ letterSpacing: 1 }}>
+                            Comercial
+                        </Text>
+
+                        <NavLink
+                            label="Gestión de Clientes"
+                            leftSection={<IconUserCheck size={20} stroke={1.5} />}
+                            rightSection={isActive('/admin/clientes') && <IconChevronRight size={14} />}
+                            {...getLinkProps('/admin/clientes')}
+                        />
+
+                        <Divider my="md" color="gray.2" />
+
                         {/* DOMINIO: LOGÍSTICA & TRÁFICO */}
                         <Text size="xs" fw={700} c="dimmed" mb="xs" pl={4} tt="uppercase" style={{ letterSpacing: 1 }}>
                             Logística & Tráfico

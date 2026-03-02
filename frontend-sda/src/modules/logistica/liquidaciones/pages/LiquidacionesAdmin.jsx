@@ -497,7 +497,7 @@ const LiquidacionesAdmin = () => {
                                             </Table.Td>
                                             <Table.Td>
                                                 <Text fw={700}>{liq.chofer?.usuario?.nombre}</Text>
-                                                <Text size="xs" c="dimmed">DNI: {liq.chofer?.dni}</Text>
+                                                <Text size="xs" c="dimmed">DNI: {liq.chofer?.usuario?.dni || '-'}</Text>
                                             </Table.Td>
                                             <Table.Td>
                                                 <Stack gap={2}>

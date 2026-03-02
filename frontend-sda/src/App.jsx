@@ -26,6 +26,7 @@ import CotizadorCordobaPage from "./modules/public/pages/CotizadorCordoba"; // M
 // Pages - Admin & Users
 import Perfil from "./modules/auth/pages/Perfil"; // Moved to Auth
 import UsuariosAdmin from "./modules/admin/pages/UsuariosAdmin";
+import ClientesAdmin from "./modules/admin/pages/ClientesAdmin";
 import DashboardAdmin from "./modules/admin/pages/DashboardAdmin";
 const AdminArcade = lazy(() => import("./modules/admin/pages/AdminArcade"));
 import ConfiguracionAdmin from "./modules/admin/pages/ConfiguracionAdmin";
@@ -120,6 +121,14 @@ function App() {
               element={
                 <ProtectedByRole allowedRoles="admin">
                   <UsuariosAdmin />
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/clientes"
+              element={
+                <ProtectedByRole allowedRoles={["admin", "administrativo"]}>
+                  <ClientesAdmin />
                 </ProtectedByRole>
               }
             />

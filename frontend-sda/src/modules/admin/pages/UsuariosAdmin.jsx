@@ -119,7 +119,7 @@ const UsuariosAdmin = () => {
   };
 
   const handleEliminarUsuario = async (userId) => {
-    const confirmar = await confirmarAccion("¿Eliminar usuario?", "Esta acción no se puede deshacer");
+    const confirmar = await confirmarAccion("¿Desactivar usuario?", "El usuario perderá acceso al sistema pero su historial se mantendrá intacto.");
     if (!confirmar) return;
 
     try {
@@ -129,11 +129,11 @@ const UsuariosAdmin = () => {
       });
 
       if (response.ok) {
-        mostrarAlerta("✅ Usuario eliminado correctamente", "success");
+        mostrarAlerta("✅ Usuario desactivado correctamente", "success");
         setUsuarios((prev) => prev.filter((u) => u._id !== userId));
       } else {
         const data = await response.json();
-        mostrarAlerta(data.error || "❌ Error al eliminar usuario", "danger");
+        mostrarAlerta(data.error || "❌ Error al desactivar usuario", "danger");
       }
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
@@ -258,7 +258,7 @@ const UsuariosAdmin = () => {
                             </ActionIcon>
                           </Tooltip>
                         )}
-                        <Tooltip label="Eliminar Usuario">
+                        <Tooltip label="Desactivar Usuario">
                           <ActionIcon
                             color="gray"
                             variant="subtle"

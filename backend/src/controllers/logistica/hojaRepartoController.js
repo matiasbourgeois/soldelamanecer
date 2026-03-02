@@ -748,11 +748,19 @@ const generarHojasAutomaticas = async (fechaReferencia, esFeriadoNacional = fals
 
         const resultados = { creadas: 0, saltadas: 0, errores: 0 };
 
-        // Calcular día de la semana (0=Domingo en JS, convertimos a 0=Lunes)
-        const diaSemanaJS = fechaReferencia.getDay();
+        // ─── TIMEZONE FIX (Fase 17) ────────────────────────────────────────────────
+        // CRÍTICO: NO usar fechaReferencia.getDay() directamente. Ese método devuelve
+        // el día de la semana en la zona horaria LOCAL del proceso Node (que en hosting
+        // suele ser UTC). Si el cron corre a las 00:01 AR (= 03:01 UTC), getDay() leería
+        // el día CORRECTO, pero si el servidor tiene otra TZ podría desfasarse.
+        // Solución: extraer el índice del día SIEMPRE desde la perspectiva de Buenos Aires.
+        const momentTZ = require('moment-timezone');
+        const fechaEnAR = momentTZ(fechaReferencia).tz('America/Argentina/Buenos_Aires');
+        // moment().day() → 0=Dom, 1=Lun, ..., 6=Sáb → convertimos a 0=Lun, ..., 6=Dom
+        const diaSemanaJS = fechaEnAR.day();
         const diaIndex = diaSemanaJS === 0 ? 6 : diaSemanaJS - 1; // 0=Lun, 1=Mar, ..., 6=Dom
         const diasNombres = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-        logger.info(`📅 Día de la semana: ${diasNombres[diaIndex]} (índice ${diaIndex})`);
+        logger.info(`📅 Día de la semana (TZ Argentina): ${diasNombres[diaIndex]} (índice ${diaIndex}) | Hora Local AR: ${fechaEnAR.format('DD/MM/YYYY HH:mm')}}`);
 
         for (const ruta of rutas) {
             try {

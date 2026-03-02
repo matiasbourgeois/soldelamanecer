@@ -127,9 +127,9 @@ const login = async (req, res) => {
   try {
     const { email, contrasena } = req.body;
 
-    const usuario = await Usuario.findOne({ email });
+    const usuario = await Usuario.findOne({ email, activo: { $ne: false } });
     if (!usuario) {
-      return res.status(400).json({ error: "Credenciales inválidas" });
+      return res.status(400).json({ error: "Credenciales inválidas o cuenta desactivada" });
     }
 
     if (!usuario.verificado) {
@@ -197,6 +197,10 @@ const googleLogin = async (req, res) => {
     const { email, name, picture } = payload;
 
     let usuario = await Usuario.findOne({ email });
+
+    if (usuario && usuario.activo === false) {
+      return res.status(403).json({ error: "Cuenta desactivada por un administrador" });
+    }
 
     if (!usuario) {
       // Registrar nuevo usuario
