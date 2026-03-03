@@ -24,7 +24,6 @@ import {
     TextInput
 } from '@mantine/core';
 import { DatePickerInput, MonthPickerInput } from '@mantine/dates';
-import { Search as IconSearch, X as IconX } from 'lucide-react';
 import {
     Calculator as IconCalculator,
     Mail as IconMail,
@@ -36,7 +35,9 @@ import {
     ShieldAlert as IconShieldAlert,
     Ban as IconBan,
     Eye as IconEye,
-    Download as IconDownload
+    Download as IconDownload,
+    Search as IconSearch,
+    X as IconX
 } from 'lucide-react';
 import { mostrarAlerta } from '../../../../core/utils/alertaGlobal';
 import { confirmarAccion } from '../../../../core/utils/confirmarAccion';
