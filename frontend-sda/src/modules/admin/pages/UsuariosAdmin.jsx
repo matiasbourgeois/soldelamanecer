@@ -16,12 +16,14 @@ import {
   Pagination,
   Loader,
   Center,
-  Tooltip
+  Tooltip,
+  Button
 } from "@mantine/core";
-import { Trash2, CheckCircle, Search, User, AlertCircle } from "lucide-react";
+import { Trash2, CheckCircle, Search, User, AlertCircle, UserPlus } from "lucide-react";
 import AuthContext from "@core/context/AuthProvider";
 import { mostrarAlerta } from "@core/utils/alertaGlobal.jsx";
 import { confirmarAccion } from "@core/utils/confirmarAccion.jsx";
+import ModalPromoverAdministrativo from "../components/ModalPromoverAdministrativo";
 
 const UsuariosAdmin = () => {
   const navigate = useNavigate();
@@ -34,6 +36,8 @@ const UsuariosAdmin = () => {
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [modalPromoverAbierto, setModalPromoverAbierto] = useState(false);
 
   useEffect(() => {
     if (!auth?._id || auth.rol !== "admin") {
@@ -154,149 +158,169 @@ const UsuariosAdmin = () => {
   const totalPaginas = Math.ceil(totalUsuarios / limite);
 
   return (
-    <Container size="xl" py="md">
-      <Paper p="md" radius="md" shadow="sm" withBorder mb="lg">
-        <Group justify="space-between" mb="md">
-          <Title order={2} fw={700} c="dimmed">
-            Gestión de Usuarios
-          </Title>
-          <TextInput
-            placeholder="Buscar por nombre o email..."
-            leftSection={<Search size={16} />}
-            value={busqueda}
-            onChange={(e) => {
-              setBusqueda(e.target.value);
-              setPaginaActual(1);
-            }}
-            radius="md"
-            w={300}
-          />
-        </Group>
+    <>
+      <Container size="xl" py="md">
+        <Paper p="md" radius="md" shadow="sm" withBorder mb="lg">
+          <Group justify="space-between" mb="md">
+            <Title order={2} fw={700} c="dimmed">
+              Gestión de Usuarios
+            </Title>
+            <Group>
+              <Button
+                leftSection={<UserPlus size={16} />}
+                variant="light"
+                color="teal"
+                radius="md"
+                onClick={() => setModalPromoverAbierto(true)}
+              >
+                Nuevo Administrativo
+              </Button>
+              <TextInput
+                placeholder="Buscar por nombre o email..."
+                leftSection={<Search size={16} />}
+                value={busqueda}
+                onChange={(e) => {
+                  setBusqueda(e.target.value);
+                  setPaginaActual(1);
+                }}
+                radius="md"
+                w={300}
+              />
+            </Group>
+          </Group>
 
-        {error && (
-          <Text c="red" ta="center" mb="md" fw={500}>
-            <AlertCircle size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> {error}
-          </Text>
-        )}
+          {error && (
+            <Text c="red" ta="center" mb="md" fw={500}>
+              <AlertCircle size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> {error}
+            </Text>
+          )}
 
-        <ScrollArea>
-          <Table striped highlightOnHover verticalSpacing="sm" withTableBorder={false}>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Usuario</Table.Th>
-                <Table.Th>Email</Table.Th>
-                <Table.Th>Rol</Table.Th>
-                <Table.Th>Estado</Table.Th>
-                <Table.Th ta="center">Acciones</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {loading ? (
+          <ScrollArea>
+            <Table striped highlightOnHover verticalSpacing="sm" withTableBorder={false}>
+              <Table.Thead>
                 <Table.Tr>
-                  <Table.Td colSpan={5}>
-                    <Center py="xl">
-                      <Loader color="cyan" type="dots" />
-                    </Center>
-                  </Table.Td>
+                  <Table.Th>Usuario</Table.Th>
+                  <Table.Th>Email</Table.Th>
+                  <Table.Th>Rol</Table.Th>
+                  <Table.Th>Estado</Table.Th>
+                  <Table.Th ta="center">Acciones</Table.Th>
                 </Table.Tr>
-              ) : usuarios.length > 0 ? (
-                usuarios.map((user) => (
-                  <Table.Tr key={user._id}>
-                    <Table.Td>
-                      <Group gap="sm">
-                        {/* 2. User Icon: Gray instead of Yellow */}
-                        <ActionIcon variant="light" color="gray" radius="xl" size="lg">
-                          <User size={18} />
-                        </ActionIcon>
-                        <Text fw={500}>{user.nombre}</Text>
-                      </Group>
+              </Table.Thead>
+              <Table.Tbody>
+                {loading ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={5}>
+                      <Center py="xl">
+                        <Loader color="cyan" type="dots" />
+                      </Center>
                     </Table.Td>
-                    <Table.Td>
-                      <Text size="sm" c="dimmed">{user.email}</Text>
-                    </Table.Td>
-                    <Table.Td>
-                      {/* 3. Role Select: Cyan instead of Yellow */}
-                      <Select
-                        value={user.rol}
-                        onChange={(val) => handleChangeRol(user._id, val)}
-                        data={[
-                          { value: 'cliente', label: 'Cliente' },
-                          { value: 'chofer', label: 'Chofer' },
-                          { value: 'administrativo', label: 'Administrativo' },
-                          { value: 'admin', label: 'Admin' }
-                        ]}
-                        size="xs"
-                        radius="md"
-                        w={140}
-                        variant="filled"
-                        color="cyan"
-                        allowDeselect={false}
-                      />
-                    </Table.Td>
-                    <Table.Td>
-                      {user.verificado ? (
-                        <Badge color="green" variant="light" size="sm" radius="sm">
-                          Verificado
-                        </Badge>
-                      ) : (
-                        <Badge color="gray" variant="light" size="sm" radius="sm">
-                          Pendiente
-                        </Badge>
-                      )}
-                    </Table.Td>
-                    <Table.Td>
-                      <Group justify="center" gap={8}>
-                        {!user.verificado && (
-                          <Tooltip label="Verificar Usuario">
+                  </Table.Tr>
+                ) : usuarios.length > 0 ? (
+                  usuarios.map((user) => (
+                    <Table.Tr key={user._id}>
+                      <Table.Td>
+                        <Group gap="sm">
+                          {/* 2. User Icon: Gray instead of Yellow */}
+                          <ActionIcon variant="light" color="gray" radius="xl" size="lg">
+                            <User size={18} />
+                          </ActionIcon>
+                          <Text fw={500}>{user.nombre}</Text>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm" c="dimmed">{user.email}</Text>
+                      </Table.Td>
+                      <Table.Td>
+                        {/* 3. Role Select: Cyan instead of Yellow */}
+                        <Select
+                          value={user.rol}
+                          onChange={(val) => handleChangeRol(user._id, val)}
+                          data={[
+                            { value: 'cliente', label: 'Cliente' },
+                            { value: 'chofer', label: 'Chofer' },
+                            { value: 'administrativo', label: 'Administrativo' },
+                            { value: 'admin', label: 'Admin' }
+                          ]}
+                          size="xs"
+                          radius="md"
+                          w={140}
+                          variant="filled"
+                          color="cyan"
+                          allowDeselect={false}
+                        />
+                      </Table.Td>
+                      <Table.Td>
+                        {user.verificado ? (
+                          <Badge color="green" variant="light" size="sm" radius="sm">
+                            Verificado
+                          </Badge>
+                        ) : (
+                          <Badge color="gray" variant="light" size="sm" radius="sm">
+                            Pendiente
+                          </Badge>
+                        )}
+                      </Table.Td>
+                      <Table.Td>
+                        <Group justify="center" gap={8}>
+                          {!user.verificado && (
+                            <Tooltip label="Verificar Usuario">
+                              <ActionIcon
+                                color="gray"
+                                variant="subtle"
+                                onClick={() => handleVerificarUsuario(user._id)}
+                                style={{ stroke: '#495057' }}
+                              >
+                                <CheckCircle size={18} />
+                              </ActionIcon>
+                            </Tooltip>
+                          )}
+                          <Tooltip label="Desactivar Usuario">
                             <ActionIcon
                               color="gray"
                               variant="subtle"
-                              onClick={() => handleVerificarUsuario(user._id)}
+                              onClick={() => handleEliminarUsuario(user._id)}
                               style={{ stroke: '#495057' }}
                             >
-                              <CheckCircle size={18} />
+                              <Trash2 size={18} />
                             </ActionIcon>
                           </Tooltip>
-                        )}
-                        <Tooltip label="Desactivar Usuario">
-                          <ActionIcon
-                            color="gray"
-                            variant="subtle"
-                            onClick={() => handleEliminarUsuario(user._id)}
-                            style={{ stroke: '#495057' }}
-                          >
-                            <Trash2 size={18} />
-                          </ActionIcon>
-                        </Tooltip>
-                      </Group>
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))
+                ) : (
+                  <Table.Tr>
+                    <Table.Td colSpan={5}>
+                      <Text ta="center" py="md" c="dimmed">
+                        No se encontraron usuarios
+                      </Text>
                     </Table.Td>
                   </Table.Tr>
-                ))
-              ) : (
-                <Table.Tr>
-                  <Table.Td colSpan={5}>
-                    <Text ta="center" py="md" c="dimmed">
-                      No se encontraron usuarios
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
-        </ScrollArea>
+                )}
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
 
-        <Group justify="flex-end" mt="md">
-          <Pagination
-            total={totalPaginas}
-            value={paginaActual}
-            onChange={setPaginaActual}
-            color="cyan"
-            radius="md"
-            withEdges
-          />
-        </Group>
-      </Paper>
-    </Container>
+          <Group justify="flex-end" mt="md">
+            <Pagination
+              total={totalPaginas}
+              value={paginaActual}
+              onChange={setPaginaActual}
+              color="cyan"
+              radius="md"
+              withEdges
+            />
+          </Group>
+        </Paper>
+      </Container>
+
+      <ModalPromoverAdministrativo
+        abierto={modalPromoverAbierto}
+        onClose={() => setModalPromoverAbierto(false)}
+        token={auth?.token}
+        onPromocionExitosa={fetchUsuarios}
+      />
+    </>
   );
 };
 

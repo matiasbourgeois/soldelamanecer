@@ -152,13 +152,21 @@ const FormularioRuta = ({ onClose, ruta, recargar }) => {
     try {
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${auth.token}`
+        },
         body: JSON.stringify(body),
       });
 
 
       if (res.ok) {
-        mostrarAlerta(ruta ? "✅ Ruta actualizada" : "✅ Ruta creada", "success");
+        const data = await res.json();
+        if (data.pendienteAprobacion) {
+          mostrarAlerta("⏳ " + data.mensaje, "info");
+        } else {
+          mostrarAlerta(ruta ? "✅ Ruta actualizada" : "✅ Ruta creada", "success");
+        }
         onClose();
         recargar();
       } else {

@@ -314,6 +314,12 @@ export function AppLayout({ children, auth, handleLogout }) {
                         </Text>
 
                         <NavLink
+                            label="Aprobaciones Pendientes"
+                            leftSection={<IconShield size={20} stroke={1.5} />}
+                            rightSection={isActive('/admin/aprobaciones') && <IconChevronRight size={14} />}
+                            {...getLinkProps('/admin/aprobaciones')}
+                        />
+                        <NavLink
                             label="Configuración General"
                             leftSection={<IconSettings size={20} stroke={1.5} />}
                             rightSection={isActive('/admin/configuracion') && <IconChevronRight size={14} />}

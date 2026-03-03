@@ -89,10 +89,18 @@ const RutasAdmin = () => {
     try {
       const res = await fetch(apiSistema(`/rutas/${id}`), {
         method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${auth?.token}`
+        }
       });
 
       if (res.ok) {
-        mostrarAlerta("✅ Ruta eliminada correctamente.", "success");
+        const data = await res.json();
+        if (data.pendienteAprobacion) {
+          mostrarAlerta("✅ Solicitud de eliminación enviada a revisión.", "info");
+        } else {
+          mostrarAlerta("✅ Ruta eliminada correctamente.", "success");
+        }
         fetchRutas(paginaActual, filtro);
       } else {
         const data = await res.json();

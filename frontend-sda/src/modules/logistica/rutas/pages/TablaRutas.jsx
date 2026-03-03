@@ -12,8 +12,11 @@ import {
   Loader,
   Center,
   Tooltip,
-  Button
+  Button,
+  Stack
 } from "@mantine/core";
+import AuthContext from "../../../../core/context/AuthProvider";
+import { useContext } from "react";
 
 const TablaRutas = ({
   rutas = [],
@@ -25,7 +28,7 @@ const TablaRutas = ({
   setPaginaActual,
   loading = false
 }) => {
-
+  const { auth } = useContext(AuthContext);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [localidadesModal, setLocalidadesModal] = useState([]);
 
@@ -93,11 +96,18 @@ const TablaRutas = ({
               </Table.Tr>
             ) : Array.isArray(rutas) && rutas.length > 0 ? (
               rutas.map((r) => (
-                <Table.Tr key={r._id}>
+                <Table.Tr key={r._id} style={r.tienePendientes ? { opacity: 0.8, backgroundColor: '#fff9db' } : {}}>
                   <Table.Td>
-                    <Badge color="cyan" variant="light" size="lg" w={100} style={{ display: 'flex', justifyContent: 'center' }}>
-                      {r.codigo}
-                    </Badge>
+                    <Stack gap={4}>
+                      <Badge color="cyan" variant="light" size="lg" w={100} style={{ display: 'flex', justifyContent: 'center' }}>
+                        {r.codigo}
+                      </Badge>
+                      {r.tienePendientes && (
+                        <Badge color="orange" size="xs" variant="filled">
+                          EN REVISIÓN
+                        </Badge>
+                      )}
+                    </Stack>
                   </Table.Td>
                   <Table.Td>{r.horaSalida}</Table.Td>
                   <Table.Td>
@@ -145,28 +155,38 @@ const TablaRutas = ({
                     )}
                   </Table.Td>
                   <Table.Td>
-                    <Group justify="center" gap={8}>
-                      <Tooltip label="Editar Ruta">
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          onClick={() => onEditar(r)}
-                          style={{ stroke: '#495057' }}
-                        >
-                          <Pencil size={18} />
-                        </ActionIcon>
-                      </Tooltip>
-                      <Tooltip label="Eliminar Ruta">
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          onClick={() => onEliminar(r._id)}
-                          style={{ stroke: '#495057' }}
-                        >
-                          <Trash2 size={18} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
+                    {r.tienePendientes ? (
+                      <Group justify="center">
+                        <Tooltip label="Cambios esperando aprobación">
+                          <ActionIcon variant="light" color="orange" style={{ cursor: 'default' }}>
+                            <Badge color="orange" size="xs" circle p={0}>⏳</Badge>
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    ) : (
+                      <Group justify="center" gap={8}>
+                        <Tooltip label="Editar Ruta">
+                          <ActionIcon
+                            variant="subtle"
+                            color="gray"
+                            onClick={() => onEditar(r)}
+                            style={{ stroke: '#495057' }}
+                          >
+                            <Pencil size={18} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Eliminar Ruta">
+                          <ActionIcon
+                            variant="subtle"
+                            color="gray"
+                            onClick={() => onEliminar(r._id)}
+                            style={{ stroke: '#495057' }}
+                          >
+                            <Trash2 size={18} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    )}
                   </Table.Td>
                 </Table.Tr>
               ))

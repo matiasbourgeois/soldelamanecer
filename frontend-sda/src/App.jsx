@@ -34,6 +34,7 @@ import ChoferesAdmin from "./modules/admin/pages/ChoferesAdmin";
 import Reportes from "./modules/admin/pages/reportes/Reportes"; // Assuming subfolder moved
 import ReportesLogistica from "./modules/admin/pages/reportes/ReportesLogistica";
 import ContratadosAdmin from "./modules/admin/pages/contratados/ContratadosAdmin";
+import AprobacionesAdmin from "./modules/admin/pages/AprobacionesAdmin";
 
 // Pages - Logistica (Envios)
 import GestionEnvios from "./modules/logistica/envios/pages/GestionEnvios";
@@ -139,6 +140,14 @@ function App() {
                   <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: 'white' }}>Cargando Zona Arcade...</div>}>
                     <AdminArcade />
                   </Suspense>
+                </ProtectedByRole>
+              }
+            />
+            <Route
+              path="/admin/aprobaciones"
+              element={
+                <ProtectedByRole allowedRoles="admin">
+                  <AprobacionesAdmin />
                 </ProtectedByRole>
               }
             />
