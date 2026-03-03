@@ -20,9 +20,11 @@ import {
     ThemeIcon,
     ScrollArea,
     Divider,
-    Tooltip
+    Tooltip,
+    TextInput
 } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
+import { DatePickerInput, MonthPickerInput } from '@mantine/dates';
+import { Search as IconSearch, X as IconX } from 'lucide-react';
 import {
     Calculator as IconCalculator,
     Mail as IconMail,
@@ -39,8 +41,11 @@ import {
 import { mostrarAlerta } from '../../../../core/utils/alertaGlobal';
 import { confirmarAccion } from '../../../../core/utils/confirmarAccion';
 import clienteAxios from '../../../../core/api/clienteAxios';
+import { useSearchParams } from 'react-router-dom';
 
 const LiquidacionesAdmin = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tabActivo = searchParams.get('tab') || 'simulador';
     const [choferes, setChoferes] = useState([]);
 
     const formatearFechaUTC = (fechaStr) => {
@@ -118,10 +123,18 @@ const LiquidacionesAdmin = () => {
     const [paginaHistorial, setPaginaHistorial] = useState(1);
     const ITEMS_POR_PAGINA = 15;
 
+    // Filtros del historial
+    const [filtroNombre, setFiltroNombre] = useState('');
+    const [filtroMes, setFiltroMes] = useState(null);
+    const [filtroEstado, setFiltroEstado] = useState('');
+
     useEffect(() => {
         cargarChoferes();
         cargarHistorial();
     }, []);
+
+    // Resetear página cuando cambian filtros
+    useEffect(() => { setPaginaHistorial(1); }, [filtroNombre, filtroMes, filtroEstado]);
 
     const cargarChoferes = async () => {
         try {
@@ -227,6 +240,8 @@ const LiquidacionesAdmin = () => {
             await clienteAxios.post(`/liquidaciones/${id}/anular`);
             mostrarAlerta('Liquidación anulada exitosamente', 'success');
             cargarHistorial();
+            // Notificar a la campanita que refresque de inmediato
+            window.dispatchEvent(new CustomEvent('notif:refresh'));
         } catch (error) {
             console.error("Error anulando liquidacion:", error);
             mostrarAlerta(error.response?.data?.error || 'No se pudo anular la liquidación', 'error');
@@ -267,12 +282,30 @@ const LiquidacionesAdmin = () => {
     };
 
     // Paginated Data
+    const hayFiltros = filtroNombre || filtroMes || filtroEstado;
+
+    const historialFiltrado = useMemo(() => {
+        return historial.filter(liq => {
+            if (filtroNombre) {
+                const nombre = (liq.chofer?.usuario?.nombre || '').toLowerCase();
+                if (!nombre.includes(filtroNombre.toLowerCase())) return false;
+            }
+            if (filtroMes) {
+                const d = new Date(liq.periodo?.inicio);
+                const mesRef = new Date(filtroMes);
+                if (d.getUTCMonth() !== mesRef.getUTCMonth() || d.getUTCFullYear() !== mesRef.getUTCFullYear()) return false;
+            }
+            if (filtroEstado && liq.estado !== filtroEstado) return false;
+            return true;
+        });
+    }, [historial, filtroNombre, filtroMes, filtroEstado]);
+
     const historialPaginado = useMemo(() => {
         const inicio = (paginaHistorial - 1) * ITEMS_POR_PAGINA;
-        return historial.slice(inicio, inicio + ITEMS_POR_PAGINA);
-    }, [historial, paginaHistorial]);
+        return historialFiltrado.slice(inicio, inicio + ITEMS_POR_PAGINA);
+    }, [historialFiltrado, paginaHistorial]);
 
-    const totalPaginasHistorial = Math.ceil(historial.length / ITEMS_POR_PAGINA);
+    const totalPaginasHistorial = Math.ceil(historialFiltrado.length / ITEMS_POR_PAGINA);
 
     const hojasPaginadas = useMemo(() => {
         if (!simulacion?.hojasValidas) return [];
@@ -293,7 +326,11 @@ const LiquidacionesAdmin = () => {
                 </Box>
             </Group>
 
-            <Tabs defaultValue="simulador" variant="pills" radius="md" color="cyan">
+            <Tabs
+                value={tabActivo}
+                onChange={(val) => setSearchParams({ tab: val })}
+                variant="pills" radius="md" color="cyan"
+            >
                 <Tabs.List mb="xl">
                     <Tabs.Tab value="simulador" leftSection={<IconCalculator size={16} />}>Nueva Liquidación</Tabs.Tab>
                     <Tabs.Tab value="historial" leftSection={<IconFileText size={16} />}>Historial de Liquidaciones</Tabs.Tab>
@@ -474,6 +511,133 @@ const LiquidacionesAdmin = () => {
                 </Tabs.Panel>
 
                 <Tabs.Panel value="historial">
+
+                    {/* ── BARRA DE FILTROS ──────────────────────────────────── */}
+                    <Paper shadow="xs" radius="md" p="md" mb="md" withBorder
+                        style={{ borderColor: '#e2e8f0', background: '#fafbfc' }}
+                    >
+                        <Group align="flex-end" gap="sm" wrap="wrap">
+                            <TextInput
+                                placeholder="Buscar contratado..."
+                                leftSection={<IconSearch size={14} />}
+                                value={filtroNombre}
+                                onChange={e => setFiltroNombre(e.currentTarget.value)}
+                                style={{ flex: 1, minWidth: 180 }}
+                                radius="md"
+                                size="sm"
+                                rightSection={filtroNombre ? (
+                                    <ActionIcon size="xs" variant="subtle" color="gray" onClick={() => setFiltroNombre('')}>
+                                        <IconX size={12} />
+                                    </ActionIcon>
+                                ) : null}
+                            />
+                            <MonthPickerInput
+                                placeholder="Filtrar por mes..."
+                                value={filtroMes}
+                                onChange={setFiltroMes}
+                                clearable
+                                radius="md"
+                                size="sm"
+                                style={{ minWidth: 170 }}
+                                valueFormat="MMMM YYYY"
+                                locale="es"
+                                popoverProps={{ withinPortal: true }}
+                            />
+                            <Select
+                                placeholder="Todos los estados"
+                                value={filtroEstado}
+                                onChange={val => setFiltroEstado(val || '')}
+                                clearable
+                                radius="md"
+                                size="sm"
+                                style={{ minWidth: 180 }}
+                                data={[
+                                    { value: 'borrador', label: '📋 Borrador' },
+                                    { value: 'enviado', label: '📤 Enviado' },
+                                    { value: 'rechazado', label: '❌ Rechazado' },
+                                    { value: 'aceptado_manual', label: '✅ Aceptado (manual)' },
+                                    { value: 'aceptado_automatico', label: '✅ Aceptado (auto)' },
+                                    { value: 'anulado', label: '🗑 Anulado' },
+                                ]}
+                            />
+                            {hayFiltros && (
+                                <Button
+                                    variant="light" color="gray" size="sm" radius="md"
+                                    leftSection={<IconX size={13} />}
+                                    onClick={() => { setFiltroNombre(''); setFiltroMes(null); setFiltroEstado(''); }}
+                                >
+                                    Limpiar
+                                </Button>
+                            )}
+                            <Text size="xs" c="dimmed" style={{ alignSelf: 'center', whiteSpace: 'nowrap' }}>
+                                {historialFiltrado.length} resultado{historialFiltrado.length !== 1 ? 's' : ''}
+                                {hayFiltros && ` de ${historial.length}`}
+                            </Text>
+                        </Group>
+                    </Paper>
+
+                    {/* ── BANNER: Liquidaciones que requieren atención ────────── */}
+                    {historial.filter(l => l.estado === 'rechazado').length > 0 && (
+                        <Box
+                            mb="md"
+                            p="md"
+                            style={{
+                                background: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
+                                border: '1px solid #f59e0b',
+                                borderLeft: '4px solid #f59e0b',
+                                borderRadius: 10
+                            }}
+                        >
+                            <Group mb="sm" gap="xs">
+                                <IconShieldAlert size={18} color="#92400e" />
+                                <Text fw={700} size="sm" c="#92400e">
+                                    Requieren Atención — {historial.filter(l => l.estado === 'rechazado').length} liquidación(es) rechazada(s)
+                                </Text>
+                            </Group>
+                            <Stack gap="xs">
+                                {historial.filter(l => l.estado === 'rechazado').map(liq => (
+                                    <Box
+                                        key={liq._id}
+                                        p="sm"
+                                        style={{
+                                            background: 'white',
+                                            borderRadius: 8,
+                                            border: '1px solid #fde68a',
+                                            display: 'flex',
+                                            alignItems: 'flex-start',
+                                            gap: 12
+                                        }}
+                                    >
+                                        <ThemeIcon color="orange" size={32} radius="md" variant="light" style={{ flexShrink: 0 }}>
+                                            <IconAlertCircle size={16} />
+                                        </ThemeIcon>
+                                        <Box style={{ flex: 1 }}>
+                                            <Group justify="space-between" wrap="nowrap">
+                                                <div>
+                                                    <Text size="sm" fw={700}>{liq.chofer?.usuario?.nombre}</Text>
+                                                    <Text size="xs" c="dimmed">
+                                                        {obtenerMesYAnio(liq.periodo?.inicio)} · Monto: {liq.totales?.montoTotalViajes?.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}
+                                                    </Text>
+                                                </div>
+                                                <Badge color="orange" size="sm" variant="filled">RECHAZADO</Badge>
+                                            </Group>
+                                            {liq.motivoRechazo && liq.motivoRechazo !== '[DEMO-EMAIL]' && (
+                                                <Box mt={6} p={8} style={{ background: '#fef3c7', borderRadius: 6 }}>
+                                                    <Text size="xs" c="#78350f" fw={500}>
+                                                        Motivo: <em>"{liq.motivoRechazo}"</em>
+                                                    </Text>
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </Box>
+                                ))}
+                            </Stack>
+                            <Text size="xs" c="dimmed" mt="sm">
+                                💡 Para corregir: anulá la liquidación, corregí la hoja de reparto correspondiente y generá una nueva liquidación para el mismo período.
+                            </Text>
+                        </Box>
+                    )}
+
                     <Paper shadow="sm" radius="md" withBorder>
                         <ScrollArea>
                             <Table verticalSpacing="sm" horizontalSpacing="md">

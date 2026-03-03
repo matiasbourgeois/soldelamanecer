@@ -2543,3 +2543,36 @@ A pedido del Administrador del cÃ³digo, se revisÃ³ todo el Ã¡rbol en busca de re
 
 ---
 
+
+
+---
+
+##  FASE 8.5: PANEL DE NOTIFICACIONES Y MEJORAS EN LIQUIDACIONES
+
+**Fecha Implemetación**: 02/03/2026
+**Estado**:  **COMPLETO**
+
+### 1. Panel Unificado de Notificaciones (Header)
+Se implementó un sistema de notificaciones globales en el layout principal (\AppLayout.jsx\) accesible para roles \dmin\ y \dministrativo\.
+
+*   **Fuentes de Datos (Consolidadas en \/api/notificaciones\)**:
+    *   **Mantenimiento de Vehículos**: Alertas críticas (vencidos) y advertencias (próximos a vencer en < 500km).
+    *   **Liquidaciones Rechazadas**: Alertas de contratados que rechazaron su liquidación, mostrando motivo.
+*   **UI God Tier (\NotificacionesPanel.jsx\)**:
+    *   Popover elegante anclado a la campanita.
+    *   **Estado Vacío (Verde Premium)**: Cuando no hay alertas (total = 0), la campanita se vuelve verde esmeralda (\#10b981\) con un efecto de 'shimmer' (rayo de luz diagonal) y un glow suave.
+    *   **Estado Alerta (Rojo/Naranja)**: Anillo pulsante (\.pulse-ring\) rojo si hay alertas críticas, insignia de conteo, sombra dinámica.
+    *   **Acciones**: Click en cada tarjeta navega al módulo correspondiente (ej. \/admin/liquidaciones?tab=historial\).
+*   **Sincronización en Tiempo Real**:
+    *   Polling cada 60 segundos.
+    *   Sistema de **eventos nativos del navegador** (\window.dispatchEvent(new CustomEvent('notif:refresh'))\) permite a otros componentes (ej. al anular una liquidación) forzar una recarga instantánea del badge sin esperar al intervalo.
+
+### 2. Mejoras en Historial de Liquidaciones (\LiquidacionesAdmin.jsx\)
+*   **Banner de Atención Requerida**: Un banner ámbar destacado muestra un resumen de todas las liquidaciones en estado \echazado\, independientemente de la página actual.
+*   **Buscador / Filtros Avanzados (Frontend-only)**:
+    *   Búsqueda por **Contratado** (TextInput).
+    *   Filtro por **Mes/Año** (\MonthPickerInput\ de Mantine, parcheado para compatibilidad \dayjs\  \Date\).
+    *   Filtro por **Estado** (Select: Borrador, Enviado, Rechazado, etc.).
+    *   El filtrado ocurre en memoria (\useMemo\ sobre todos los registros cargados) y reinicia la paginación a la página 1.
+*   **Tabs por URL**: El control de pestañas (Simulador vs Historial) ahora lee el \SearchParams\ de \eact-router-dom\ (\?tab=historial\), permitiendo enlaces directos (como los usados en el panel de notificaciones).
+

@@ -537,7 +537,8 @@ const rechazarLiquidacion = async (req, res) => {
 
         if (!motivo) return res.status(400).json({ error: "Debe ingresar el motivo del rechazo." });
 
-        const liquidacion = await LiquidacionContratado.findOne({ tokenAceptacion: token });
+        const liquidacion = await LiquidacionContratado.findOne({ tokenAceptacion: token })
+            .populate({ path: "chofer", populate: { path: "usuario", select: "nombre email" } });
 
         if (!liquidacion) return res.status(404).json({ error: "Enlace inválido o expirado" });
 
@@ -550,6 +551,7 @@ const rechazarLiquidacion = async (req, res) => {
         await liquidacion.save();
 
         logger.info(`🚫 Liquidación ${liquidacion._id} rechazada por chofer. Motivo: ${motivo}`);
+
         res.json({ message: "Liquidación rechazada, el equipo de administración fue notificado", liquidacion });
     } catch (error) {
         logger.error("❌ Error rechazando liquidacion publica:", error);

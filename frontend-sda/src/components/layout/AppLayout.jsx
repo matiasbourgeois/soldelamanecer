@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     AppShell,
     Burger,
@@ -9,19 +9,17 @@ import {
     Text,
     Box,
     Divider,
-    rem,
     useMantineTheme,
     Badge,
-    UnstyledButton,
     Stack,
     Button,
     ActionIcon,
-    Indicator
+    Popover,
+    Paper
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-    Home as IconHome,
     User as IconUser,
     Truck as IconTruckDelivery,
     Users as IconUsers,
@@ -36,60 +34,62 @@ import {
     Calculator as IconCalculator,
     Wrench as IconTool,
     Bell as IconBell,
-    AlertTriangle as IconAlertTriangle,
     UserCheck as IconUserCheck,
     Gamepad2,
-    Briefcase as IconBriefcase,
     Banknote as IconBanknote,
     Shield as IconShield,
     MapPin as IconMapPin,
     Settings as IconSettings
 } from 'lucide-react';
-import { apiSistema, apiUsuarios, apiEstaticos } from '../../core/api/apiSistema';
+import { apiSistema, apiEstaticos } from '../../core/api/apiSistema';
 import clienteAxios from '../../core/api/clienteAxios';
-
-import { useState, useEffect } from 'react';
+import { NotificacionesPanel } from './NotificacionesPanel';
 
 export function AppLayout({ children, auth, handleLogout }) {
     const theme = useMantineTheme();
     const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
     const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
-    const [notificationsCount, setNotificationsCount] = useState(0);
+    const [panelAbierto, setPanelAbierto] = useState(false);
+    const [notifDatos, setNotifDatos] = useState(null);
+    const [notifCargando, setNotifCargando] = useState(false);
+    const [notifError, setNotifError] = useState(null);
 
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Check Maintenance Status for Notifications
+    // Total para el badge = urgentes + criticas + advertencias
+    const totalNotif = notifDatos?.total || 0;
+    const hayCriticas = (notifDatos?.urgentes || 0) + (notifDatos?.criticas || 0) > 0;
+
+    const fetchNotificaciones = async () => {
+        if (!['admin', 'administrativo'].includes(auth?.rol)) return;
+        try {
+            setNotifCargando(true);
+            setNotifError(null);
+            const { data } = await clienteAxios.get('/notificaciones');
+            setNotifDatos(data);
+        } catch (err) {
+            console.error('Error cargando notificaciones:', err);
+            setNotifError('No se pudieron cargar las alertas.');
+        } finally {
+            setNotifCargando(false);
+        }
+    };
+
     useEffect(() => {
         if (!['admin', 'administrativo'].includes(auth?.rol)) return;
-
-        const checkMaintenance = async () => {
-            try {
-                const response = await clienteAxios.get('/vehiculos/paginado?pagina=0&limite=100');
-
-                const vehiculos = response.data.resultados || response.data;
-                let criticalCount = 0;
-
-                vehiculos.forEach(v => {
-                    if (v.configuracionMantenimiento) {
-                        v.configuracionMantenimiento.forEach(c => {
-                            const kmRecorrido = v.kilometrajeActual - c.ultimoKm;
-                            const restante = c.frecuenciaKm - kmRecorrido;
-                            if (restante <= 0) criticalCount++; // RED Status
-                        });
-                    }
-                });
-                setNotificationsCount(criticalCount);
-            } catch (error) {
-                console.error("Error checking notifications:", error);
-            }
-        };
-
-        checkMaintenance();
-        const interval = setInterval(checkMaintenance, 60000); // Check every minute
+        fetchNotificaciones();
+        const interval = setInterval(fetchNotificaciones, 60000);
         return () => clearInterval(interval);
     }, [auth]);
+
+    // Refresco inmediato cuando otra página despacha 'notif:refresh'
+    useEffect(() => {
+        const handler = () => fetchNotificaciones();
+        window.addEventListener('notif:refresh', handler);
+        return () => window.removeEventListener('notif:refresh', handler);
+    }, []);
 
     const isActive = (path) => location.pathname === path;
     const isParentActive = (paths) => paths.some(path => location.pathname.startsWith(path));
@@ -373,79 +373,118 @@ export function AppLayout({ children, auth, handleLogout }) {
 
                     {/* GLOBAL NOTIFICATION BELL (RIGHT SIDE) */}
                     <Group>
-                        <style>
-                            {`
+                        <style>{`
                             @keyframes pulse-ring {
                                 0% { transform: scale(0.8); opacity: 0.5; }
                                 100% { transform: scale(2.5); opacity: 0; }
                             }
-                            @keyframes float {
-                                0% { transform: translateY(0px); }
-                                50% { transform: translateY(-2px); }
-                                100% { transform: translateY(0px); }
+                            @keyframes bell-ok-glow {
+                                0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.55); }
+                                50%  { box-shadow: 0 0 0 7px rgba(16,185,129,0); }
+                                100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
                             }
-                            `}
-                        </style>
+                            @keyframes bell-ok-shimmer {
+                                0%   { opacity: 0; transform: translateX(-100%) rotate(25deg); }
+                                40%  { opacity: 0.45; }
+                                100% { opacity: 0; transform: translateX(200%) rotate(25deg); }
+                            }
+                        `}</style>
+
                         {['admin', 'administrativo'].includes(auth?.rol) && (
-                            <Group gap={10} align="center">
-                                <div style={{ position: 'relative' }}>
-                                    {notificationsCount > 0 && (
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                top: '50%',
-                                                left: '50%',
+                            <Popover
+                                opened={panelAbierto}
+                                onChange={setPanelAbierto}
+                                position="bottom-end"
+                                offset={8}
+                                shadow="xl"
+                                radius="lg"
+                                withArrow
+                                arrowPosition="side"
+                                withinPortal
+                            >
+                                <Popover.Target>
+                                    <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setPanelAbierto(o => !o)}>
+
+                                        {/* Anillo pulsante — solo en alertas críticas */}
+                                        {hayCriticas && (
+                                            <div style={{
+                                                position: 'absolute', top: '50%', left: '50%',
                                                 transform: 'translate(-50%, -50%)',
-                                                width: 12,
-                                                height: 12,
-                                                borderRadius: '50%',
+                                                width: 12, height: 12, borderRadius: '50%',
                                                 backgroundColor: 'rgba(255, 50, 50, 0.5)',
                                                 animation: 'pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite'
-                                            }}
-                                        />
-                                    )}
-                                    <ActionIcon
-                                        variant={notificationsCount > 0 ? "filled" : "default"}
-                                        color={notificationsCount > 0 ? "red" : "gray"}
-                                        size={34}
-                                        radius="xl"
-                                        onClick={() => navigate('/admin/mantenimiento/metricas')}
-                                        style={{
-                                            transition: 'all 0.3s ease',
-                                            border: notificationsCount > 0 ? '2px solid white' : '1px solid var(--mantine-color-gray-3)',
-                                            boxShadow: notificationsCount > 0 ? '0 4px 12px rgba(255, 0, 0, 0.3)' : 'none',
-                                            zIndex: 2
-                                        }}
-                                    >
-                                        {notificationsCount > 0 ? (
-                                            <IconBell size={18} fill="white" strokeWidth={1.5} />
-                                        ) : (
-                                            <IconBell size={16} strokeWidth={1.5} />
+                                            }} />
                                         )}
-                                    </ActionIcon>
-                                    {notificationsCount > 0 && (
-                                        <Badge
-                                            size="xs"
-                                            circle
-                                            color="orange"
+
+                                        {/* El botón de la campanita */}
+                                        <ActionIcon
                                             variant="filled"
+                                            size={36} radius="xl"
                                             style={{
-                                                position: 'absolute',
-                                                top: -4,
-                                                right: -4,
-                                                border: '2px solid white',
-                                                zIndex: 3,
-                                                minWidth: 16,
-                                                height: 16,
-                                                padding: 0,
-                                                fontSize: 9
+                                                transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+                                                overflow: 'hidden',
+                                                position: 'relative',
+                                                zIndex: 2,
+                                                // Verde cuando OK, naranja/rojo cuando hay alertas
+                                                backgroundColor: totalNotif === 0
+                                                    ? '#10b981'
+                                                    : hayCriticas ? '#ef4444' : '#f97316',
+                                                border: totalNotif === 0
+                                                    ? '2px solid rgba(255,255,255,0.35)'
+                                                    : '2px solid white',
+                                                boxShadow: totalNotif === 0
+                                                    ? '0 4px 14px rgba(16,185,129,0.45)'
+                                                    : hayCriticas
+                                                        ? '0 4px 14px rgba(239,68,68,0.45)'
+                                                        : '0 4px 14px rgba(249,115,22,0.45)',
+                                                animation: totalNotif === 0
+                                                    ? 'bell-ok-glow 2.5s ease-in-out infinite'
+                                                    : 'none',
                                             }}
                                         >
-                                            {notificationsCount}
-                                        </Badge>
-                                    )}
-                                </div>
-                            </Group>
+                                            {/* Shimmer de luz diagonal — solo en estado OK */}
+                                            {totalNotif === 0 && (
+                                                <div style={{
+                                                    position: 'absolute', inset: 0,
+                                                    background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%)',
+                                                    animation: 'bell-ok-shimmer 3s ease-in-out infinite',
+                                                    pointerEvents: 'none'
+                                                }} />
+                                            )}
+                                            <IconBell
+                                                size={18}
+                                                fill="white"
+                                                color="white"
+                                                strokeWidth={1.5}
+                                            />
+                                        </ActionIcon>
+
+                                        {/* Badge con el total — solo cuando hay alertas */}
+                                        {totalNotif > 0 && (
+                                            <Badge size="xs" circle
+                                                color={hayCriticas ? 'red' : 'orange'}
+                                                variant="filled"
+                                                style={{
+                                                    position: 'absolute', top: -4, right: -4,
+                                                    border: '2px solid white', zIndex: 3,
+                                                    minWidth: 16, height: 16, padding: 0, fontSize: 9
+                                                }}
+                                            >
+                                                {totalNotif > 99 ? '99+' : totalNotif}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </Popover.Target>
+
+                                <Popover.Dropdown p={0} style={{ overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                    <NotificacionesPanel
+                                        datos={notifDatos}
+                                        cargando={notifCargando}
+                                        error={notifError}
+                                        onClose={() => setPanelAbierto(false)}
+                                    />
+                                </Popover.Dropdown>
+                            </Popover>
                         )}
                     </Group>
                 </Group>

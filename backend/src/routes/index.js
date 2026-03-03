@@ -24,5 +24,6 @@ router.use("/reportes", require("./reportes.routes"));
 
 // Sistema Global
 router.use("/configuracion", require("./configuracion"));
+router.use("/notificaciones", require("./notificaciones"));
 
 module.exports = router;
