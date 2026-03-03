@@ -320,6 +320,43 @@ const obtenerClientesPaginados = async (req, res) => {
 
 
 
+// Buscar clientes por email/dni para promoverlos a administrativos
+const buscarClientesParaPromocion = async (req, res) => {
+  try {
+    if (req.usuario.rol !== "admin") {
+      return res.status(403).json({ error: "Acceso denegado" });
+    }
+
+    const busqueda = req.query.busqueda?.trim().toLowerCase() || "";
+
+    // Si no hay busqueda, no devolvemos nada para no saturar el dropdown
+    if (!busqueda) {
+      return res.json([]);
+    }
+
+    const filtro = {
+      rol: 'cliente',
+      activo: { $ne: false },
+      $or: [
+        { nombre: { $regex: busqueda, $options: "i" } },
+        { email: { $regex: busqueda, $options: "i" } },
+        { dni: { $regex: busqueda, $options: "i" } },
+      ]
+    };
+
+    const clientes = await Usuario.find(filtro)
+      .select("_id nombre email dni fotoPerfil")
+      .limit(5)
+      .sort({ createdAt: -1 });
+
+    res.json(clientes);
+  } catch (error) {
+    console.error("Error al buscar clientes para promoción:", error);
+    res.status(500).json({ error: "Error al buscar clientes" });
+  }
+};
+
+
 // Cambiar contraseña
 const cambiarPassword = async (req, res) => {
   try {
@@ -363,5 +400,6 @@ module.exports = {
   obtenerUsuarioPorId,
   obtenerUsuariosPaginados,
   obtenerClientesPaginados,
+  buscarClientesParaPromocion,
   cambiarPassword
 };

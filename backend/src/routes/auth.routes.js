@@ -12,6 +12,7 @@ const {
   obtenerUsuarioPorId,
   obtenerUsuariosPaginados,
   obtenerClientesPaginados,
+  buscarClientesParaPromocion,
   cambiarPassword
 } = require("../controllers/auth/usuariosController");
 
@@ -62,6 +63,7 @@ router.put("/:id", verificarToken, actualizarUsuarioDesdeAdmin);
 router.delete("/:id", verificarToken, eliminarUsuario);
 router.get("/paginados", verificarToken, obtenerUsuariosPaginados);
 router.get("/clientes", verificarToken, obtenerClientesPaginados); // ✅ FASE 15
+router.get("/buscar-promocion", verificarToken, buscarClientesParaPromocion);
 router.get("/:id", verificarToken, obtenerUsuarioPorId); // ✅ ESTA VA ÚLTIMA
 
 

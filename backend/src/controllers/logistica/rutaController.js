@@ -1,34 +1,21 @@
 const Ruta = require("../../models/Ruta");
 require("../../models/Zona");
-const Localidad = require("../../models/Localidad");  // Asegúrate de importar el modelo Localidad
+const Localidad = require("../../models/Localidad");
+const SolicitudAprobacion = require("../../models/SolicitudAprobacion");
 const excelJS = require("exceljs");
+
 // Crear ruta
 const crearRuta = async (req, res) => {
   try {
     const {
-      codigo,
-      horaSalida,
-      frecuencia,
-      descripcion,
-      zona,
-      localidades = [],
-      choferAsignado,
-      vehiculoAsignado,
-      contratistaTitular,
-      kilometrosEstimados,
-      precioKm,
-      tipoPago,
-      montoPorDistribucion,
-      montoMensual
+      codigo, horaSalida, frecuencia, descripcion, zona, localidades = [],
+      choferAsignado, vehiculoAsignado, contratistaTitular, kilometrosEstimados,
+      precioKm, tipoPago, montoPorDistribucion, montoMensual
     } = req.body;
 
-    const nuevaRuta = new Ruta({
-      codigo,
-      horaSalida,
-      frecuencia,
-      descripcion,
-      zona: zona || null,
-      localidades,
+    const datosRuta = {
+      codigo, horaSalida, frecuencia, descripcion,
+      zona: zona || null, localidades,
       choferAsignado: choferAsignado || null,
       vehiculoAsignado: vehiculoAsignado || null,
       contratistaTitular: contratistaTitular || null,
@@ -37,8 +24,25 @@ const crearRuta = async (req, res) => {
       tipoPago: tipoPago || 'por_km',
       montoPorDistribucion: montoPorDistribucion || 0,
       montoMensual: montoMensual || 0,
-    });
+    };
 
+    // Si es administrativo, manda a SolicitudAprobacion en lugar de crear directo
+    if (req.usuario.rol === "administrativo") {
+      const nuevaSolicitud = new SolicitudAprobacion({
+        entidad: "Ruta",
+        accion: "CREACION",
+        datosPropuestos: datosRuta,
+        solicitante: req.usuario.id
+      });
+      await nuevaSolicitud.save();
+      return res.status(202).json({
+        mensaje: "Solicitud de creación enviada a revisión",
+        pendienteAprobacion: true
+      });
+    }
+
+    // Si es admin, crea directo
+    const nuevaRuta = new Ruta(datosRuta);
     await nuevaRuta.save();
     res.status(201).json(nuevaRuta);
   } catch (error) {
@@ -62,7 +66,7 @@ const obtenerRutas = async (req, res) => {
       }
       : {};
 
-    const rutas = await Ruta.find(filtro)
+    let rutas = await Ruta.find(filtro)
       .skip(Number(pagina) * Number(limite))
       .limit(Number(limite))
       .populate("zona", "nombre")
@@ -83,6 +87,22 @@ const obtenerRutas = async (req, res) => {
       })
       .lean();
 
+    // Añadir flag de tienePendientes para administrativos
+    if (req.usuario && req.usuario.rol === "administrativo") {
+      const idsRutas = rutas.map(r => r._id);
+      const pendientes = await SolicitudAprobacion.find({
+        entidad: "Ruta",
+        entidadId: { $in: idsRutas },
+        estado: "PENDIENTE"
+      }).select("entidadId accion");
+
+      const pendientesSet = new Set(pendientes.map(p => p.entidadId.toString()));
+      rutas = rutas.map(r => ({
+        ...r,
+        tienePendientes: pendientesSet.has(r._id.toString())
+      }));
+    }
+
     const total = await Ruta.countDocuments(filtro);
 
     res.json({
@@ -99,7 +119,7 @@ const obtenerRutas = async (req, res) => {
 
 const obtenerTodasLasRutas = async (req, res) => {
   try {
-    const rutas = await Ruta.find()
+    let rutas = await Ruta.find()
       .populate({
         path: "choferAsignado",
         select: "usuario tipoVinculo",
@@ -117,6 +137,22 @@ const obtenerTodasLasRutas = async (req, res) => {
       .populate("localidades", "nombre") // opcional si lo usás
       .lean();
 
+    // Añadir flag de tienePendientes para administrativos
+    if (req.usuario && req.usuario.rol === "administrativo") {
+      const idsRutas = rutas.map(r => r._id);
+      const pendientes = await SolicitudAprobacion.find({
+        entidad: "Ruta",
+        entidadId: { $in: idsRutas },
+        estado: "PENDIENTE"
+      }).select("entidadId accion");
+
+      const pendientesSet = new Set(pendientes.map(p => p.entidadId.toString()));
+      rutas = rutas.map(r => ({
+        ...r,
+        tienePendientes: pendientesSet.has(r._id.toString())
+      }));
+    }
+
     res.status(200).json({ rutas });
   } catch (error) {
     console.error("Error al obtener todas las rutas:", error);
@@ -128,6 +164,34 @@ const obtenerTodasLasRutas = async (req, res) => {
 const actualizarRuta = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Verificar si ya hay una solicitud pendiente para evitar duplicados
+    if (req.usuario.rol === "administrativo") {
+      const solicitudExistente = await SolicitudAprobacion.findOne({
+        entidad: "Ruta",
+        entidadId: id,
+        estado: "PENDIENTE"
+      });
+
+      if (solicitudExistente) {
+        return res.status(409).json({ error: "Esta ruta ya tiene una solicitud de modificación pendiente de revisión." });
+      }
+
+      const nuevaSolicitud = new SolicitudAprobacion({
+        entidad: "Ruta",
+        entidadId: id,
+        accion: "EDICION",
+        datosPropuestos: req.body,
+        solicitante: req.usuario.id
+      });
+      await nuevaSolicitud.save();
+      return res.status(202).json({
+        mensaje: "Cambios enviados a revisión del administrador",
+        pendienteAprobacion: true
+      });
+    }
+
+    // Flujo normal para admin
     const rutaActualizada = await Ruta.findByIdAndUpdate(id, req.body, { new: true });
     if (!rutaActualizada) {
       return res.status(404).json({ error: "Ruta no encontrada" });
@@ -263,6 +327,33 @@ const eliminarLocalidadDeRuta = async (req, res) => {
 const eliminarRuta = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Verificar si ya hay una solicitud pendiente para evitar duplicados
+    if (req.usuario.rol === "administrativo") {
+      const solicitudExistente = await SolicitudAprobacion.findOne({
+        entidad: "Ruta",
+        entidadId: id,
+        estado: "PENDIENTE"
+      });
+
+      if (solicitudExistente) {
+        return res.status(409).json({ error: "No puedes eliminar esta ruta porque tiene cambios pendientes de revisión." });
+      }
+
+      const nuevaSolicitud = new SolicitudAprobacion({
+        entidad: "Ruta",
+        entidadId: id,
+        accion: "ELIMINACION",
+        solicitante: req.usuario.id
+      });
+      await nuevaSolicitud.save();
+      return res.status(202).json({
+        mensaje: "Solicitud de eliminación enviada a revisión",
+        pendienteAprobacion: true
+      });
+    }
+
+    // Flujo normal para admin
     const ruta = await Ruta.findByIdAndDelete(id);
     if (!ruta) {
       return res.status(404).json({ error: "Ruta no encontrada" });

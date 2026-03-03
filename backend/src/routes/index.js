@@ -23,6 +23,7 @@ router.use("/proveedores", require("./proveedores"));
 router.use("/reportes", require("./reportes.routes"));
 
 // Sistema Global
+router.use("/aprobaciones", require("./aprobaciones"));
 router.use("/configuracion", require("./configuracion"));
 router.use("/notificaciones", require("./notificaciones"));
 
