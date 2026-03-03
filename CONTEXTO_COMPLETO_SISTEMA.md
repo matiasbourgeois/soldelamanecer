@@ -2576,3 +2576,32 @@ Se implement� un sistema de notificaciones globales en el layout principal (\App
     *   El filtrado ocurre en memoria (\useMemo\ sobre todos los registros cargados) y reinicia la paginaci�n a la p�gina 1.
 *   **Tabs por URL**: El control de pesta�as (Simulador vs Historial) ahora lee el \SearchParams\ de \eact-router-dom\ (\?tab=historial\), permitiendo enlaces directos (como los usados en el panel de notificaciones).
 
+
+## ƒÜÇ FASE 9: SISTEMA DE APROBACIONES, NOTIFICACIONES Y ROLES GOD TIER (03/03/2026)
+
+**Estado**: Γà **100% COMPLETADO** - Frontend y Backend en produccin.
+
+### Γà **LO QUE SE IMPLEMENTô**
+
+#### 1. Motor de Aprobaciones (Change Requests)
+- **Problema**: El personal administrativo modificaba rutas y tarifas con impacto instantíneo en la base de datos sin supervisin.
+- **Solucin**: Los usuarios con rol dministrativo ahora operan en un entorno aislado (Sandbox/Draft). Al intentar Crear, Editar o Eliminar una ruta en FormularioRuta.jsx o RutasAdmin.jsx, el Backend (utasController.js) intercepta la orden basado en su Token JWT y la desva hacia una nueva coleccin llamada SolicitudesAprobacion con estado PENDIENTE.
+- **UI Administrativo**: Las rutas en este limbo mígico muestran un candado ΓÅ EN REVISIôN en la tabla principal y bloquean modificaciones concurrentes de otros administrativos.
+- **UI Administrador (AprobacionesAdmin.jsx)**: Se cre un Panel de Aprobaciones nivel Dios en el Sidebar, dnde el dmin revisa una autntica **Diff View (Antes vs Despus)** interactiva. Los campos inalterados se ven en gris; los alterados muestran el valor original tachado en rojo con una flecha apuntando al valor nuevo en verde. Las eliminaciones muestran toda la ruta en rojo. El admin puede Aprobar (impacta DB y limpia la solicitud) o Rechazar pidiendo un motivo.
+
+#### 2. Resolutor de Paradoja de Roles (Promocin de Clientes)
+- **Problema**: Haba una pared hermtica entre Comercial (clientes) y Personal (empleados). Si un nuevo empleado de logstica se registraba en la pígina pblica, el motor lo catalogaba como cliente preventivo. Era imposible ascenderlo a dministrativo porque no apareca en la tabla de Personal.
+- **Solucin**: En UsuariosAdmin.jsx (solo visible para admin), se instal un Mdulo de Alta Especial. Mediante ModalPromoverAdministrativo.jsx, el dueo puede tipear el mail o CUIT de cualquier persona que se haya registrado por su cuenta. El endpoint especial (/api/usuarios/buscar-promocion) perfora la pared, encuentra al cliente, y con un botn verde lo abduce, cambiíndole el rol a dministrativo y pasíndolo automíticamente a la mesa de control interna.
+
+#### 3. Centro de Notificaciones Unificado
+- **Problema**: Las alertas mecínicas vencidas y las liquidaciones que el gerente bochaba por tener remitos en mal estado, flotaban sueltas sin ninguna advertencia proactiva en el Frontend.
+- **Solucin**: Se cre un endpoint combinatorio (/api/notificaciones/consolidadas) que barre mltiples colecciones (Vehiculos vencidos, Liquidaciones en estado RECHAZADA).
+- **Frontend**: Una campana con contador dinímico rojo en el AppLayout.jsx de Mantine. Al hacer click, despliega un Offcanvas que separa las alertas por urgencia y linkea directo a las pantallas de resolucin (Mantenimiento o Liquidaciones).
+
+#### 4. Dashboard Directivo
+- **Problema**: Las tarjetas frontales marcaban estadsticas mígicas o cadas.
+- **Solucin**: Reescritura del AppLayout.jsx y paneles frontales. El Dashboard de la raz (/admin) ahora absorbe un stream de verdad directamente del backend. Se redisearon contadores de Tarifa Promedio, Rutas Activas, Envos en Reparto y Rendimiento.
+
+---
+
+**FIN DEL DOCUMENTO - CONTEXTO COMPLETO ACTUALIZADO**
