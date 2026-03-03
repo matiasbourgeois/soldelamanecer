@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import clienteAxios from "../../../../core/api/clienteAxios";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
+import { modals } from "@mantine/modals";
 import MapaEntregas from "./MapaEntregas";
 import TabDrogueria from "./TabDrogueria";
 
@@ -56,19 +57,28 @@ const DetalleHojaReparto = () => {
     };
 
     const cerrarHoja = async (hojaId) => {
-        try {
-            const confirm = window.confirm("¿Está seguro de forzar el cierre de esta hoja? Los envíos no entregados quedarán como reagendados.");
-            if (!confirm) return;
-
-            await clienteAxios.post('/hojas-reparto/forzar-cierre', { hojaId });
-            mostrarAlerta("Hoja cerrada correctamente", "success");
-            // Refresh
-            const res = await clienteAxios.get(`/hojas-reparto/${id}`);
-            setHoja(res.data);
-        } catch (error) {
-            console.error("Error al cerrar hoja:", error);
-            mostrarAlerta("Error al cerrar la hoja", "error");
-        }
+        modals.openConfirmModal({
+            title: 'Forzar Cierre de Hoja',
+            children: (
+                <Text size="sm">
+                    ¿Está seguro de forzar el cierre de esta hoja? Los envíos no entregados quedarán como reagendados.
+                </Text>
+            ),
+            labels: { confirm: 'Sí, cerrar', cancel: 'Cancelar' },
+            confirmProps: { color: 'red' },
+            onConfirm: async () => {
+                try {
+                    await clienteAxios.post('/hojas-reparto/forzar-cierre', { hojaId });
+                    mostrarAlerta("Hoja cerrada correctamente", "success");
+                    // Refresh
+                    const res = await clienteAxios.get(`/hojas-reparto/${id}`);
+                    setHoja(res.data);
+                } catch (error) {
+                    console.error("Error al cerrar hoja:", error);
+                    mostrarAlerta("Error al cerrar la hoja", "error");
+                }
+            }
+        });
     };
 
     if (cargando) return <LoadingOverlay visible={true} overlayProps={{ radius: "sm", blur: 2 }} />;

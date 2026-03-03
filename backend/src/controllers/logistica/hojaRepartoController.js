@@ -665,7 +665,7 @@ const consultarHojasPaginado = async (req, res) => {
         const total = await HojaReparto.countDocuments(filtro);
 
         const hojas = await HojaReparto.find(filtro)
-            .sort({ fecha: -1 })
+            .sort({ fecha: -1, _id: 1 })
             .skip(pagina * limite)
             .limit(limite)
             .populate({

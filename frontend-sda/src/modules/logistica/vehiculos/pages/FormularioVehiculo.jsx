@@ -7,6 +7,7 @@ import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
 import { IconUpload, IconTrash, IconCheck, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import axios from "axios";
+import { modals } from "@mantine/modals";
 
 const FormularioVehiculo = ({ onClose, vehiculo, recargar, tipoPropiedadDefault }) => {
   const [activeTab, setActiveTab] = useState('general');
@@ -110,19 +111,29 @@ const FormularioVehiculo = ({ onClose, vehiculo, recargar, tipoPropiedadDefault 
   };
 
   const handleDeleteDoc = async (docId) => {
-    if (!window.confirm("¿Seguro que desea eliminar este documento?")) return;
-
-    try {
-      const res = await axios.delete(apiSistema(`/vehiculos/${vehiculo._id}/documentos/${docId}`));
-      setFormData(prev => ({
-        ...prev,
-        documentos: res.data.vehiculo.documentos
-      }));
-      recargar(); // Actualizar la lista en el padre
-      mostrarAlerta("Documento eliminado", "success");
-    } catch (error) {
-      mostrarAlerta("Error al eliminar documento", "danger");
-    }
+    modals.openConfirmModal({
+      title: 'Eliminar Documento',
+      children: (
+        <Text size="sm">
+          ¿Seguro que desea eliminar este documento? Esta acción no se puede deshacer.
+        </Text>
+      ),
+      labels: { confirm: 'Eliminar', cancel: 'Cancelar' },
+      confirmProps: { color: 'red' },
+      onConfirm: async () => {
+        try {
+          const res = await axios.delete(apiSistema(`/vehiculos/${vehiculo._id}/documentos/${docId}`));
+          setFormData(prev => ({
+            ...prev,
+            documentos: res.data.vehiculo.documentos
+          }));
+          recargar(); // Actualizar la lista en el padre
+          mostrarAlerta("Documento eliminado", "success");
+        } catch (error) {
+          mostrarAlerta("Error al eliminar documento", "danger");
+        }
+      }
+    });
   };
 
   // Helper para construir URL de archivos

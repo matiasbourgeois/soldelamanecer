@@ -254,17 +254,26 @@ const ControlOperativo = () => {
     };
 
     const cerrarHoja = async (hojaId) => {
-        try {
-            const confirm = window.confirm("¿Está seguro de forzar el cierre de esta hoja? Los envíos no entregados quedarán como reagendados.");
-            if (!confirm) return;
-
-            await clienteAxios.post('/hojas-reparto/forzar-cierre', { hojaId });
-            mostrarAlerta("Hoja cerrada correctamente", "success");
-            obtenerHojas();
-        } catch (error) {
-            console.error("Error al cerrar hoja:", error);
-            mostrarAlerta("Error al cerrar la hoja", "error");
-        }
+        modals.openConfirmModal({
+            title: 'Forzar Cierre de Hoja',
+            children: (
+                <Text size="sm">
+                    ¿Está seguro de forzar el cierre de esta hoja? Los envíos no entregados quedarán como reagendados.
+                </Text>
+            ),
+            labels: { confirm: 'Sí, cerrar', cancel: 'Cancelar' },
+            confirmProps: { color: 'red' },
+            onConfirm: async () => {
+                try {
+                    await clienteAxios.post('/hojas-reparto/forzar-cierre', { hojaId });
+                    mostrarAlerta("Hoja cerrada correctamente", "success");
+                    obtenerHojas();
+                } catch (error) {
+                    console.error("Error al cerrar hoja:", error);
+                    mostrarAlerta("Error al cerrar la hoja", "error");
+                }
+            }
+        });
     };
 
     const handleEliminarHoja = (hojaId, numeroHoja, codigoRuta) => {

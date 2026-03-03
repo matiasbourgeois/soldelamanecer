@@ -17,6 +17,7 @@ import {
 import { apiSistema } from '../../../../core/api/apiSistema';
 import axios from 'axios';
 import { notifications } from '@mantine/notifications';
+import { modals } from '@mantine/modals';
 
 // --- SUB-COMPONENTS ---
 const StatusBadge = ({ vehiculo }) => {
@@ -166,9 +167,18 @@ const MantenimientoAdmin = () => {
 
         // Si el KM es menor al actual, pedir confirmación extra
         if (nuevoKm < selectedVehiculo.kilometrajeActual && !force) {
-            if (!window.confirm(`¿Estás seguro de que deseas retroceder el odómetro de ${selectedVehiculo.kilometrajeActual.toLocaleString()} a ${nuevoKm.toLocaleString()}?`)) {
-                return;
-            }
+            modals.openConfirmModal({
+                title: 'Confirmar Actualización de Odómetro',
+                children: (
+                    <Text size="sm">
+                        ¿Estás seguro de que deseas retroceder el odómetro de <b>{selectedVehiculo.kilometrajeActual.toLocaleString()}</b> a <b>{nuevoKm.toLocaleString()}</b>?
+                    </Text>
+                ),
+                labels: { confirm: 'Sí, retroceder', cancel: 'Cancelar' },
+                confirmProps: { color: 'red' },
+                onConfirm: () => handleUpdateKm(true),
+            });
+            return;
         }
 
         try {
@@ -246,21 +256,32 @@ const MantenimientoAdmin = () => {
     };
 
     const handleDeleteConfig = async (nombreConfig) => {
-        if (!window.confirm(`¿Seguro que querés eliminar "${nombreConfig}"?`)) return;
-        try {
-            const token = localStorage.getItem('token');
-            const res = await axios.delete(apiSistema(`/vehiculos/${selectedVehiculo._id}/mantenimiento/config/${nombreConfig}`), {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            notifications.show({ title: 'Éxito', message: 'Mantenimiento eliminado', color: 'blue' });
+        modals.openConfirmModal({
+            title: 'Eliminar Configuración',
+            children: (
+                <Text size="sm">
+                    ¿Seguro que querés eliminar el mantenimiento <b>"{nombreConfig}"</b>?
+                </Text>
+            ),
+            labels: { confirm: 'Eliminar', cancel: 'Cancelar' },
+            confirmProps: { color: 'red' },
+            onConfirm: async () => {
+                try {
+                    const token = localStorage.getItem('token');
+                    const res = await axios.delete(apiSistema(`/vehiculos/${selectedVehiculo._id}/mantenimiento/config/${nombreConfig}`), {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    notifications.show({ title: 'Éxito', message: 'Mantenimiento eliminado', color: 'blue' });
 
-            if (res.data) {
-                setSelectedVehiculo(res.data);
-            }
-            fetchVehiculos();
-        } catch (e) {
-            notifications.show({ title: 'Error', message: 'No se pudo eliminar', color: 'red' });
-        }
+                    if (res.data) {
+                        setSelectedVehiculo(res.data);
+                    }
+                    fetchVehiculos();
+                } catch (e) {
+                    notifications.show({ title: 'Error', message: 'No se pudo eliminar', color: 'red' });
+                }
+            },
+        });
     };
 
     const handleEditConfig = async () => {
@@ -319,17 +340,28 @@ const MantenimientoAdmin = () => {
     };
 
     const handleDeleteTipoBase = async (id) => {
-        if (!window.confirm("¿Seguro que querés eliminar este tipo de la base de conocimiento?")) return;
-        try {
-            const token = localStorage.getItem('token');
-            await axios.delete(apiSistema(`/mantenimientos-tipo/${id}`), {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            notifications.show({ title: 'Eliminado', color: 'blue' });
-            fetchTiposMantenimiento();
-        } catch (e) {
-            notifications.show({ title: 'Error', color: 'red' });
-        }
+        modals.openConfirmModal({
+            title: 'Eliminar de Base de Conocimiento',
+            children: (
+                <Text size="sm">
+                    ¿Seguro que querés eliminar este tipo de la base de conocimiento? Esto no afectará a los mantenimientos ya asignados a vehículos.
+                </Text>
+            ),
+            labels: { confirm: 'Eliminar', cancel: 'Cancelar' },
+            confirmProps: { color: 'red' },
+            onConfirm: async () => {
+                try {
+                    const token = localStorage.getItem('token');
+                    await axios.delete(apiSistema(`/mantenimientos-tipo/${id}`), {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    notifications.show({ title: 'Eliminado', color: 'blue' });
+                    fetchTiposMantenimiento();
+                } catch (e) {
+                    notifications.show({ title: 'Error', color: 'red' });
+                }
+            },
+        });
     };
 
     const handleUpdateTipoBase = async () => {

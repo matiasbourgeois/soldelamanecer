@@ -1,0 +1,27 @@
+Total Hojas de Reparto: 81
+
+Top 20 hojas más recientes:
+- ID: 69a5c7937126680ae76785ed | Numero: LEON-1-20260303 | Ruta: L-LEON-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785e1 | Numero: JPOS-1-20260303 | Ruta: L-JPOS-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785e9 | Numero: LASP-1-20260303 | Ruta: L-LASP-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785f9 | Numero: MITA-1-20260303 | Ruta: L-MITA-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785d1 | Numero: CEJE-1-20260303 | Ruta: L-CEJE-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785f5 | Numero: MINO-1-20260303 | Ruta: L-MINO-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785e5 | Numero: LABO-1-20260303 | Ruta: L-LABO-1 | Estado: en reparto | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae7678609 | Numero: PILA-1-20260303 | Ruta: L-PILA-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785d5 | Numero: CEJE-2-20260303 | Ruta: L-CEJE-2 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785d9 | Numero: CURA-1-20260303 | Ruta: L-CURA-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785fd | Numero: MTEG-1-20260303 | Ruta: L-MTEG-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785c9 | Numero: AMAR-1-20260303 | Ruta: L-AMAR-1 | Estado: en reparto | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae7678601 | Numero: VNUE-1-20260303 | Ruta: L-VNUE-1 | Estado: en reparto | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785f1 | Numero: MJUA-1-20260303 | Ruta: L-MJUA-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae7678605 | Numero: ONCA-1-20260303 | Ruta: L-ONCA-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae7678611 | Numero: R36T-1-20260303 | Ruta: L-R36T-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae767860d | Numero: PMOL-1-20260303 | Ruta: L-PMOL-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785dd | Numero: HERN-1-20260303 | Ruta: L-HERN-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785cd | Numero: BELL-1-20260303 | Ruta: L-BELL-1 | Estado: en reparto | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+- ID: 69a5c7937126680ae76785c5 | Numero: ALCA-1-20260303 | Ruta: L-ALCA-1 | Estado: pendiente | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
+
+Rutas encontradas con 'bell': L-BELL-1
+Hojas repartos matching /bell/ (número o ruta): 1
+- ID: 69a5c7937126680ae76785cd | Numero: BELL-1-20260303 | Ruta: L-BELL-1 | Estado: en reparto | Fec: Tue Mar 03 2026 00:00:00 GMT-0300 (Argentina Standard Time)
