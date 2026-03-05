@@ -7,9 +7,13 @@ const logger = require("../../utils/logger");
 const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
     const moment = require('moment-timezone');
 
-    // Parseo seguro a GMT-3 para asegurar que el día inicia a las 00:00 y termina a las 23:59 de Argentina
-    const fnInicio = moment(fechaInicio).tz('America/Argentina/Buenos_Aires').startOf('day').toDate();
-    const fnFin = moment(fechaFin).tz('America/Argentina/Buenos_Aires').endOf('day').toDate();
+    // MÁXIMA SEGURIDAD: Cortamos el string a YYYY-MM-DD para ignorar cualquier desfase de reloj del frontend.
+    // Parseamos directamente como esa fecha en la zona horaria estricta de Argentina.
+    const fInitStr = fechaInicio.split('T')[0];
+    const fFinStr = fechaFin.split('T')[0];
+
+    const fnInicio = moment.tz(fInitStr, "YYYY-MM-DD", 'America/Argentina/Buenos_Aires').startOf('day').toDate();
+    const fnFin = moment.tz(fFinStr, "YYYY-MM-DD", 'America/Argentina/Buenos_Aires').endOf('day').toDate();
 
     // Buscar Hojas del periodo donde:
     // - chofer == choferId (el titular maneja él mismo)
@@ -170,8 +174,11 @@ const guardarLiquidacion = async (req, res) => {
         // ─── GUARD: No permitir doble liquidación activa para el mismo chofer y período ───
         // Estados activos: borrador (en proceso), enviado (esperando conformidad), aceptado (ya aprobada)
         const moment = require('moment-timezone');
-        const inicioPeriodo = moment(fechaInicio).tz('America/Argentina/Buenos_Aires').startOf('day').toDate();
-        const finPeriodo = moment(fechaFin).tz('America/Argentina/Buenos_Aires').endOf('day').toDate();
+        const fInitStrGuard = fechaInicio.split('T')[0];
+        const fFinStrGuard = fechaFin.split('T')[0];
+
+        const inicioPeriodo = moment.tz(fInitStrGuard, "YYYY-MM-DD", 'America/Argentina/Buenos_Aires').startOf('day').toDate();
+        const finPeriodo = moment.tz(fFinStrGuard, "YYYY-MM-DD", 'America/Argentina/Buenos_Aires').endOf('day').toDate();
 
         const liquidacionExistente = await LiquidacionContratado.findOne({
             chofer: choferId,

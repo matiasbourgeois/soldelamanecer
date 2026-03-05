@@ -83,12 +83,21 @@ const LiquidacionesAdmin = () => {
 
     const formatearYYYYMMDDLocal = (dateOb) => {
         if (!dateOb) return '';
-        const d = new Date(dateOb); // Forzamos parseo seguro por si entra como String ISO
-        if (isNaN(d.getTime())) return ''; // Proteccion extra
+        const d = new Date(dateOb);
+        if (isNaN(d.getTime())) return '';
 
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
+        // MÁXIMA SEGURIDAD FÍSICA MATEMÁTICA: 
+        // Mantine entrega la fecha en UTC 00:00. Al extraer usando los métodos locales, 
+        // JavaScript resta el offset horario, retrocediendo al día CREADO (21:00 del día anterior).
+        // Sumamos el offset horario físico (minutos) a los milisegundos universales para
+        // mover el reloj al "medio día" de la fecha seleccionada visualmente.
+        const userTimezoneOffset = d.getTimezoneOffset() * 60000;
+        const dateConOffset = new Date(d.getTime() + userTimezoneOffset);
+
+        const year = dateConOffset.getFullYear();
+        const month = String(dateConOffset.getMonth() + 1).padStart(2, '0');
+        const day = String(dateConOffset.getDate()).padStart(2, '0');
+
         return `${year}-${month}-${day}`;
     };
 
@@ -173,8 +182,8 @@ const LiquidacionesAdmin = () => {
 
         setCargandoSimulacion(true);
         try {
-            const fI = formatearYYYYMMDDLocal(fechaInicio);
-            const fF = formatearYYYYMMDDLocal(fechaFin);
+            const fI = `${formatearYYYYMMDDLocal(fechaInicio)}T00:00:00`;
+            const fF = `${formatearYYYYMMDDLocal(fechaFin)}T23:59:59`;
 
             const { data } = await clienteAxios.post('/liquidaciones/simular', {
                 choferId: choferSeleccionado,
@@ -200,8 +209,8 @@ const LiquidacionesAdmin = () => {
 
     const guardarLiquidacion = async () => {
         try {
-            const fI = formatearYYYYMMDDLocal(fechaInicio);
-            const fF = formatearYYYYMMDDLocal(fechaFin);
+            const fI = `${formatearYYYYMMDDLocal(fechaInicio)}T00:00:00`;
+            const fF = `${formatearYYYYMMDDLocal(fechaFin)}T23:59:59`;
 
             const { data } = await clienteAxios.post('/liquidaciones', {
                 choferId: choferSeleccionado,

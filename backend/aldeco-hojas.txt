@@ -1,0 +1,4 @@
+Aldeco Chofer ID: 699ce69ad3667d15ffe0c84a
+- RU9S-1-20260305 (Ruta: L-RU9S-1): DB:2026-03-05T03:00:00.000Z Estado: en reparto
+- RU9S-1-20260304 (Ruta: L-RU9S-1): DB:2026-03-04T03:00:00.000Z Estado: cerrada
+- RU9S-1-20260303 (Ruta: L-RU9S-1): DB:2026-03-03T03:00:00.000Z Estado: cerrada

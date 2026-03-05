@@ -805,7 +805,7 @@ const generarHojasAutomaticas = async (fechaReferencia, esFeriadoNacional = fals
                     vehiculo: ruta.vehiculoAsignado,
                     envios: [], // ⚠️ Orden: Sin confirmación automática de encomiendas
                     estado: 'pendiente',
-                    observaciones: `Generada automáticamente por el sistema (Motor Silencioso).`,
+                    observaciones: "", // Se eliminó el texto automático a pedido
                     // Snapshot de precios y KMs (Fase 1 Plan Maestro)
                     tipoPago: ruta.tipoPago || 'por_km',
                     kilometrosEstimados: ruta.kilometrosEstimados || 0,

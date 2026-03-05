@@ -1,0 +1,45 @@
+﻿≡ƒöî Conectando a MongoDB...
+Γ£à Conectado a MongoDB
+
+======================================================
+≡ƒæñ CONTRATISTA ENCONTRADO: ALDECO BAUDONNET, LUCAS JAVIER  (ID: 699ce69ad3667d15ffe0c845)
+======================================================
+
+≡ƒù║∩╕Å RUTAS ASIGNADAS (2):
+   - C├│digo: L-VMAR-1 | Frecuencia: Martes, Mi├⌐rcoles, Jueves, Viernes | V├¡nculo: Chofer Asignado
+   - C├│digo: L-VMAR-2 | Frecuencia: Lunes a Viernes | V├¡nculo: Chofer Asignado
+
+≡ƒôà SIMULACI├ôN DE HOJAS ESPERADAS PARA MARZO (Del 01/03/2026 al 05/03/2026):
+
+   ≡ƒö╣ Domingo 01/03/2026 
+
+   ≡ƒö╣ Lunes 02/03/2026 
+      + Deber├¡a tener la hoja: VMAR-2-20260302 (Ruta: L-VMAR-2)
+
+   ≡ƒö╣ Martes 03/03/2026 (Feriado Carnaval - NO SE TRABAJ├ô)
+      + Deber├¡a tener la hoja: VMAR-1-20260303 (Ruta: L-VMAR-1)
+      + Deber├¡a tener la hoja: VMAR-2-20260303 (Ruta: L-VMAR-2)
+
+   ≡ƒö╣ Mi├⌐rcoles 04/03/2026 (Feriado Carnaval - NO SE TRABAJ├ô)
+      + Deber├¡a tener la hoja: VMAR-1-20260304 (Ruta: L-VMAR-1)
+      + Deber├¡a tener la hoja: VMAR-2-20260304 (Ruta: L-VMAR-2)
+
+   ≡ƒö╣ Jueves 05/03/2026 
+      + Deber├¡a tener la hoja: VMAR-1-20260305 (Ruta: L-VMAR-1)
+      + Deber├¡a tener la hoja: VMAR-2-20260305 (Ruta: L-VMAR-2)
+
+======================================================
+≡ƒôª HOJAS REALES EXISTENTES EN BASE DE DATOS PARA ESTE CHOFER EN MARZO:
+   Se encontraron 7 hojas reales:
+   - 02/03/2026: VMAR-2-20260302 (Ruta: L-VMAR-2) [Estado: en reparto]
+   - 03/03/2026: VMAR-1-20260303 (Ruta: L-VMAR-1) [Estado: en reparto]
+   - 03/03/2026: VMAR-2-20260303 (Ruta: L-VMAR-2) [Estado: en reparto]
+   - 04/03/2026: VMAR-1-20260304 (Ruta: L-VMAR-1) [Estado: en reparto]
+   - 04/03/2026: VMAR-2-20260304 (Ruta: L-VMAR-2) [Estado: pendiente]
+   - 05/03/2026: VMAR-1-20260305 (Ruta: L-VMAR-1) [Estado: en reparto]
+   - 05/03/2026: VMAR-2-20260305 (Ruta: L-VMAR-2) [Estado: pendiente]
+
+≡ƒöÑ AN├üLISIS DE DISCREPANCIAS (Lo que falta):
+   Γ£à NO FALTAN HOJAS. El contratista tiene todas las hojas que su ruta indica para los d├¡as laborables.
+
+≡ƒöî Desconectado de MongoDB.
