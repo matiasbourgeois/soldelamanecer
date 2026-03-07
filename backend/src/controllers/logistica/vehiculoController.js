@@ -23,7 +23,9 @@ const crearVehiculo = async (req, res) => {
 // Obtener todos los vehículos
 const obtenerVehiculos = async (req, res) => {
   try {
-    const vehiculos = await Vehiculo.find();
+    const soloPropio = req.query.soloPropio === 'true';
+    const filtro = soloPropio ? { tipoPropiedad: 'propio' } : {};
+    const vehiculos = await Vehiculo.find(filtro);
     res.json(vehiculos);
   } catch (error) {
     console.error("Error al obtener vehículos:", error);
@@ -78,6 +80,7 @@ const obtenerVehiculosPaginado = async (req, res) => {
     const pagina = parseInt(req.query.pagina) || 0;
     const limite = parseInt(req.query.limite) || 10;
     const busqueda = req.query.busqueda?.toLowerCase() || "";
+    const soloPropio = req.query.soloPropio === 'true';
 
     const filtro = {
       $or: [
@@ -86,6 +89,8 @@ const obtenerVehiculosPaginado = async (req, res) => {
         { modelo: { $regex: busqueda, $options: "i" } },
       ],
     };
+
+    if (soloPropio) filtro.tipoPropiedad = 'propio';
 
     const total = await Vehiculo.countDocuments(filtro);
 

@@ -144,7 +144,7 @@ const MantenimientoAdmin = () => {
         setCargando(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(apiSistema(`/vehiculos/paginado?pagina=${pagina - 1}&limite=${limite}`), {
+            const response = await axios.get(apiSistema(`/vehiculos/paginado?pagina=${pagina - 1}&limite=${limite}&soloPropio=true`), {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.data.resultados) {

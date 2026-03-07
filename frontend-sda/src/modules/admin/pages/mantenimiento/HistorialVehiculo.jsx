@@ -40,7 +40,7 @@ const HistorialVehiculo = () => {
         const fetchList = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get(apiSistema("/vehiculos"), {
+                const res = await axios.get(apiSistema("/vehiculos?soloPropio=true"), {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const mapped = res.data.map(v => ({ value: v._id, label: `${v.patente} - ${v.marca} ${v.modelo}` }));
@@ -66,7 +66,7 @@ const HistorialVehiculo = () => {
 
             // 1. Obtener datos detallados del vehículo
             // Usamos el listado ya que el backend por ahora devuelve todo en /api/vehiculos
-            const resVehiculos = await axios.get(apiSistema(`/vehiculos`), {
+            const resVehiculos = await axios.get(apiSistema(`/vehiculos?soloPropio=true`), {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const v = resVehiculos.data.find(veh => veh._id === id);
