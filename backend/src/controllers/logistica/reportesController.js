@@ -3,14 +3,18 @@ const Envio = require("../../models/Envio");
 const HojaReparto = require("../../models/HojaReparto");
 const Vehiculo = require("../../models/Vehiculo");
 const Chofer = require("../../models/Chofer");
+const timeUtil = require("../../utils/timeUtil");
+const moment = require('moment-timezone');
+
 
 exports.getDashboardStats = async (req, res) => {
     try {
         // -------------------------------------------------------------------------
-        // 1. KPI Cards (Operativa General)
+        // 1. KPI Cards (Operativa General) usando Timezone Estricto de Argentina
         // -------------------------------------------------------------------------
-        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        const startOfLastMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
+        const hoy = new Date();
+        const startOfMonth = timeUtil.getInicioMesArg(hoy);
+        const startOfLastMonth = moment(hoy).tz('America/Argentina/Buenos_Aires').subtract(1, 'months').startOf('month').toDate();
 
         const [
             totalEnviosMes,

@@ -307,7 +307,8 @@ const consultarHojas = async (req, res) => {
 
 
 const mongoose = require("mongoose");
-
+const timeUtil = require("../../utils/timeUtil");
+const fs = require('fs');
 const obtenerHojaPorId = async (req, res) => {
     try {
         const { id } = req.params;
@@ -656,9 +657,7 @@ const consultarHojasPaginado = async (req, res) => {
             filtro.fecha = {};
             if (desde) filtro.fecha.$gte = new Date(desde);
             if (hasta) {
-                const dateHasta = new Date(hasta);
-                dateHasta.setHours(23, 59, 59, 999); // End of day
-                filtro.fecha.$lte = dateHasta;
+                filtro.fecha.$lte = timeUtil.getFinDiaArg(new Date(hasta));
             }
         }
 
@@ -709,10 +708,8 @@ const consultarHojasPaginado = async (req, res) => {
         const hojasConDuplicados = await Promise.all(hojasConRemitos.map(async (hoja) => {
             if (!hoja.ruta?._id) return { ...hoja, esDuplicada: false };
 
-            const fechaInicio = new Date(hoja.fecha);
-            fechaInicio.setHours(0, 0, 0, 0);
-            const fechaFin = new Date(hoja.fecha);
-            fechaFin.setHours(23, 59, 59, 999);
+            const fechaInicio = timeUtil.getInicioDiaArg(hoja.fecha);
+            const fechaFin = timeUtil.getFinDiaArg(hoja.fecha);
 
             const count = await HojaReparto.countDocuments({
                 ruta: hoja.ruta._id,
@@ -967,10 +964,8 @@ const buscarHojaPorRutaFecha = async (req, res) => {
 
         // Parsear fecha
         const fechaBusqueda = new Date(fecha);
-        const inicioDia = new Date(fechaBusqueda);
-        inicioDia.setHours(0, 0, 0, 0);
-        const finDia = new Date(fechaBusqueda);
-        finDia.setHours(23, 59, 59, 999);
+        const inicioDia = timeUtil.getInicioDiaArg(fechaBusqueda);
+        const finDia = timeUtil.getFinDiaArg(fechaBusqueda);
 
         // Buscar hoja
         const hoja = await HojaReparto.findOne({
@@ -1112,11 +1107,9 @@ const crearHojaEspecial = async (req, res) => {
         const fechaObj = new Date(fecha || new Date());
 
         // Formato: SDA-ESPECIAL-20260221-001
-        const dateStr = `${fechaObj.getFullYear()}${String(fechaObj.getMonth() + 1).padStart(2, '0')}${String(fechaObj.getDate()).padStart(2, '0')}`;
-        const inicioDia = new Date(fechaObj);
-        inicioDia.setHours(0, 0, 0, 0);
-        const finDia = new Date(fechaObj);
-        finDia.setHours(23, 59, 59, 999);
+        const dateStr = timeUtil.getStrYYYYMMDDArg(fechaObj).replace(/-/g, '');
+        const inicioDia = timeUtil.getInicioDiaArg(fechaObj);
+        const finDia = timeUtil.getFinDiaArg(fechaObj);
 
         const countHojas = await HojaReparto.countDocuments({
             fecha: { $gte: inicioDia, $lte: finDia },

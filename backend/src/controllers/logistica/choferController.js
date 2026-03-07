@@ -2,6 +2,7 @@ const Chofer = require("../../models/Chofer");
 const Vehiculo = require("../../models/Vehiculo");
 const UsuarioSistema = require("../../models/Usuario");
 const excelJS = require("exceljs");
+const timeUtil = require("../../utils/timeUtil");
 
 
 // Crear nuevo chofer
@@ -216,8 +217,8 @@ const obtenerMiConfiguracion = async (req, res) => {
     // 1. Buscar si existe una Hoja de Reparto para hoy para este chofer
     const HojaReparto = require("../../models/HojaReparto");
     const hoy = new Date();
-    const inicioDia = new Date(hoy).setHours(0, 0, 0, 0);
-    const finDia = new Date(hoy).setHours(23, 59, 59, 999);
+    const inicioDia = timeUtil.getInicioDiaArg(hoy);
+    const finDia = timeUtil.getFinDiaArg(hoy);
 
     const hojasActivas = await HojaReparto.find({
       chofer: chofer._id,
@@ -230,13 +231,13 @@ const obtenerMiConfiguracion = async (req, res) => {
         vehiculo: hojasActivas[0].vehiculo,
         ruta: hojasActivas[0].ruta,
         hojaRepartoId: hojasActivas[0]._id,
-        hojaRepartoCodigo: hojasActivas[0].numeroHoja || `${hojasActivas[0].ruta?.codigo?.replace(/^L-/, '')}-${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}${String(hoy.getDate()).padStart(2, '0')}`,
+        hojaRepartoCodigo: hojasActivas[0].numeroHoja || `${hojasActivas[0].ruta?.codigo?.replace(/^L-/, '')}-${timeUtil.getStrYYYYMMDDArg(hoy).replace(/-/g, '')}`,
         esPlanificada: true,
         hojasActivas: hojasActivas.map(hoja => ({
           vehiculo: hoja.vehiculo,
           ruta: hoja.ruta,
           hojaRepartoId: hoja._id,
-          hojaRepartoCodigo: hoja.numeroHoja || `${hoja.ruta?.codigo?.replace(/^L-/, '')}-${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}${String(hoy.getDate()).padStart(2, '0')}`,
+          hojaRepartoCodigo: hoja.numeroHoja || `${hoja.ruta?.codigo?.replace(/^L-/, '')}-${timeUtil.getStrYYYYMMDDArg(hoy).replace(/-/g, '')}`,
         }))
       });
     }
@@ -353,13 +354,12 @@ const actualizarAsignacion = async (req, res) => {
 
       // Buscar hoja de la NUEVA ruta para HOY
       const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      const manana = new Date(hoy);
-      manana.setDate(manana.getDate() + 1);
+      const hoyInicio = timeUtil.getInicioDiaArg(hoy);
+      const hoyFin = timeUtil.getFinDiaArg(hoy);
 
       let nuevaHoja = await HojaReparto.findOne({
         ruta: rutaId,
-        fecha: { $gte: hoy, $lt: manana }
+        fecha: { $gte: hoyInicio, $lte: hoyFin }
       });
 
       if (!nuevaHoja) {
@@ -588,8 +588,8 @@ const reporteExcelChoferes = async (req, res) => {
       if (chofer.tipoVinculo === 'contratado' && chofer.datosContratado) {
         cuitTexto = chofer.datosContratado.cuit || "S/C";
         if (chofer.datosContratado.fechaIngreso) {
-          const f = new Date(chofer.datosContratado.fechaIngreso);
-          ingresoTexto = `${f.getDate().toString().padStart(2, '0')}/${(f.getMonth() + 1).toString().padStart(2, '0')}/${f.getFullYear()}`;
+          const fStr = timeUtil.getStrYYYYMMDDArg(chofer.datosContratado.fechaIngreso);
+          ingresoTexto = fStr.split('-').reverse().join('/');
         }
       }
 

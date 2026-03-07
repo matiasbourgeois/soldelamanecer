@@ -549,8 +549,8 @@ const reporteExcelConsolidado = async (req, res) => {
           }
           cuitTexto = c.datosContratado.cuit || "S/C";
           if (c.datosContratado.fechaIngreso) {
-            const f = new Date(c.datosContratado.fechaIngreso);
-            ingresoTexto = `${f.getDate().toString().padStart(2, '0')}/${(f.getMonth() + 1).toString().padStart(2, '0')}/${f.getFullYear()}`;
+            const fStr = timeUtil.getStrYYYYMMDDArg(c.datosContratado.fechaIngreso);
+            ingresoTexto = fStr.split('-').reverse().join('/');
           }
         }
       }
@@ -611,11 +611,11 @@ const sincronizarTarifasMesVencido = async (req, res) => {
     const mesIndex = parseInt(mes, 10) - 1; // JS months are 0-11
     const anioParsed = parseInt(anio, 10);
 
-    const inicioMes = new Date(anioParsed, mesIndex, 1);
-    inicioMes.setHours(0, 0, 0, 0);
+    const fechaBase = new Date(Date.UTC(anioParsed, mesIndex, 15, 12, 0, 0));
+    const inicioMes = timeUtil.getInicioMesArg(fechaBase);
 
-    const finMes = new Date(anioParsed, mesIndex + 1, 0); // Last day of month
-    finMes.setHours(23, 59, 59, 999);
+    const moment = require('moment-timezone');
+    const finMes = moment(fechaBase).tz('America/Argentina/Buenos_Aires').endOf('month').toDate();
 
     // Requerimos HojaReparto localmente para no romper referencias cíclicas si las hay
     const HojaReparto = require("../../models/HojaReparto");

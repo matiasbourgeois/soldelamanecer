@@ -1,3 +1,10 @@
+const timeUtil = require("../../utils/timeUtil");
+const Envio = require("../../models/Envio");
+const Ruta = require("../../models/Ruta");
+const Remito = require("../../models/Remito");
+const HojaReparto = require("../../models/HojaReparto");
+const logger = require("../../utils/logger");
+
 // Buscar hoja existente por ruta y fecha (Fase 5)
 const buscarHojaPorRutaFecha = async (req, res) => {
     try {
@@ -9,10 +16,8 @@ const buscarHojaPorRutaFecha = async (req, res) => {
 
         // Parsear fecha
         const fechaBusqueda = new Date(fecha);
-        const inicioDia = new Date(fechaBusqueda);
-        inicioDia.setHours(0, 0, 0, 0);
-        const finDia = new Date(fechaBusqueda);
-        finDia.setHours(23, 59, 59, 999);
+        const inicioDia = timeUtil.getInicioDiaArg(fechaBusqueda);
+        const finDia = timeUtil.getFinDiaArg(fechaBusqueda);
 
         // Buscar hoja
         const hoja = await HojaReparto.findOne({

@@ -1,5 +1,6 @@
 const Vehiculo = require("../../models/Vehiculo");
 const MantenimientoLog = require("../../models/MantenimientoLog");
+const timeUtil = require("../../utils/timeUtil");
 const fs = require('fs');
 const path = require('path');
 
@@ -166,15 +167,8 @@ const registrarMantenimiento = async (req, res) => {
     const kmRegistro = kmAlMomento ? Number(kmAlMomento) : vehiculo.kilometrajeActual;
 
     // Si viene fecha del frontend (ej: 2026-01-24), suele venir a medianoche UTC.
-    // Para evitar que el desfasaje horario lo mueva de día, lo forzamos a 12:00:00 del día indicado.
-    let fechaRegistro = new Date();
-    if (fecha) {
-      fechaRegistro = new Date(fecha);
-      if (!isNaN(fechaRegistro.getTime())) {
-        // Si es una fecha exacta a medianoche, le sumamos 12 horas para que caiga siempre en el mismo día sin importar el TZ local
-        fechaRegistro.setUTCHours(12, 0, 0, 0);
-      }
-    }
+    // Usamos el utilitario para clavar la hora a las 12:00 UTC, evitando saltos de TZ locales
+    const fechaRegistro = fecha ? timeUtil.getMediodiaSeguroUTC(fecha) : new Date();
 
     // Actualizamos el ultimoKm del mantenimiento
     vehiculo.configuracionMantenimiento[configIndex].ultimoKm = kmRegistro;
@@ -365,10 +359,10 @@ const registrarReporteChofer = async (req, res) => {
     const vehiculo = await Vehiculo.findById(id);
     if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
 
-    // 1. Validar Límite de Reportes Diarios
+    // 1. Validar Límite de Reportes Diarios con Timezone estricto de Argentina
     const fechaReporte = fecha ? new Date(fecha) : new Date();
-    const startOfDay = new Date(fechaReporte); startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(fechaReporte); endOfDay.setHours(23, 59, 59, 999);
+    const startOfDay = timeUtil.getInicioDiaArg(fechaReporte);
+    const endOfDay = timeUtil.getFinDiaArg(fechaReporte);
 
     const reportesHoy = await MantenimientoLog.countDocuments({
       vehiculo: id,
@@ -421,7 +415,7 @@ const registrarReporteChofer = async (req, res) => {
       litrosCargados: litros || 0,
       ruta: rutaId || null,
       hojaReparto: hojaFinalId || null,
-      fecha: fecha ? new Date(new Date(fecha).setUTCHours(12, 0, 0, 0)) : new Date(),
+      fecha: fecha ? timeUtil.getMediodiaSeguroUTC(fecha) : new Date(),
       registradoPor: req.usuario ? req.usuario.id : null,
       observaciones: observaciones || `Reporte diario desde App Móvil.`
     });
@@ -442,8 +436,8 @@ const obtenerEstadisticasVehiculo = async (req, res) => {
   try {
     const { id } = req.params;
     const hoy = new Date();
-    const startOfDay = new Date(hoy); startOfDay.setHours(0, 0, 0, 0);
-    const hace30Dias = new Date(hoy); hace30Dias.setDate(hoy.getDate() - 30);
+    const startOfDay = timeUtil.getInicioDiaArg(hoy);
+    const hace30Dias = new Date(startOfDay.getTime()); hace30Dias.setDate(hace30Dias.getDate() - 30);
 
     // 1. Datos diarios
     const logsHoy = await MantenimientoLog.find({
