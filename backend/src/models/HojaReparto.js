@@ -53,6 +53,8 @@ const hojaRepartoSchema = new mongoose.Schema({
   kilometrosEstimados: { type: Number, default: 0 },
   precioKm: { type: Number, default: 0 },
   montoFijo: { type: Number, default: 0 },
+  montoPorDistribucion: { type: Number, default: 0 },
+  montoMensual: { type: Number, default: 0 },
   tipoPago: {
     type: String,
     enum: ['por_km', 'por_mes', 'por_distribucion'],

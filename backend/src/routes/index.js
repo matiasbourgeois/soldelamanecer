@@ -26,5 +26,6 @@ router.use("/reportes", require("./reportes.routes"));
 router.use("/aprobaciones", require("./aprobaciones"));
 router.use("/configuracion", require("./configuracion"));
 router.use("/notificaciones", require("./notificaciones"));
+router.use("/sistema", require("./sistema.routes"));
 
 module.exports = router;

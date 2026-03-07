@@ -69,7 +69,8 @@ const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
     let kmExtraAcumulados = 0;
     let montoTotalViajes = 0;
 
-    let tieneMesFijo = false;
+    // Rastreo de Rutas Mensuales para evitar duplicidad pero permitir acumulación de distintas rutas
+    const rutasMensualesProcesadas = new Set();
     let montoMesAdicional = 0;
 
     const hojasConDetalle = hojasValidas.map(hojaObj => {
@@ -111,16 +112,23 @@ const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
                 hoja.detallePago = `Por KM (${kmBase + extra} km): $${pagoHoja}`;
                 hoja.subtotal = pagoHoja;
             } else if (tipoPagoEval === 'por_distribucion') {
-                pagoHoja = truncarMonto(hoja.montoPorDistribucion || 0);
+                const distValorOriginal = hoja.montoPorDistribucion || ruta?.montoPorDistribucion || 0;
+                pagoHoja = truncarMonto(distValorOriginal);
                 montoTotalViajes += pagoHoja;
                 hoja.detallePago = `Por Distribución: $${pagoHoja}`;
                 hoja.subtotal = pagoHoja;
             } else if (tipoPagoEval === 'por_mes') {
-                hoja.detallePago = esEspecial ? 'Mes Fijo (Especial)' : `Mes Fijo ($${truncarMonto(hoja.montoMensual || 0)})`;
-                hoja.subtotal = 0;
-                if (!tieneMesFijo && !esEspecial) {
-                    tieneMesFijo = true;
-                    montoMesAdicional = truncarMonto(hoja.montoMensual || 0);
+                const mesValorOriginal = hoja.montoMensual || ruta?.montoMensual || 0;
+                const mesTruncado = truncarMonto(mesValorOriginal);
+
+                hoja.detallePago = esEspecial ? 'Mes Fijo (Especial)' : 'Tarifa Mensual';
+                hoja.subtotal = 0; // LIMPIEZA VISUAL: No mostramos pago parcial por cada hoja mensual
+
+                // Solo sumamos el monto mensual si es una RUTA distinta que no hayamos procesado aún en este período
+                const rutaIdStr = ruta?._id?.toString();
+                if (rutaIdStr && !rutasMensualesProcesadas.has(rutaIdStr) && !esEspecial) {
+                    rutasMensualesProcesadas.add(rutaIdStr);
+                    montoMesAdicional += mesTruncado;
                 }
             } else {
                 hoja.detallePago = `Sin tipoPago`;
@@ -130,7 +138,7 @@ const calcularTotalesLiquidacion = async (choferId, fechaInicio, fechaFin) => {
         return hoja;
     });
 
-    if (tieneMesFijo) {
+    if (montoMesAdicional > 0) {
         montoTotalViajes += montoMesAdicional;
     }
 

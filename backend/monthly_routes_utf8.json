@@ -1,0 +1,1771 @@
+[
+  {
+    "_id": "67eb631cef1f90dda14bc9ea",
+    "codigo": "L-PILA-1",
+    "horaSalida": "07:18",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Lunes a S├íbado"
+    },
+    "descripcion": "RIO SEGUNDO MA├æANA",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f705d",
+      "67ef52732b0a2b83596f7059"
+    ],
+    "choferAsignado": {
+      "_id": "699d0b119c9d210cf760ab31",
+      "usuario": "699d0b119c9d210cf760ab2f",
+      "dni": "22772816",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.810Z",
+        "razonSocial": "",
+        "cuit": "20-22772816-7",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.811Z",
+      "updatedAt": "2026-02-25T15:29:35.027Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "69723a7db56e8bd116b1c7b1",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:00.365Z",
+    "updatedAt": "2026-02-24T22:54:55.609Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699d0b119c9d210cf760ab31",
+      "usuario": "699d0b119c9d210cf760ab2f",
+      "dni": "22772816",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.810Z",
+        "razonSocial": "",
+        "cuit": "20-22772816-7",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.811Z",
+      "updatedAt": "2026-02-25T15:29:35.027Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb631cef1f90dda14bc9ee",
+    "codigo": "L-R36T-1",
+    "horaSalida": "13:40",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Lunes a S├íbado"
+    },
+    "descripcion": "RIO CUARTO TRONCAL TARDE",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f705c"
+    ],
+    "choferAsignado": {
+      "_id": "699d0b119c9d210cf760ab36",
+      "usuario": "699d0b119c9d210cf760ab34",
+      "dni": "30929119",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.879Z",
+        "razonSocial": "",
+        "cuit": "",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.879Z",
+      "updatedAt": "2026-02-24T02:37:02.782Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "69723ac8b56e8bd116b1c7c7",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:00.722Z",
+    "updatedAt": "2026-02-24T22:55:17.472Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": null
+  },
+  {
+    "_id": "67eb631cef1f90dda14bc9f0",
+    "codigo": "L-RCU2-1",
+    "horaSalida": "00:42",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Martes, Mi├⌐rcoles, Jueves, Viernes, S├íbado"
+    },
+    "descripcion": "RIO CUARTO CENTRO MA├æANA",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f705c"
+    ],
+    "choferAsignado": {
+      "_id": "699ce69ad3667d15ffe0c840",
+      "usuario": "699ce69ad3667d15ffe0c83e",
+      "dni": "38909277",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2016-01-04T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-38909277-9",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 20000,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.074Z",
+      "updatedAt": "2026-02-26T19:46:55.552Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "699d35b73f834da66eb856ec",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:00.901Z",
+    "updatedAt": "2026-03-02T14:30:56.510Z",
+    "__v": 0,
+    "kilometrosEstimados": 0,
+    "montoMensual": 2817623.61,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699ce69ad3667d15ffe0c840",
+      "usuario": "699ce69ad3667d15ffe0c83e",
+      "dni": "38909277",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2016-01-04T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-38909277-9",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 20000,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.074Z",
+      "updatedAt": "2026-02-26T19:46:55.552Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb631def1f90dda14bc9f2",
+    "codigo": "L-RCUA-1",
+    "horaSalida": "00:41",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Martes, Mi├⌐rcoles, Jueves, Viernes, S├íbado"
+    },
+    "descripcion": "Rio Cuarto 1 MA├æANA PERIFERIA",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f705c"
+    ],
+    "choferAsignado": {
+      "_id": "699ce69ad3667d15ffe0c86d",
+      "usuario": "699ce69ad3667d15ffe0c86b",
+      "dni": "33825323",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2017-11-24T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-33825323-1",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.691Z",
+      "updatedAt": "2026-02-25T15:29:35.047Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "699d35b73f834da66eb856ef",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:01.081Z",
+    "updatedAt": "2026-02-24T19:04:40.932Z",
+    "__v": 0,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699ce69ad3667d15ffe0c86d",
+      "usuario": "699ce69ad3667d15ffe0c86b",
+      "dni": "33825323",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2017-11-24T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-33825323-1",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.691Z",
+      "updatedAt": "2026-02-25T15:29:35.047Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb631def1f90dda14bc9f6",
+    "codigo": "L-RIO2-1",
+    "horaSalida": "14:24",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Lunes a S├íbado"
+    },
+    "descripcion": "RIO SEGUNDO TARDE",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f705d",
+      "67ef52732b0a2b83596f7059"
+    ],
+    "choferAsignado": {
+      "_id": "699d0b119c9d210cf760ab31",
+      "usuario": "699d0b119c9d210cf760ab2f",
+      "dni": "22772816",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.810Z",
+        "razonSocial": "",
+        "cuit": "20-22772816-7",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.811Z",
+      "updatedAt": "2026-02-25T15:29:35.027Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "69723a7db56e8bd116b1c7b1",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:01.437Z",
+    "updatedAt": "2026-02-24T22:55:41.004Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699d0b119c9d210cf760ab31",
+      "usuario": "699d0b119c9d210cf760ab2f",
+      "dni": "22772816",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.810Z",
+        "razonSocial": "",
+        "cuit": "20-22772816-7",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.811Z",
+      "updatedAt": "2026-02-25T15:29:35.027Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb631def1f90dda14bc9f8",
+    "codigo": "L-RIV1-1",
+    "horaSalida": "13:41",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Lunes a S├íbado"
+    },
+    "descripcion": "Rio Cuarto 1 TARDE PERIFERIA",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f705c"
+    ],
+    "choferAsignado": {
+      "_id": "699ce69ad3667d15ffe0c86d",
+      "usuario": "699ce69ad3667d15ffe0c86b",
+      "dni": "33825323",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2017-11-24T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-33825323-1",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.691Z",
+      "updatedAt": "2026-02-25T15:29:35.047Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "699d35b73f834da66eb856ef",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:01.616Z",
+    "updatedAt": "2026-02-24T19:01:59.428Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699ce69ad3667d15ffe0c86d",
+      "usuario": "699ce69ad3667d15ffe0c86b",
+      "dni": "33825323",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2017-11-24T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-33825323-1",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.691Z",
+      "updatedAt": "2026-02-25T15:29:35.047Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb631def1f90dda14bc9fa",
+    "codigo": "L-RIV2-1",
+    "horaSalida": "13:42",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Lunes a S├íbado"
+    },
+    "descripcion": "RIO CUARTO CENTRO TARDE",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f705c"
+    ],
+    "choferAsignado": {
+      "_id": "699ce69ad3667d15ffe0c840",
+      "usuario": "699ce69ad3667d15ffe0c83e",
+      "dni": "38909277",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2016-01-04T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-38909277-9",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 20000,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.074Z",
+      "updatedAt": "2026-02-26T19:46:55.552Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "699d35b73f834da66eb856ec",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:01.795Z",
+    "updatedAt": "2026-02-24T22:03:43.259Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699ce69ad3667d15ffe0c840",
+      "usuario": "699ce69ad3667d15ffe0c83e",
+      "dni": "38909277",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2016-01-04T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-38909277-9",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 20000,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.074Z",
+      "updatedAt": "2026-02-26T19:46:55.552Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb631def1f90dda14bc9fc",
+    "codigo": "L-RIV3-1",
+    "horaSalida": "07:18",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Martes, Mi├⌐rcoles, Jueves, Viernes, S├íbado"
+    },
+    "descripcion": "RIO CUARTO FARMACITY MA├æANA",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f705c"
+    ],
+    "choferAsignado": {
+      "_id": "699ce69ad3667d15ffe0c840",
+      "usuario": "699ce69ad3667d15ffe0c83e",
+      "dni": "38909277",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2016-01-04T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-38909277-9",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 20000,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.074Z",
+      "updatedAt": "2026-02-26T19:46:55.552Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "699d35b73f834da66eb856f2",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:01.974Z",
+    "updatedAt": "2026-03-02T14:37:11.484Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699ce69ad3667d15ffe0c840",
+      "usuario": "699ce69ad3667d15ffe0c83e",
+      "dni": "38909277",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2016-01-04T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-38909277-9",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 20000,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.074Z",
+      "updatedAt": "2026-02-26T19:46:55.552Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb631eef1f90dda14bc9fe",
+    "codigo": "L-RIV3-2",
+    "horaSalida": "14:14",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Lunes a S├íbado"
+    },
+    "descripcion": "RIO CUARTO FARMACITY TARDE",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f705c"
+    ],
+    "choferAsignado": {
+      "_id": "699ce69ad3667d15ffe0c840",
+      "usuario": "699ce69ad3667d15ffe0c83e",
+      "dni": "38909277",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2016-01-04T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-38909277-9",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 20000,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.074Z",
+      "updatedAt": "2026-02-26T19:46:55.552Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "699d35b73f834da66eb856f2",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:02.153Z",
+    "updatedAt": "2026-02-24T22:04:51.745Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699ce69ad3667d15ffe0c840",
+      "usuario": "699ce69ad3667d15ffe0c83e",
+      "dni": "38909277",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2016-01-04T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-38909277-9",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 20000,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.074Z",
+      "updatedAt": "2026-02-26T19:46:55.552Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb631eef1f90dda14bca00",
+    "codigo": "L-RSPM-1",
+    "horaSalida": "00:14",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Martes, Mi├⌐rcoles, Jueves, Viernes, S├íbado"
+    },
+    "descripcion": "TRONCAL VILLA MARIA NOCHE",
+    "zona": null,
+    "localidades": [],
+    "choferAsignado": {
+      "_id": "699ce727d29613c1291207b2",
+      "usuario": "699ce727d29613c1291207b0",
+      "dni": "22440281",
+      "telefono": "0000000000",
+      "tipoVinculo": "relacionDependencia",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        },
+        "razonSocial": "",
+        "cuit": "",
+        "email": "",
+        "fechaIngreso": "2009-06-01T12:00:00.000Z",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0
+      },
+      "createdAt": "2026-02-23T23:47:51.442Z",
+      "updatedAt": "2026-02-24T02:37:02.782Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "699d35b73f834da66eb856f5",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:02.333Z",
+    "updatedAt": "2026-03-02T14:28:37.992Z",
+    "__v": 0,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699ce727d29613c1291207b2",
+      "usuario": "699ce727d29613c1291207b0",
+      "dni": "22440281",
+      "telefono": "0000000000",
+      "tipoVinculo": "relacionDependencia",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        },
+        "razonSocial": "",
+        "cuit": "",
+        "email": "",
+        "fechaIngreso": "2009-06-01T12:00:00.000Z",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0
+      },
+      "createdAt": "2026-02-23T23:47:51.442Z",
+      "updatedAt": "2026-02-24T02:37:02.782Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb631eef1f90dda14bca04",
+    "codigo": "L-RU36-1",
+    "horaSalida": "00:40",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Martes, Mi├⌐rcoles, Jueves, Viernes, S├íbado"
+    },
+    "descripcion": "TRONCAL RIO CUARTO NOCHE",
+    "zona": null,
+    "localidades": [],
+    "choferAsignado": {
+      "_id": "699ce727d29613c1291207ca",
+      "usuario": "699ce727d29613c1291207c8",
+      "dni": "30900903",
+      "telefono": "0000000000",
+      "tipoVinculo": "relacionDependencia",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        },
+        "razonSocial": "",
+        "cuit": "",
+        "email": "",
+        "fechaIngreso": "2017-01-17T12:00:00.000Z",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0
+      },
+      "createdAt": "2026-02-23T23:47:51.707Z",
+      "updatedAt": "2026-02-24T02:37:02.782Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "69723aaeb56e8bd116b1c7bf",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:02.693Z",
+    "updatedAt": "2026-03-02T14:30:23.130Z",
+    "__v": 0,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699ce727d29613c1291207ca",
+      "usuario": "699ce727d29613c1291207c8",
+      "dni": "30900903",
+      "telefono": "0000000000",
+      "tipoVinculo": "relacionDependencia",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        },
+        "razonSocial": "",
+        "cuit": "",
+        "email": "",
+        "fechaIngreso": "2017-01-17T12:00:00.000Z",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0
+      },
+      "createdAt": "2026-02-23T23:47:51.707Z",
+      "updatedAt": "2026-02-24T02:37:02.782Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb6320ef1f90dda14bca1a",
+    "codigo": "L-VPUN-1",
+    "horaSalida": "12:50",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Lunes a S├íbado"
+    },
+    "descripcion": "LA FALDA TARDE",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f7041",
+      "67ef52732b0a2b83596f702b",
+      "67ef52732b0a2b83596f7022"
+    ],
+    "choferAsignado": {
+      "_id": "699d0b119c9d210cf760ab27",
+      "usuario": "699d0b119c9d210cf760ab25",
+      "dni": "25794190",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.676Z",
+        "razonSocial": "",
+        "cuit": "",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.678Z",
+      "updatedAt": "2026-02-24T02:37:02.782Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "697236abb56e8bd116b1c4c9",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:04.664Z",
+    "updatedAt": "2026-02-24T22:57:20.991Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699d0b119c9d210cf760ab27",
+      "usuario": "699d0b119c9d210cf760ab25",
+      "dni": "25794190",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.676Z",
+        "razonSocial": "",
+        "cuit": "",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.678Z",
+      "updatedAt": "2026-02-24T02:37:02.782Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb6320ef1f90dda14bca1c",
+    "codigo": "L-VPUN-2",
+    "horaSalida": "00:36",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "textoLegible": "Martes, Mi├⌐rcoles, Jueves, Viernes, S├íbado"
+    },
+    "descripcion": "LA FALDA NOCHE",
+    "zona": null,
+    "localidades": [],
+    "choferAsignado": {
+      "_id": "699ce69ad3667d15ffe0c868",
+      "usuario": "699ce69ad3667d15ffe0c866",
+      "dni": "26641334",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2023-01-10T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-26641334-4",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.622Z",
+      "updatedAt": "2026-02-25T15:29:35.067Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "69723ae8b56e8bd116b1c7d5",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:04.843Z",
+    "updatedAt": "2026-03-02T14:30:11.670Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699ce69ad3667d15ffe0c868",
+      "usuario": "699ce69ad3667d15ffe0c866",
+      "dni": "26641334",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2023-01-10T12:00:00.000Z",
+        "razonSocial": "",
+        "cuit": "20-26641334-4",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-23T23:45:30.622Z",
+      "updatedAt": "2026-02-25T15:29:35.067Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb6324ef1f90dda14bca34",
+    "codigo": "L-PILO-1",
+    "horaSalida": "14:14",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false
+      ],
+      "textoLegible": "S├íbado"
+    },
+    "descripcion": "RIO SEGUNDO TARDE SABADOS",
+    "zona": null,
+    "localidades": [
+      "67ef52732b0a2b83596f706d",
+      "67ef52732b0a2b83596f7075"
+    ],
+    "choferAsignado": {
+      "_id": "699d0b119c9d210cf760ab31",
+      "usuario": "699d0b119c9d210cf760ab2f",
+      "dni": "22772816",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.810Z",
+        "razonSocial": "",
+        "cuit": "20-22772816-7",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.811Z",
+      "updatedAt": "2026-02-25T15:29:35.027Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "69723a7db56e8bd116b1c7b1",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:08.099Z",
+    "updatedAt": "2026-02-24T23:01:39.923Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699d0b119c9d210cf760ab31",
+      "usuario": "699d0b119c9d210cf760ab2f",
+      "dni": "22772816",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.810Z",
+        "razonSocial": "",
+        "cuit": "20-22772816-7",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.811Z",
+      "updatedAt": "2026-02-25T15:29:35.027Z",
+      "__v": 0
+    }
+  },
+  {
+    "_id": "67eb6325ef1f90dda14bca3a",
+    "codigo": "L-PILA-2",
+    "horaSalida": "07:18",
+    "frecuencia": {
+      "tipo": "dias-especificos",
+      "diasSemana": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      "textoLegible": "Lunes, Martes, Mi├⌐rcoles, Jueves, Viernes"
+    },
+    "descripcion": "",
+    "zona": null,
+    "localidades": [],
+    "choferAsignado": {
+      "_id": "699d0b119c9d210cf760ab31",
+      "usuario": "699d0b119c9d210cf760ab2f",
+      "dni": "22772816",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.810Z",
+        "razonSocial": "",
+        "cuit": "20-22772816-7",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.811Z",
+      "updatedAt": "2026-02-25T15:29:35.027Z",
+      "__v": 0
+    },
+    "vehiculoAsignado": "69723a7db56e8bd116b1c7b1",
+    "activa": true,
+    "createdAt": "2025-04-01T03:53:09.030Z",
+    "updatedAt": "2026-03-02T14:42:38.290Z",
+    "__v": 1,
+    "kilometrosEstimados": 0,
+    "montoMensual": 0,
+    "montoPorDistribucion": 0,
+    "tipoPago": "por_mes",
+    "precioKm": 0,
+    "contratistaTitular": {
+      "_id": "699d0b119c9d210cf760ab31",
+      "usuario": "699d0b119c9d210cf760ab2f",
+      "dni": "22772816",
+      "telefono": "0000000000",
+      "tipoVinculo": "contratado",
+      "vehiculoAsignado": null,
+      "activo": true,
+      "datosContratado": {
+        "fechaIngreso": "2026-02-24T02:21:05.810Z",
+        "razonSocial": "",
+        "cuit": "20-22772816-7",
+        "email": "",
+        "fechaEgreso": null,
+        "vehiculoDefault": null,
+        "rutaDefault": null,
+        "montoChoferDia": 0,
+        "documentos": {
+          "dni": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "carnetConducir": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "constanciaARCA": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "contrato": {
+            "path": null,
+            "fechaSubida": null
+          },
+          "antecedentesPenales": {
+            "path": null,
+            "fechaSubida": null
+          }
+        }
+      },
+      "createdAt": "2026-02-24T02:21:05.811Z",
+      "updatedAt": "2026-02-25T15:29:35.027Z",
+      "__v": 0
+    }
+  }
+]

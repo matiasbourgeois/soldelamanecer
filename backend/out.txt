@@ -1,18 +1,5 @@
-Original Date: 2026-03-05T03:00:00.000Z
-Pared Date (d): Thu Mar 05 2026 00:00:00 GMT-0300 (Argentina Standard Time)
-Offset (d.getTimezoneOffset): 180 min
-Date with offset added: Thu Mar 05 2026 03:00:00 GMT-0300 (Argentina Standard Time)
-Formateada AR: 05/03/2026
-
-Original Date: 2026-03-05T00:00:00.000Z
-Pared Date (d): Wed Mar 04 2026 21:00:00 GMT-0300 (Argentina Standard Time)
-Offset (d.getTimezoneOffset): 180 min
-Date with offset added: Thu Mar 05 2026 00:00:00 GMT-0300 (Argentina Standard Time)
-Formateada AR: 05/03/2026
-
-Original Date: 2026-03-04T03:00:00.000Z
-Pared Date (d): Wed Mar 04 2026 00:00:00 GMT-0300 (Argentina Standard Time)
-Offset (d.getTimezoneOffset): 180 min
-Date with offset added: Wed Mar 04 2026 03:00:00 GMT-0300 (Argentina Standard Time)
-Formateada AR: 04/03/2026
-
+﻿Conectado
+RUTA: L-RIV2-1 | TIPO PAGO: por_mes | KM: 0 | PRECIO_KM: 0 | DIST: 0 | MES: 0 | CONTRATISTA: 699ce69ad3667d15ffe0c840
+RUTA: L-RIV3-1 | TIPO PAGO: por_mes | KM: 0 | PRECIO_KM: 0 | DIST: 0 | MES: 0 | CONTRATISTA: 699ce69ad3667d15ffe0c840
+RUTA: L-RIV3-2 | TIPO PAGO: por_mes | KM: 0 | PRECIO_KM: 0 | DIST: 0 | MES: 0 | CONTRATISTA: 699ce69ad3667d15ffe0c840
+RUTA: L-RCU2-1 | TIPO PAGO: por_mes | KM: 0 | PRECIO_KM: 0 | DIST: 0 | MES: 2817623.61 | CONTRATISTA: 699ce69ad3667d15ffe0c840

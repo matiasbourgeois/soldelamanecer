@@ -13,25 +13,45 @@ import {
     Center,
     ThemeIcon,
     Card,
-    Grid
+    Grid,
+    Tabs,
+    Modal,
+    Box
 } from "@mantine/core";
-import { IconSettings, IconCash, IconAlertCircle, IconDeviceFloppy } from "@tabler/icons-react";
+import { DatePickerInput } from '@mantine/dates';
+import {
+    IconSettings,
+    IconCash,
+    IconAlertCircle,
+    IconDeviceFloppy,
+    IconDatabaseImport,
+    IconServerCog,
+    IconHistory,
+    IconShieldCheck
+} from "@tabler/icons-react";
 import axios from "axios";
 import { apiSistema } from "@core/api/apiSistema";
 import { mostrarAlerta } from "@core/utils/alertaGlobal.jsx";
 import AuthContext from "@core/context/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import sistemaService from "../../../services/sistemaService";
 
 const ConfiguracionAdmin = () => {
     const { auth } = useContext(AuthContext);
     const navigate = useNavigate();
 
+    // Tab 1: Parámetros Generales
     const [tarifaSDA, setTarifaSDA] = useState(0);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [ultimaAcutalizacion, setUltimaActualizacion] = useState(null);
 
-    // Redirección de seguridad redundante
+    // Tab 3: Sistema y Mantenimiento (Time Machine)
+    const [recoveryDates, setRecoveryDates] = useState([null, null]);
+    const [recoveryLoading, setRecoveryLoading] = useState(false);
+    const [modalConfirmOpen, setModalConfirmOpen] = useState(false);
+
     useEffect(() => {
         if (auth && auth.rol !== "admin") {
             mostrarAlerta("Acceso denegado. Se requiere nivel Administrador.", "danger");
@@ -74,12 +94,41 @@ const ConfiguracionAdmin = () => {
             mostrarAlerta(data.msg || "Configuración actualizada correctamente.", "success");
         } catch (error) {
             console.error("Error al guardar configuración:", error);
-            mostrarAlerta(
-                error.response?.data?.error || "Error al guardar la configuración.",
-                "danger"
-            );
+            mostrarAlerta(error.response?.data?.error || "Error al guardar la configuración.", "danger");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const executeRecoveryProtocol = async () => {
+        if (!recoveryDates[0] || !recoveryDates[1]) {
+            mostrarAlerta("Debe seleccionar ambas fechas.", "warning");
+            return;
+        }
+
+        setRecoveryLoading(true);
+        setModalConfirmOpen(false);
+
+        try {
+            const fIn = dayjs(recoveryDates[0]).format("YYYY-MM-DD");
+            const fOut = dayjs(recoveryDates[1]).format("YYYY-MM-DD");
+
+            const resultado = await sistemaService.recuperarDiasCaidos({
+                fechaInicio: fIn,
+                fechaFin: fOut
+            });
+
+            console.log("Reporte Antimateria:", resultado.reporte);
+
+            let msg = `Se procesaron ${resultado.reporte.length} días. Revisa la consola para el reporte detallado.`;
+            mostrarAlerta(msg, "success");
+
+        } catch (error) {
+            console.error("Error en Recovery Protocol:", error);
+            mostrarAlerta(error.response?.data?.error || "Error crítico del sistema.", "danger");
+        } finally {
+            setRecoveryLoading(false);
+            setRecoveryDates([null, null]);
         }
     };
 
@@ -92,72 +141,167 @@ const ConfiguracionAdmin = () => {
     }
 
     return (
-        <Container size="lg" py="xl">
+        <Container size="xl" py="lg">
             <Group mb="xl" gap="sm">
                 <ThemeIcon size="xl" radius="md" color="indigo" variant="light">
                     <IconSettings size={28} />
                 </ThemeIcon>
                 <div>
-                    <Title order={2} fw={800} style={{ color: "var(--mantine-color-dark-8)" }}>
-                        Configuración General del Sistema
+                    <Title order={2} fw={800} c="dark.8">
+                        Configuración y Sistema
                     </Title>
                     <Text c="dimmed" size="sm">
-                        Parámetros globales que afectan a todos los módulos y trabajadores corporativos.
+                        Panel de control maestro para administradores Nivel Dios.
                     </Text>
                 </div>
             </Group>
 
-            <Grid>
-                <Grid.Col span={{ base: 12, md: 8 }}>
-                    <Card withBorder shadow="sm" radius="md" padding="xl" style={{ borderColor: "var(--mantine-color-gray-3)" }}>
-                        <Card.Section withBorder inheritPadding py="xs" bg="gray.0">
-                            <Group gap="xs">
-                                <IconCash size={18} color="var(--mantine-color-green-7)" />
-                                <Text fw={700} c="dark.7">Tarifas Universales</Text>
-                            </Group>
-                        </Card.Section>
+            <Tabs defaultValue="parametros" color="indigo" radius="md">
+                <Tabs.List>
+                    <Tabs.Tab value="parametros" leftSection={<IconCash size={16} />}>
+                        Parámetros Generales
+                    </Tabs.Tab>
+                    <Tabs.Tab value="cargas" leftSection={<IconDatabaseImport size={16} />}>
+                        Cargas Masivas
+                    </Tabs.Tab>
+                    <Tabs.Tab value="sistema" color="red" leftSection={<IconServerCog size={16} />}>
+                        Sistema y Mantenimiento
+                    </Tabs.Tab>
+                </Tabs.List>
 
-                        <Stack gap="lg" mt="md">
-                            <Alert icon={<IconAlertCircle size={16} />} title="Piso Mínimo Garantizado" color="blue" variant="light">
-                                Si el chofer maneja un vehículo de <b>SDA</b>, se le pagará esta tarifa base automáticamente, salvo que tenga un acuerdo mayor en su legajo.
-                            </Alert>
+                {/* Tapa 1: Parámetros Clásicos */}
+                <Tabs.Panel value="parametros" pt="xl">
+                    <Grid>
+                        <Grid.Col span={{ base: 12, md: 8 }}>
+                            <Card withBorder shadow="sm" radius="md" padding="xl">
+                                <Card.Section withBorder inheritPadding py="xs" bg="gray.0">
+                                    <Group gap="xs">
+                                        <IconCash size={18} color="var(--mantine-color-green-7)" />
+                                        <Text fw={700} c="dark.7">Tarifas Universales</Text>
+                                    </Group>
+                                </Card.Section>
 
-                            <NumberInput
-                                label="Tarifa Universal Chofer (Vehículo SDA)"
-                                description="Monto mínimo garantizado por día/viaje a pagar por el servicio de manejo al usar flota de la empresa."
-                                placeholder="Ej. 30000"
-                                value={tarifaSDA}
-                                onChange={(val) => setTarifaSDA(Number(val))}
-                                prefix="$ "
-                                thousandSeparator="."
-                                decimalSeparator=","
-                                size="md"
-                                required
-                                styles={{ input: { fontWeight: 600, color: 'var(--mantine-color-green-8)' } }}
-                            />
+                                <Stack gap="lg" mt="md">
+                                    <Alert icon={<IconAlertCircle size={16} />} title="Piso Mínimo Garantizado" color="blue" variant="light">
+                                        Si el chofer maneja un vehículo de <b>SDA</b>, se le pagará esta tarifa base automáticamente, salvo que tenga un acuerdo mayor en su legajo.
+                                    </Alert>
 
-                            {ultimaAcutalizacion && (
-                                <Text size="xs" c="dimmed">
-                                    Última actualización: {new Date(ultimaAcutalizacion).toLocaleString("es-AR")}
-                                </Text>
-                            )}
+                                    <NumberInput
+                                        label="Tarifa Universal Chofer (Vehículo SDA)"
+                                        description="Monto mínimo garantizado por día/viaje a pagar por el servicio de manejo al usar flota de la empresa."
+                                        placeholder="Ej. 30000"
+                                        value={tarifaSDA}
+                                        onChange={(val) => setTarifaSDA(Number(val))}
+                                        prefix="$ "
+                                        thousandSeparator="."
+                                        decimalSeparator=","
+                                        size="md"
+                                        required
+                                        styles={{ input: { fontWeight: 600, color: 'var(--mantine-color-green-8)' } }}
+                                    />
 
-                            <Group justify="flex-end" mt="xl">
-                                <Button
-                                    leftSection={<IconDeviceFloppy size={18} />}
-                                    color="cyan"
-                                    onClick={handleSave}
-                                    loading={saving}
-                                    size="md"
-                                    radius="md"
-                                >
-                                    Guardar Configuración
-                                </Button>
-                            </Group>
-                        </Stack>
+                                    {ultimaAcutalizacion && (
+                                        <Text size="xs" c="dimmed">
+                                            Última actualización: {new Date(ultimaAcutalizacion).toLocaleString("es-AR")}
+                                        </Text>
+                                    )}
+
+                                    <Group justify="flex-end" mt="xl">
+                                        <Button leftSection={<IconDeviceFloppy size={18} />} color="cyan" onClick={handleSave} loading={saving} size="md" radius="md">
+                                            Guardar Configuración
+                                        </Button>
+                                    </Group>
+                                </Stack>
+                            </Card>
+                        </Grid.Col>
+                    </Grid>
+                </Tabs.Panel>
+
+                {/* Tapa 2: Cargas Masivas (Placeholder para organizar futuro código) */}
+                <Tabs.Panel value="cargas" pt="xl">
+                    <Card withBorder shadow="sm" radius="md" padding="xl">
+                        <Center style={{ height: 200 }}>
+                            <Stack align="center" gap="xs">
+                                <IconDatabaseImport size={48} color="var(--mantine-color-gray-4)" />
+                                <Text c="dimmed" fw={500}>Área reservada para importadores de Excel y migraciones masivas.</Text>
+                            </Stack>
+                        </Center>
                     </Card>
-                </Grid.Col>
-            </Grid>
+                </Tabs.Panel>
+
+                {/* Tapa 3: Time Machine */}
+                <Tabs.Panel value="sistema" pt="xl">
+                    <Grid>
+                        <Grid.Col span={{ base: 12, md: 10 }}>
+                            <Card withBorder shadow="sm" radius="md" padding="xl" style={{ borderColor: "var(--mantine-color-red-4)" }}>
+                                <Card.Section withBorder inheritPadding py="xs" bg="red.0">
+                                    <Group gap="xs">
+                                        <IconShieldCheck size={18} color="var(--mantine-color-red-7)" />
+                                        <Text fw={700} c="red.9">Protocolo de Recuperación / Time Machine</Text>
+                                    </Group>
+                                </Card.Section>
+
+                                <Stack gap="md" mt="md">
+                                    <Alert icon={<IconAlertCircle size={16} />} title="Uso Exclusivo en Emergencias" color="red" variant="filled">
+                                        Esta herramienta simulará el transcurso del tiempo para generar, poner en reparto y cerrar hojas de manera recursiva si el servidor estuvo apagado durante días laborables. ¡Usar con precaución extrema!
+                                    </Alert>
+
+                                    <Text size="sm" c="dimmed">
+                                        Selecciona el rango de fechas en los que el servidor no procesó tareas programadas. El motor omitirá feriados y no sobreescribirá rutas creadas a mano.
+                                    </Text>
+
+                                    <DatePickerInput
+                                        type="range"
+                                        label="Rango de Fechas Caídas"
+                                        placeholder="Desde - Hasta"
+                                        value={recoveryDates}
+                                        onChange={setRecoveryDates}
+                                        size="md"
+                                        required
+                                        clearable
+                                        disabled={recoveryLoading}
+                                    />
+
+                                    <Group justify="flex-end" mt="xl">
+                                        <Button
+                                            leftSection={<IconHistory size={18} />}
+                                            color="red"
+                                            onClick={() => setModalConfirmOpen(true)}
+                                            loading={recoveryLoading}
+                                            size="md"
+                                            radius="md"
+                                            disabled={!recoveryDates[0] || !recoveryDates[1]}
+                                        >
+                                            Inyectar Días Perdidos
+                                        </Button>
+                                    </Group>
+                                </Stack>
+                            </Card>
+                        </Grid.Col>
+                    </Grid>
+                </Tabs.Panel>
+            </Tabs>
+
+            {/* Modal Confirmación Roja */}
+            <Modal
+                opened={modalConfirmOpen}
+                onClose={() => setModalConfirmOpen(false)}
+                title={<Title order={4} c="red.7">⚠️ Confirmar Viaje en el Tiempo</Title>}
+                centered
+                overlayProps={{ blur: 3, opacity: 0.55 }}
+            >
+                <Text size="sm" mb="lg">
+                    Estás a punto de forzar al servidor a inyectar las operativas del pasado desde el <b>{recoveryDates[0] && dayjs(recoveryDates[0]).format('DD/MM/YYYY')}</b> hasta el <b>{recoveryDates[1] && dayjs(recoveryDates[1]).format('DD/MM/YYYY')}</b>.
+                    <br /><br />
+                    El sistema generará todas las hojas correspondientes, simulará sus transiciones y las cerrará instantáneamente.
+                    <b>¿Estás seguro que el servidor estuvo apagado esos días?</b>
+                </Text>
+
+                <Group justify="flex-end">
+                    <Button variant="default" onClick={() => setModalConfirmOpen(false)}>Cancelar</Button>
+                    <Button color="red" onClick={executeRecoveryProtocol}>SÍ, VIAJAR EN EL TIEMPO</Button>
+                </Group>
+            </Modal>
         </Container>
     );
 };
