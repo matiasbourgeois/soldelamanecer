@@ -24,7 +24,7 @@ const crearVehiculo = async (req, res) => {
 const obtenerVehiculos = async (req, res) => {
   try {
     const soloPropio = req.query.soloPropio === 'true';
-    const filtro = soloPropio ? { tipoPropiedad: 'propio' } : {};
+    const filtro = soloPropio ? { tipoPropiedad: 'propio', activo: true } : {};
     const vehiculos = await Vehiculo.find(filtro);
     res.json(vehiculos);
   } catch (error) {
@@ -90,7 +90,10 @@ const obtenerVehiculosPaginado = async (req, res) => {
       ],
     };
 
-    if (soloPropio) filtro.tipoPropiedad = 'propio';
+    if (soloPropio) {
+      filtro.tipoPropiedad = 'propio';
+      filtro.activo = true;
+    }
 
     const total = await Vehiculo.countDocuments(filtro);
 
