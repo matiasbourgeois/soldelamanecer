@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const verifyToken = require('../../middlewares/authMiddleware');
-const roleMiddleware = require('../../middlewares/roleMiddleware');
+const verificarToken = require('../middlewares/authMiddleware');
+const verificarAdmin = require('../middlewares/verificarAdmin');
 const recoveryController = require('../controllers/sistema/recoveryController');
 
-// Ruta exclusiva para Administradores de Nivel Dios (Time Machine)
+// Ruta exclusiva para Administradores (Time Machine)
 router.post('/recuperar-dias-caidos',
-    verifyToken,
-    roleMiddleware('admin'), // Aseguramos que solo los administradores puedan acceder
+    verificarToken,
+    verificarAdmin,
     recoveryController.recuperarDiasCaidos
 );
 
