@@ -4,7 +4,9 @@ const Envio = require('../../models/Envio');
 const Remito = require('../../models/Remito');
 const Ruta = require("../../models/Ruta");
 const { enviarNotificacionEstado } = require("../../utils/emailService");
-const Chofer = require("../../models/Chofer"); // Agregar arriba si no está
+const Chofer = require("../../models/Chofer");
+const mongoose = require("mongoose");
+const timeUtil = require("../../utils/timeUtil");
 
 
 
@@ -305,10 +307,6 @@ const consultarHojas = async (req, res) => {
     }
 };
 
-
-const mongoose = require("mongoose");
-const timeUtil = require("../../utils/timeUtil");
-const fs = require('fs');
 const obtenerHojaPorId = async (req, res) => {
     try {
         const { id } = req.params;
