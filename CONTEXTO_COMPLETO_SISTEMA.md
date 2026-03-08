@@ -2598,4 +2598,134 @@ Esta fase representa la consolidación y blindaje absoluto del sistema frente a 
 
 ---
 
+---
+
+## 🖥️ INFRAESTRUCTURA DE PRODUCCIÓN (Actualizado: 08/03/2026)
+
+> Esta sección documenta la arquitectura real del VPS para que cualquier IA pueda desplegar sin ambigüedad.
+
+### VPS — Servidor
+| Dato | Valor |
+|------|-------|
+| **IP** | `69.62.86.69` |
+| **OS** | Ubuntu 22.04.5 LTS |
+| **Acceso SSH** | `ssh root@69.62.86.69` (contraseña compartida por el usuario) |
+
+> ⚠️ En el VPS conviven **DOS sistemas completamente independientes**. No tocar el del Cotizador Logístico. Toda intervención es solo en `soldelamanecer`.
+
+---
+
+### PM2 — Procesos Node.js Activos
+| pm_id | Nombre PM2 | Sistema | Puerto | Directorio |
+|-------|-----------|---------|--------|------------|
+| 1 | `sda-backend` | **Sol del Amanecer** | 5000 | `/var/www/soldelamanecer/backend` |
+| 2 | `cotizador-backend` | Cotizador Logístico | 5001 | `/var/www/cotizador_rutas/backend` |
+
+**Comandos útiles:**
+```bash
+pm2 status                        # Ver estado de todos
+pm2 logs sda-backend --lines 50   # Ver logs de Sol del Amanecer
+pm2 reload sda-backend            # Recargar sin downtime
+pm2 save                          # Persistir lista de procesos
+```
+
+---
+
+### MongoDB — Bases de Datos
+| Base de Datos | Sistema | URI de conexión |
+|---------------|---------|-----------------|
+| `soldelamanecer` | Sol del Amanecer | `mongodb://localhost:27017/soldelamanecer` |
+| `cotizadorRutas-db` | Cotizador Logístico | (no tocar) |
+
+---
+
+### Nginx — Dominios Configurados en el VPS
+| Archivo en sites-enabled | Dominio | Destino |
+|--------------------------|---------|---------|
+| `api.soldelamanecer.ar` | `https://api.soldelamanecer.ar` | `localhost:5000` (Sol del Amanecer backend) |
+| `soldelamanecer` | `https://soldelamanecer.ar` + `www` | `localhost:5000/api` vía proxy (legacy, frontend estático en `/var/www/soldelamanecer/client`) |
+| `cotizadorlogistico.site` | `https://cotizadorlogistico.site` | (no tocar) |
+
+> El dominio `api-choferes.cotizadorlogistico.site` fue **ELIMINADO** el 08/03/2026 (era legacy del proyecto anterior).
+
+---
+
+### Dominios Hostinger (DNS)
+| Tipo | Host | Apunta a | Propósito |
+|------|------|----------|-----------|
+| A Record | `@` | Hostinger (IP Hostinger) | Frontend (`soldelamanecer.ar`) |
+| A Record | `www` | Hostinger (IP Hostinger) | Frontend (`www.soldelamanecer.ar`) |
+| A Record | `api` | `69.62.86.69` | Subdominio API → VPS (`api.soldelamanecer.ar`) |
+
+---
+
+### .env del Backend en VPS (campos críticos)
+```env
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/soldelamanecer
+JWT_SECRET=tu_clave_secreta_super_segura
+FRONTEND_URL=https://soldelamanecer.ar
+API_URL=https://api.soldelamanecer.ar       # ← URL base para links de email
+APP_URL=https://soldelamanecer.ar
+EMAIL_USER=logistica@soldelamanecer.ar
+EMAIL_HOST=smtp.hostinger.com
+EMAIL_PORT=465
+EMAIL_SECURE=true
+GOOGLE_CLIENT_ID=<el client id de Google>
+```
+
+---
+
+### URLs de Producción (Frontend)
+| Variable | Valor |
+|----------|-------|
+| `API_BASE` (producción) | `https://api.soldelamanecer.ar/api` |
+| `SERVER_BASE` (producción) | `https://api.soldelamanecer.ar` |
+
+Esto está definido en:
+- `frontend-sda/src/core/api/apiSistema.js`
+- `frontend-sda/src/core/api/clienteAxios.js`
+- `app-sda-chofer/src/api/client.ts` (PROD_URL)
+
+---
+
+### Proceso de Deploy (Paso a Paso)
+
+**Backend (VPS):**
+```bash
+ssh root@69.62.86.69
+cd /var/www/soldelamanecer/backend
+git pull origin main
+npm install
+pm2 reload sda-backend
+pm2 save
+```
+
+**Frontend Web (Hostinger):**
+```bash
+# En la máquina local:
+cd frontend-sda
+npm run build
+# → Subir carpeta dist/ a Hostinger via FileZilla o cPanel
+# → Destino: /home/u163400999/domains/soldelamanecer.ar/public_html/
+```
+
+**Si hay conflictos en git:**
+```bash
+git stash        # Guarda cambios locales temporalmente
+git pull origin main
+git stash pop    # Restaura los cambios (si aplica)
+```
+
+---
+
+### Google OAuth — Configuración Requerida
+
+En **Google Cloud Console → Credenciales → OAuth 2.0 Client IDs**, deben estar como "Orígenes autorizados de JavaScript":
+- `https://soldelamanecer.ar`
+- `https://www.soldelamanecer.ar`
+- `http://localhost:5173`
+
+---
+
 **FIN DEL DOCUMENTO - CONTEXTO COMPLETO ACTUALIZADO**
