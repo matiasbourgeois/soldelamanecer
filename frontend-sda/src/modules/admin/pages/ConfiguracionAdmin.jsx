@@ -16,7 +16,8 @@ import {
     Grid,
     Tabs,
     Modal,
-    Box
+    Box,
+    TextInput
 } from "@mantine/core";
 import { DatePickerInput } from '@mantine/dates';
 import {
@@ -27,7 +28,11 @@ import {
     IconDatabaseImport,
     IconServerCog,
     IconHistory,
-    IconShieldCheck
+    IconShieldCheck,
+    IconMail,
+    IconPlus,
+    IconTrash,
+    IconDownload
 } from "@tabler/icons-react";
 import axios from "axios";
 import { apiSistema } from "@core/api/apiSistema";
@@ -43,6 +48,8 @@ const ConfiguracionAdmin = () => {
 
     // Tab 1: Parámetros Generales
     const [tarifaSDA, setTarifaSDA] = useState(0);
+    const [emailsDrogSud, setEmailsDrogSud] = useState([]);
+    const [nuevoEmail, setNuevoEmail] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [ultimaAcutalizacion, setUltimaActualizacion] = useState(null);
@@ -51,6 +58,7 @@ const ConfiguracionAdmin = () => {
     const [recoveryDates, setRecoveryDates] = useState([null, null]);
     const [recoveryLoading, setRecoveryLoading] = useState(false);
     const [modalConfirmOpen, setModalConfirmOpen] = useState(false);
+    const [backupLoading, setBackupLoading] = useState(false);
 
     useEffect(() => {
         if (auth && auth.rol !== "admin") {
@@ -70,6 +78,7 @@ const ConfiguracionAdmin = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setTarifaSDA(data.tarifaGlobalSDA || 0);
+            setEmailsDrogSud(data.emailsDrogSud || []);
             setUltimaActualizacion(data.ultimaActualizacion);
         } catch (error) {
             console.error("Error al obtener configuración:", error);
@@ -85,11 +94,15 @@ const ConfiguracionAdmin = () => {
             const token = localStorage.getItem("token");
             const { data } = await axios.put(
                 apiSistema("/configuracion"),
-                { tarifaGlobalSDA: tarifaSDA },
+                {
+                    tarifaGlobalSDA: tarifaSDA,
+                    emailsDrogSud: emailsDrogSud
+                },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
             setTarifaSDA(data.configuracion.tarifaGlobalSDA);
+            setEmailsDrogSud(data.configuracion.emailsDrogSud);
             setUltimaActualizacion(data.configuracion.ultimaActualizacion);
             mostrarAlerta(data.msg || "Configuración actualizada correctamente.", "success");
         } catch (error) {
@@ -129,6 +142,33 @@ const ConfiguracionAdmin = () => {
         } finally {
             setRecoveryLoading(false);
             setRecoveryDates([null, null]);
+        }
+    };
+
+    const handleDownloadBackup = async () => {
+        setBackupLoading(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get(apiSistema("/sistema/backup"), {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            const fecha = dayjs().format('YYYY-MM-DD');
+            link.setAttribute('download', `Backup_SDA_${fecha}.json.gz`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+
+            mostrarAlerta("Respaldo de base de datos generado y descargado correctamente.", "success");
+        } catch (error) {
+            console.error("Error al descargar backup:", error);
+            mostrarAlerta("Error al generar el respaldo de seguridad.", "danger");
+        } finally {
+            setBackupLoading(false);
         }
     };
 
@@ -172,7 +212,7 @@ const ConfiguracionAdmin = () => {
                 {/* Tapa 1: Parámetros Clásicos */}
                 <Tabs.Panel value="parametros" pt="xl">
                     <Grid>
-                        <Grid.Col span={{ base: 12, md: 8 }}>
+                        <Grid.Col span={{ base: 12, md: 6 }}>
                             <Card withBorder shadow="sm" radius="md" padding="xl">
                                 <Card.Section withBorder inheritPadding py="xs" bg="gray.0">
                                     <Group gap="xs">
@@ -214,6 +254,85 @@ const ConfiguracionAdmin = () => {
                                 </Stack>
                             </Card>
                         </Grid.Col>
+
+                        <Grid.Col span={{ base: 12, md: 6 }}>
+                            <Card withBorder shadow="sm" radius="md" padding="xl">
+                                <Card.Section withBorder inheritPadding py="xs" bg="gray.0">
+                                    <Group gap="xs">
+                                        <IconMail size={18} color="var(--mantine-color-cyan-7)" />
+                                        <Text fw={700} c="dark.7">Destinatarios Droguería del Sud</Text>
+                                    </Group>
+                                </Card.Section>
+
+                                <Stack gap="md" mt="md">
+                                    <Text size="sm" c="dimmed">
+                                        Direcciones de correo que recibirán el informe diario de rutas consolidado.
+                                    </Text>
+
+                                    <Group align="flex-end">
+                                        <Box style={{ flex: 1 }}>
+                                            <TextInput
+                                                label="Agregar Email"
+                                                placeholder="ejemplo@drogueria.com"
+                                                value={nuevoEmail}
+                                                onChange={(e) => setNuevoEmail(e.target.value)}
+                                                radius="md"
+                                            />
+                                        </Box>
+                                        <Button
+                                            variant="light"
+                                            color="cyan"
+                                            radius="md"
+                                            onClick={() => {
+                                                if (!nuevoEmail || !nuevoEmail.includes("@")) {
+                                                    mostrarAlerta("Formato de email inválido", "warning");
+                                                    return;
+                                                }
+                                                if (emailsDrogSud.includes(nuevoEmail)) {
+                                                    mostrarAlerta("El email ya está en la lista", "warning");
+                                                    return;
+                                                }
+                                                setEmailsDrogSud([...emailsDrogSud, nuevoEmail]);
+                                                setNuevoEmail("");
+                                            }}
+                                        >
+                                            <IconPlus size={18} />
+                                        </Button>
+                                    </Group>
+
+                                    <Stack gap="xs" mt="sm">
+                                        {emailsDrogSud.length === 0 ? (
+                                            <Text size="xs" ta="center" c="dimmed" py="md">No hay emails configurados.</Text>
+                                        ) : (
+                                            emailsDrogSud.map((email, idx) => (
+                                                <Paper key={idx} withBorder p="xs" radius="md" bg="gray.0">
+                                                    <Group justify="space-between">
+                                                        <Group gap="xs">
+                                                            <IconMail size={14} color="gray" />
+                                                            <Text size="sm" fw={600}>{email}</Text>
+                                                        </Group>
+                                                        <Button
+                                                            variant="subtle"
+                                                            color="red"
+                                                            size="compact-xs"
+                                                            onClick={() => setEmailsDrogSud(emailsDrogSud.filter(e => e !== email))}
+                                                        >
+                                                            <IconTrash size={14} />
+                                                        </Button>
+                                                    </Group>
+                                                </Paper>
+                                            ))
+                                        )}
+                                    </Stack>
+
+                                    <Group justify="flex-end" mt="xl">
+                                        <Button leftSection={<IconDeviceFloppy size={18} />} color="cyan" onClick={handleSave} loading={saving} size="md" radius="md">
+                                            Guardar Emails
+                                        </Button>
+                                    </Group>
+                                </Stack>
+                            </Card>
+                        </Grid.Col>
                     </Grid>
                 </Tabs.Panel>
 
@@ -232,7 +351,7 @@ const ConfiguracionAdmin = () => {
                 {/* Tapa 3: Time Machine */}
                 <Tabs.Panel value="sistema" pt="xl">
                     <Grid>
-                        <Grid.Col span={{ base: 12, md: 10 }}>
+                        <Grid.Col span={{ base: 12, md: 9 }}>
                             <Card withBorder shadow="sm" radius="md" padding="xl" style={{ borderColor: "var(--mantine-color-red-4)" }}>
                                 <Card.Section withBorder inheritPadding py="xs" bg="red.0">
                                     <Group gap="xs">
@@ -275,6 +394,38 @@ const ConfiguracionAdmin = () => {
                                             Inyectar Días Perdidos
                                         </Button>
                                     </Group>
+                                </Stack>
+                            </Card>
+                        </Grid.Col>
+
+                        <Grid.Col span={{ base: 12, md: 3 }}>
+                            <Card withBorder shadow="sm" radius="md" padding="xl" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                <Card.Section withBorder inheritPadding py="xs" bg="indigo.0">
+                                    <Group gap="xs">
+                                        <IconDownload size={18} color="var(--mantine-color-indigo-7)" />
+                                        <Text fw={700} c="indigo.9">Respaldo Total</Text>
+                                    </Group>
+                                </Card.Section>
+
+                                <Stack gap="md" mt="md" style={{ flex: 1, justifyContent: 'center' }}>
+                                    <Alert icon={<IconShieldCheck size={16} />} color="indigo" variant="light" size="xs">
+                                        Copia de seguridad completa (Datos + Estructura).
+                                    </Alert>
+                                    <Text size="xs" c="dimmed" ta="center">
+                                        Descarga un archivo comprimido <b>.json.gz</b> con toda la información del sistema.
+                                    </Text>
+                                    <Button
+                                        leftSection={<IconDownload size={20} />}
+                                        color="indigo"
+                                        variant="filled"
+                                        size="lg"
+                                        radius="md"
+                                        fullWidth
+                                        loading={backupLoading}
+                                        onClick={handleDownloadBackup}
+                                    >
+                                        GENERAR BACKUP
+                                    </Button>
                                 </Stack>
                             </Card>
                         </Grid.Col>

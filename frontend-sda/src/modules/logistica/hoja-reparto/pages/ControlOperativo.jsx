@@ -17,6 +17,7 @@ import {
 import clienteAxios from "../../../../core/api/clienteAxios";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
 import '@mantine/dates/styles.css';
+import dayjs from "dayjs";
 import 'dayjs/locale/es';
 
 const ControlOperativo = () => {
@@ -88,6 +89,22 @@ const ControlOperativo = () => {
         verdes: 0
     });
 
+    // Modal Informe Droguería del Sud
+    const [modalInformeOpen, setModalInformeOpen] = useState(false);
+    const [fechaInforme, setFechaInforme] = useState(() => {
+        const hoy = new Date();
+        const diaSemana = hoy.getDay(); // 0=Dom, 1=Lun
+        const d = new Date(hoy);
+        if (diaSemana === 1) {
+            d.setDate(hoy.getDate() - 2); // Si es Lunes, por defecto Sábado
+        } else {
+            d.setDate(hoy.getDate() - 1); // Sino, ayer
+        }
+        return d;
+    });
+    const [descargandoInforme, setDescargandoInforme] = useState(false);
+    const [enviandoEmail, setEnviandoEmail] = useState(false);
+
     const obtenerRecursos = async () => {
         try {
             const [resChoferes, resVehiculos, resRutas] = await Promise.all([
@@ -127,7 +144,7 @@ const ControlOperativo = () => {
         items.forEach(h => {
             // Normalizar IDs a strings para comparación confiable
             const planChoferId = (h.ruta?.choferAsignado?._id || h.ruta?.choferAsignado)?.toString();
-            const planVehiculoId = (h.ruta?.vehiculoAsignado?._id || h.ruta?.vehiculoAsignado)?.toString();
+            const planVehiculoId = (h.ruta?.vehiculoAsignado?._id || h.ruta?.vehigniculoAsignado)?.toString();
             const realChoferId = (h.chofer?._id || h.chofer)?.toString();
             const realVehiculoId = (h.vehiculo?._id || h.vehiculo)?.toString();
 
@@ -156,14 +173,10 @@ const ControlOperativo = () => {
             params.append("estado", "all");
 
             if (filtroDesde) {
-                const d = new Date(filtroDesde);
-                d.setHours(0, 0, 0, 0);
-                params.append("desde", d.toISOString());
+                params.append("desde", dayjs(filtroDesde).format("DDMMYYYY"));
             }
             if (filtroHasta) {
-                const h = new Date(filtroHasta);
-                h.setHours(23, 59, 59, 999);
-                params.append("hasta", h.toISOString());
+                params.append("hasta", dayjs(filtroHasta).format("DDMMYYYY"));
             }
 
             if (filtroNumero) params.append("busqueda", filtroNumero);
@@ -237,6 +250,47 @@ const ControlOperativo = () => {
         } catch (error) {
             console.error("Error al descargar PDF:", error);
             mostrarAlerta("Error al generar el PDF", "error");
+        }
+    };
+
+    const handleInformeDrogSud = async (enviarEmail = false) => {
+        if (!fechaInforme) return;
+
+        if (enviarEmail) setEnviandoEmail(true);
+        else setDescargandoInforme(true);
+
+        try {
+            const f = dayjs(fechaInforme).format('YYYY-MM-DD');
+            const token = localStorage.getItem('token');
+
+            if (enviarEmail) {
+                const res = await clienteAxios.get(`/hojas-reparto/informe-sud?fecha=${f}&enviarEmail=true`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                mostrarAlerta(res.data.msg, "success");
+                setModalInformeOpen(false);
+            } else {
+                const res = await clienteAxios.get(`/hojas-reparto/informe-sud?fecha=${f}`, {
+                    responseType: 'blob',
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `Informe_DrogSud_${dayjs(fechaInforme).format('DD-MM-YYYY')}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                mostrarAlerta("Informe generado correctamente.", "success");
+            }
+
+            setModalInformeOpen(false);
+        } catch (error) {
+            console.error("Error informe DrogSud:", error);
+            mostrarAlerta(error.response?.data?.error || "Error al procesar el informe.", "error");
+        } finally {
+            setDescargandoInforme(false);
+            setEnviandoEmail(false);
         }
     };
 
@@ -511,6 +565,16 @@ const ControlOperativo = () => {
                         <Text fw={500} opacity={0.9}>Consola de Auditoría y Generación Automática "God Level"</Text>
                     </Stack>
                     <Group>
+                        <Button
+                            variant="light"
+                            color="cyan.1"
+                            leftSection={<FileText size={18} />}
+                            radius="md"
+                            onClick={() => setModalInformeOpen(true)}
+                            styles={{ root: { backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' } }}
+                        >
+                            Informe Droguería del Sud
+                        </Button>
                         <Button
                             variant="filled"
                             color="orange.6"
@@ -932,7 +996,7 @@ const ControlOperativo = () => {
             <Modal
                 opened={modalEspecialOpen}
                 onClose={() => setModalEspecialOpen(false)}
-                title={<Title order={4}>Nueva Hoja Especial</Title>}
+                title={<Text fw={700} size="lg">Generar Hoja Especial</Text>}
                 size="md"
                 radius="md"
             >
@@ -1033,6 +1097,59 @@ const ControlOperativo = () => {
                             Generar Hoja
                         </Button>
                     </Group>
+                </Stack>
+            </Modal>
+
+            {/* Modal Informe Droguería del Sud */}
+            <Modal
+                opened={modalInformeOpen}
+                onClose={() => setModalInformeOpen(false)}
+                title={<Text fw={700} size="lg">Informe Diario Droguería del Sud</Text>}
+                size="sm"
+                radius="md"
+                centered
+            >
+                <Stack>
+                    <Text size="sm" c="dimmed">
+                        Selecciona la fecha para generar el reporte consolidado de rutas.
+                    </Text>
+                    <DatePickerInput
+                        label="Fecha del Informe"
+                        placeholder="Elija fecha"
+                        value={fechaInforme}
+                        onChange={setFechaInforme}
+                        required
+                        locale="es"
+                        valueFormat="DD/MM/YYYY"
+                        maxDate={new Date()}
+                    />
+
+                    <Divider my="xs" label="Opciones de Entrega" labelPosition="center" />
+
+                    <SimpleGrid cols={2}>
+                        <Button
+                            leftSection={<FileDown size={18} />}
+                            variant="light"
+                            color="cyan"
+                            onClick={() => handleInformeDrogSud(false)}
+                            loading={descargandoInforme}
+                        >
+                            Descargar
+                        </Button>
+                        <Button
+                            leftSection={<Smartphone size={18} />}
+                            variant="filled"
+                            color="cyan"
+                            onClick={() => handleInformeDrogSud(true)}
+                            loading={enviandoEmail}
+                        >
+                            Enviar Email
+                        </Button>
+                    </SimpleGrid>
+
+                    <Text size="10px" c="dimmed" ta="center">
+                        Los destinatarios se configuran en Sistema {" > "} Configuración
+                    </Text>
                 </Stack>
             </Modal>
         </Container>

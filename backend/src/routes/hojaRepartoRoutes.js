@@ -18,8 +18,12 @@ const {
   reporteDiscrepancias,  // 🆕 FASE 7
   crearHojaEspecial,
   reporteEspeciales,
-  eliminarHoja
+  eliminarHoja,
+  generarInformeDrogSud
 } = require("../controllers/logistica/hojaRepartoController");
+
+// 🆕 Informe Droguería del Sud (PDF + Email)
+router.get("/informe-sud", verificarToken, verificarGestion, generarInformeDrogSud);
 
 // 🆕 FASE 5: Buscar hoja existente por ruta y fecha (para asignación de envíos)
 router.get("/buscar-por-ruta-fecha", verificarToken, buscarHojaPorRutaFecha);

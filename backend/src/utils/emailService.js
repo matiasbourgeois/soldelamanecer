@@ -84,10 +84,6 @@ const generarHtmlCorreo = ({ titulo, nombre, mensaje, buttonText, buttonUrl }) =
           ` : ''}
 
           <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-
-          <p style="font-size: 14px; color: #64748b; text-align: center;">
-            Gracias por confiar en el sistema de logística líder en la región.
-          </p>
         </div>
 
         <!-- Footer -->
@@ -156,4 +152,37 @@ const enviarEmailVerificacion = async (email, nombre, enlace) => {
   }
 };
 
-module.exports = { enviarNotificacionEstado, enviarEmailVerificacion };
+const enviarInformeDrogSud = async (pdfBuffer, fecha, emails) => {
+  try {
+    if (!emails || emails.length === 0) {
+      console.warn("No hay emails configurados para enviar el informe de Droguería del Sud.");
+      return;
+    }
+
+    await transporter.sendMail({
+      from: `"Sol del Amanecer SRL" <${process.env.EMAIL_USER}>`,
+      to: emails.join(", "),
+      subject: `Informe de Reparto Diario - Droguería del Sud - ${fecha}`,
+      text: `Se adjunta el informe de reparto diario correspondiente al día ${fecha} para Droguería del Sud.`,
+      html: generarHtmlCorreo({
+        titulo: "Informe Diario de Reparto",
+        nombre: "Administración Droguería del Sud",
+        mensaje: `Le informamos que ya se encuentra disponible el informe de reparto diario consolidado correspondiente al día <strong>${fecha}</strong>. Puede encontrar el detalle en el archivo PDF adjunto.`,
+      }),
+      attachments: [
+        {
+          filename: `Informe_DrogSud_${fecha.replace(/\//g, '-')}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }
+      ]
+    });
+
+    console.log(`📧 Informe de Droguería del Sud enviado a: ${emails.join(", ")}`);
+  } catch (error) {
+    console.error("❌ Error al enviar informe de Droguería del Sud:", error);
+    throw error;
+  }
+};
+
+module.exports = { enviarNotificacionEstado, enviarEmailVerificacion, enviarInformeDrogSud };

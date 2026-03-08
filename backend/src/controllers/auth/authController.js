@@ -280,14 +280,22 @@ const crearClienteRapido = async (req, res) => {
 
     const { nombre, email, telefono, dni } = req.body;
 
-    if (!nombre || !email) {
-      return res.status(400).json({ error: "Nombre y Email son obligatorios para el crear el cliente" });
+    if (!nombre || !email || !dni) {
+      return res.status(400).json({ error: "Nombre, Email y DNI son obligatorios para crear el cliente" });
     }
 
-    // Verificar si el email ya existe (hasta como admin chocado)
-    const existe = await Usuario.findOne({ email });
-    if (existe) {
+    // Verificar si el email ya existe
+    const existeEmail = await Usuario.findOne({ email });
+    if (existeEmail) {
       return res.status(400).json({ error: "El email ya se encuentra registrado en la base de datos." });
+    }
+
+    // ✨ NUEVO: Verificar si el DNI ya existe (si se proporcionó)
+    if (dni) {
+      const existeDni = await Usuario.findOne({ dni });
+      if (existeDni) {
+        return res.status(400).json({ error: "Ya existe un cliente registrado con este DNI/CUIL." });
+      }
     }
 
     // Hash aleatorio infumable ya que el cliente no lo sabe

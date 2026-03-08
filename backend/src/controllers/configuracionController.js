@@ -19,7 +19,7 @@ const obtenerConfiguracion = async (req, res) => {
 // Actualizar la configuración general (Solo ADMIN)
 const actualizarConfiguracion = async (req, res) => {
     try {
-        const { tarifaGlobalSDA } = req.body;
+        const { tarifaGlobalSDA, emailsDrogSud } = req.body;
 
         let config = await Configuracion.findOne();
         if (!config) {
@@ -30,12 +30,16 @@ const actualizarConfiguracion = async (req, res) => {
             config.tarifaGlobalSDA = tarifaGlobalSDA;
         }
 
+        if (emailsDrogSud !== undefined) {
+            config.emailsDrogSud = emailsDrogSud;
+        }
+
         config.ultimaActualizacion = Date.now();
         config.actualizadoPor = req.usuario.id;
 
         await config.save();
 
-        logger.info(`✅ Configuración Global actualizada por ${req.usuario.id}: Tarifa SDA = $${config.tarifaGlobalSDA}`);
+        logger.info(`✅ Configuración Global actualizada por ${req.usuario.id}: Tarifa SDA = $${config.tarifaGlobalSDA}, Emails DrogSud = ${config.emailsDrogSud.length}`);
         res.json({ msg: "Configuraciones globales actualizadas exitosamente.", configuracion: config });
     } catch (error) {
         logger.error("Error al actualizar configuración global:", error);

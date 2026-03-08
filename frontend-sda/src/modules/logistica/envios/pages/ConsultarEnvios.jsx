@@ -12,6 +12,7 @@ import { apiSistema } from "../../../../core/api/apiSistema";
 import { mostrarAlerta } from "../../../../core/utils/alertaGlobal.jsx";
 import { confirmarAccion } from "../../../../core/utils/confirmarAccion.jsx";
 import { useDebouncedValue } from "@mantine/hooks";
+import dayjs from "dayjs";
 import '@mantine/dates/styles.css'; // Ensure styles are imported if needed globally or here
 
 const ConsultarEnvios = () => {
@@ -41,8 +42,7 @@ const ConsultarEnvios = () => {
         const formatDateForApi = (date) => {
             if (!date) return "";
             try {
-                const d = new Date(date);
-                return isNaN(d.getTime()) ? "" : d.toISOString();
+                return dayjs(date).format("DDMMYYYY");
             } catch (e) {
                 return "";
             }

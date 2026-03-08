@@ -581,6 +581,8 @@ const anularLiquidacion = async (req, res) => {
         const liquidacion = await LiquidacionContratado.findById(id).populate({ path: "chofer", populate: { path: "usuario" } });
         if (!liquidacion) return res.status(404).json({ error: "Liquidación no encontrada" });
 
+        const eraBorrador = liquidacion.estado === 'borrador';
+
         if (liquidacion.estado === 'anulado') {
             return res.status(400).json({ error: "Esta liquidación ya está anulada" });
         }
@@ -589,11 +591,11 @@ const anularLiquidacion = async (req, res) => {
         liquidacion.motivoRechazo = `ANULADA POR ADMINISTRACIÓN: ${req.usuario?.nombre || 'Admin'}`;
         await liquidacion.save();
 
-        logger.info(`⚠️ Liquidación ${liquidacion._id} anulada forzosamente por ${req.usuario?.nombre || 'Admin'}`);
+        logger.info(`⚠️ Liquidación ${liquidacion._id} anulada forzosamente por ${req.usuario?.nombre || 'Admin'}. (Era borrador: ${eraBorrador})`);
 
-        // Opcional: enviar email de anulación al chofer
+        // Opcional: enviar email de anulación al chofer SOLO si NO era un borrador
         try {
-            if (liquidacion.chofer?.usuario?.email) {
+            if (!eraBorrador && liquidacion.chofer?.usuario?.email) {
                 await transporter.sendMail({
                     from: `"Sol del Amanecer SRL" <${process.env.EMAIL_USER}>`,
                     to: liquidacion.chofer.usuario.email,
@@ -608,6 +610,7 @@ const anularLiquidacion = async (req, res) => {
                     </div>
                     `
                 });
+                logger.info(`📧 Email de anulación enviado a ${liquidacion.chofer.usuario.email}`);
             }
         } catch (emailErr) {
             logger.error(`No se pudo enviar email de anulación: ${emailErr.message}`);

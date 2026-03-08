@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Informe Droguería del Sud - {{fecha}}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+            font-size: 9px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #0891b2;
+            padding-bottom: 15px;
+        }
+
+        .logo-section h1 {
+            color: #0891b2;
+            margin: 0;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .logo-section p {
+            margin: 0;
+            font-size: 10px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .report-info {
+            text-align: right;
+        }
+
+        .report-info h2 {
+            margin: 0;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        .report-info p {
+            margin: 0;
+            color: #64748b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background-color: #0891b2;
+            color: white;
+            text-align: left;
+            padding: 8px 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 1px solid #0e7490;
+        }
+
+        td {
+            padding: 6px 4px;
+            border: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-pendiente {
+            background-color: #e2e8f0;
+            color: #475569;
+        }
+
+        .badge-en-reparto {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-cerrada {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-cancelada {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 8px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+        }
+
+        .empty-field {
+            color: #cbd5e1;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo-section">
+            <h1>Sol del Amanecer</h1>
+            <p>Logística Inteligente</p>
+        </div>
+        <div class="report-info">
+            <h2>Informe de Reparto Diario</h2>
+            <p>Droguería del Sud | <strong>{{fecha}}</strong></p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 7%">Fecha</th>
+                <th style="width: 5%; white-space: nowrap;">Ruta</th>
+                <th style="width: 12%">Descripción</th>
+                <th style="width: 10%">Chofer</th>
+                <th style="width: 7%">Vehículo</th>
+                <th style="width: 6%">Sal. Plan.</th>
+                <th style="width: 6%">Sal. Real</th>
+                <th style="width: 10%">Hr. Enlaces</th>
+                <th style="width: 6%">1ª Farm.</th>
+                <th style="width: 6%">Últ. Farm.</th>
+                <th style="width: 4%">Cub. S.</th>
+                <th style="width: 4%">Cub. R.</th>
+                <th>Observaciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each hojas}}
+            <tr>
+                <td style="white-space: nowrap;">{{fecha}}</td>
+                <td style="white-space: nowrap; min-width: 60px;"><strong>{{rutaCodigo}}</strong></td>
+                <td>{{rutaDescripcion}}</td>
+                <td>{{chofer}}</td>
+                <td>{{vehiculo}}</td>
+                <td style="text-align: center;">{{horaSalidaPlan}}</td>
+                <td style="text-align: center;">{{horaSalidaReal}}</td>
+                <td>{{horaEnlaces}}</td>
+                <td style="text-align: center;">{{horaInicioDistribucion}}</td>
+                <td style="text-align: center;">{{horaFinDistribucion}}</td>
+                <td style="text-align: center;">{{cubetasSalida}}</td>
+                <td style="text-align: center;">{{cubetasRetorno}}</td>
+                <td style="font-style: italic; font-size: 8px;">{{observaciones}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Este documento es un reporte automático generado por el sistema Sol del Amanecer el {{fechaGeneracion}}.
+        &copy; 2026 Sol del Amanecer SRL.
+    </div>
+</body>
+
+</html>

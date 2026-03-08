@@ -12,8 +12,10 @@ exports.getDashboardStats = async (req, res) => {
         // -------------------------------------------------------------------------
         // 1. KPI Cards (Operativa General) usando Timezone Estricto de Argentina
         // -------------------------------------------------------------------------
-        const hoy = new Date();
+        const hoy = timeUtil.getHoyArg();
         const startOfMonth = timeUtil.getInicioMesArg(hoy);
+
+        // Volumen Mes Anterior (para tendencia) usando moment-timezone seguro
         const startOfLastMonth = moment(hoy).tz('America/Argentina/Buenos_Aires').subtract(1, 'months').startOf('month').toDate();
 
         const [
@@ -26,9 +28,9 @@ exports.getDashboardStats = async (req, res) => {
         ] = await Promise.all([
             // Volumen Mes Actual
             Envio.countDocuments({ fechaCreacion: { $gte: startOfMonth } }),
-            // Volumen Mes Anterior (para tendencia)
+            // Volumen Mes Anterior
             Envio.countDocuments({ fechaCreacion: { $gte: startOfLastMonth, $lt: startOfMonth } }),
-            // Estados Globales (Histórico o Mes?) -> Vamos por Histórico total para "Efectividad Global"
+            // Estados Globales (Histórico total para "Efectividad Global")
             Envio.countDocuments({ estado: "entregado" }),
             Envio.countDocuments({ estado: "pendiente" }),
             Envio.countDocuments({ estado: "en reparto" }),

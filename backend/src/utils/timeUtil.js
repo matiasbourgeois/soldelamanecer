@@ -3,9 +3,16 @@ const moment = require('moment-timezone');
 const AR_TZ = 'America/Argentina/Buenos_Aires';
 
 /**
+ * Retorna el inicio del día actual en Argentina como un objeto Date nativo.
+ * Blindado contra la zona horaria del servidor.
+ */
+exports.getHoyArg = () => {
+    return moment().tz(AR_TZ).startOf('day').toDate();
+};
+
+/**
  * Retorna un objeto Date nativo que representa el UTC exacto correspondiente a las 00:00:00 
  * de la fecha especificada en la zona horaria de Argentina.
- * Ejemplo: Si fecha es "2026-03-07", retorna Date("2026-03-07T03:00:00Z")
  */
 exports.getInicioDiaArg = (fecha = new Date()) => {
     return moment(fecha).tz(AR_TZ).startOf('day').toDate();
@@ -17,6 +24,33 @@ exports.getInicioDiaArg = (fecha = new Date()) => {
  */
 exports.getFinDiaArg = (fecha = new Date()) => {
     return moment(fecha).tz(AR_TZ).endOf('day').toDate();
+};
+
+/**
+ * Parsea un string en formato DDMMYYYY (ej: "07032026") a un objeto Date
+ * fijado al inicio del día en Argentina (00:00:00 ART).
+ */
+exports.parseDDMMYYYYToDateArg = (str) => {
+    if (!str || str.length !== 8) return null;
+    return moment.tz(str, "DDMMYYYY", AR_TZ).startOf('day').toDate();
+};
+
+/**
+ * Genera un objeto de rango para MongoDB { $gte, $lte } a partir de strings DDMMYYYY.
+ * Maneja automáticamente si solo se provee uno de los dos.
+ */
+exports.getRangeFromDDMMYYYY = (desdeStr, hastaStr) => {
+    const range = {};
+    if (desdeStr) {
+        range.$gte = moment.tz(desdeStr, "DDMMYYYY", AR_TZ).startOf('day').toDate();
+    }
+    if (hastaStr) {
+        range.$lte = moment.tz(hastaStr, "DDMMYYYY", AR_TZ).endOf('day').toDate();
+    } else if (desdeStr && !hastaStr) {
+        // Si solo hay "desde", el rango es el día completo de "desde"
+        range.$lte = moment.tz(desdeStr, "DDMMYYYY", AR_TZ).endOf('day').toDate();
+    }
+    return Object.keys(range).length > 0 ? range : null;
 };
 
 /**
@@ -38,7 +72,6 @@ exports.getStrYYYYMMDDArg = (fecha = new Date()) => {
  * Extrae de forma segura el Número (1 a 12) del Mes de una fecha tal como cae en Argentina.
  */
 exports.getMesActualArg = (fecha = new Date()) => {
-    // moment().month() devuelve 0-11, le sumamos 1 para estandarizar 1-12
     return moment(fecha).tz(AR_TZ).month() + 1;
 };
 
@@ -51,7 +84,7 @@ exports.getAnioActualArg = (fecha = new Date()) => {
 
 /**
  * Ajusta una fecha para que se fije a las 12:00:00 (Mediodía UTC) del día percibido por un string, 
- * útil para evitar saltos de día por -3/+3 de offset al guardar fechas ingresadas manualmente (Ej: Service de Vehículos)
+ * útil para evitar saltos de día por -3/+3 de offset al guardar fechas ingresadas manualmente.
  */
 exports.getMediodiaSeguroUTC = (fechaStr) => {
     const d = new Date(fechaStr);
@@ -60,4 +93,14 @@ exports.getMediodiaSeguroUTC = (fechaStr) => {
         return d;
     }
     return new Date();
+};
+
+/**
+ * Retorna { start, end } correspondientes al día completo visto desde Argentina.
+ */
+exports.getDayRange = (fecha) => {
+    return {
+        start: exports.getInicioDiaArg(fecha),
+        end: exports.getFinDiaArg(fecha)
+    };
 };

@@ -3,16 +3,20 @@ const logger = require("../../utils/logger");
 const Envio = require('../../models/Envio');
 const Remito = require('../../models/Remito');
 const Ruta = require("../../models/Ruta");
-const { enviarNotificacionEstado } = require("../../utils/emailService");
+const { enviarNotificacionEstado, enviarInformeDrogSud } = require("../../utils/emailService");
 const Chofer = require("../../models/Chofer");
 const mongoose = require("mongoose");
 const timeUtil = require("../../utils/timeUtil");
+const Configuracion = require("../../models/Configuracion");
+const { generatePDF } = require("../../utils/pdfService");
+const fs = require("fs");
+const path = require("path");
+const moment = require('moment-timezone');
 
 
 
 // Generador de número de hoja al crear o confirmar (Formato: RUTA-SEC-YYYYMMDD)
 const generarNumeroHoja = async (codigoRuta, fecha = null) => {
-    const moment = require('moment-timezone');
     const fechaBase = fecha ? moment(fecha).tz('America/Argentina/Buenos_Aires') : moment().tz('America/Argentina/Buenos_Aires');
 
     const anio = fechaBase.format('YYYY');
@@ -52,7 +56,6 @@ const crearHojaPreliminar = async (req, res) => {
         }
 
         // --- VALIDACIÓN DE UNICIDAD (Fase 1 God Level + Timezone M2) ---
-        const moment = require('moment-timezone');
         const hoyArg = moment().tz('America/Argentina/Buenos_Aires');
 
         const inicioDia = hoyArg.startOf('day').toDate();
@@ -356,10 +359,6 @@ const obtenerHojaPorId = async (req, res) => {
 };
 
 
-const { generatePDF } = require("../../utils/pdfService");
-const fs = require("fs");
-const path = require("path");
-
 const exportarHojaPDF = async (req, res) => {
     try {
         const { hojaId } = req.params;
@@ -650,12 +649,11 @@ const consultarHojasPaginado = async (req, res) => {
             ];
         }
 
-        // Filtro de Fechas
+        // Filtro de Fechas (Estándar DDMMYYYY)
         if (desde || hasta) {
-            filtro.fecha = {};
-            if (desde) filtro.fecha.$gte = new Date(desde);
-            if (hasta) {
-                filtro.fecha.$lte = timeUtil.getFinDiaArg(new Date(hasta));
+            const dateRange = timeUtil.getRangeFromDDMMYYYY(desde, hasta);
+            if (dateRange) {
+                filtro.fecha = dateRange;
             }
         }
 
@@ -1247,6 +1245,86 @@ const eliminarHoja = async (req, res) => {
     }
 };
 
+/**
+ * Genera el Informe Diario PDF para Droguería del Sud.
+ * Puede descargar el PDF o enviarlo por email.
+ */
+const generarInformeDrogSud = async (req, res) => {
+    try {
+        const { fecha, enviarEmail } = req.query;
+
+        if (!fecha) {
+            return res.status(400).json({ error: "La fecha es requerida (YYYY-MM-DD)" });
+        }
+
+        // Definir rango del día usando timeUtil
+        const { start, end } = timeUtil.getDayRange(fecha);
+
+        // Buscar hojas de reparto del día
+        const hojas = await HojaReparto.find({
+            fecha: { $gte: start, $lte: end }
+        }).populate({
+            path: 'chofer',
+            populate: { path: 'usuario', select: 'nombre dni' }
+        }).populate("ruta vehiculo");
+
+        if (hojas.length === 0) {
+            return res.status(404).json({ error: "No hay hojas de reparto para la fecha seleccionada." });
+        }
+
+        const fechaFormateada = moment(fecha).format('DD/MM/YYYY');
+
+        // Preparar datos para el PDF
+        const hojasData = hojas.map(h => ({
+            fecha: moment(h.fecha).format('DD/MM/YYYY'),
+            rutaCodigo: h.ruta?.codigo || "-",
+            rutaDescripcion: h.ruta?.descripcion || "-",
+            chofer: h.chofer?.usuario?.nombre || h.chofer?.usuario?.dni || "-",
+            vehiculo: h.vehiculo?.patente || h.vehiculo?.marca || "-",
+            horaSalidaPlan: h.ruta?.horaSalida || "-",
+            horaSalidaReal: h.datosDrogueria?.horaSalidaReal || "-",
+            horaEnlaces: (h.datosDrogueria?.horaEnlaces || []).length > 0 ? h.datosDrogueria.horaEnlaces.join(", ") : "-",
+            horaInicioDistribucion: h.datosDrogueria?.horaInicioDistribucion || "-",
+            horaFinDistribucion: h.datosDrogueria?.horaFinDistribucion || "-",
+            cubetasSalida: h.datosDrogueria?.cubetasSalida !== undefined ? h.datosDrogueria.cubetasSalida : 0,
+            cubetasRetorno: h.datosDrogueria?.cubetasRetorno !== undefined ? h.datosDrogueria.cubetasRetorno : 0,
+            observaciones: h.observaciones || "-"
+        }));
+
+        const data = {
+            fecha: fechaFormateada,
+            fechaGeneracion: moment().format('DD/MM/YYYY HH:mm'),
+            hojas: hojasData,
+            landscape: true
+        };
+
+        const fileName = `Informe_DrogSud_${fechaFormateada.replace(/\//g, '-')}.pdf`;
+        const outputPath = path.join(process.cwd(), "pdfs", "informes", fileName);
+
+        // Generar el PDF usando el service existente
+        await generatePDF("reporte_drogsud.html", data, outputPath);
+
+        if (enviarEmail === 'true') {
+            const config = await Configuracion.findOne();
+            if (!config || !config.emailsDrogSud || config.emailsDrogSud.length === 0) {
+                return res.status(400).json({ error: "No hay correos destinatarios configurados en el sistema." });
+            }
+
+            const pdfBuffer = fs.readFileSync(outputPath);
+            await enviarInformeDrogSud(pdfBuffer, fechaFormateada, config.emailsDrogSud);
+
+            return res.json({ msg: `Informe enviado exitosamente a: ${config.emailsDrogSud.join(", ")}` });
+        }
+
+        // Descarga directa
+        return res.download(outputPath, fileName);
+
+    } catch (error) {
+        console.error("❌ Error al generar informe Droguería del Sud:", error);
+        res.status(500).json({ error: "Error interno al generar o enviar el informe." });
+    }
+};
+
 module.exports = {
     crearHojaPreliminar,
     confirmarHoja,
@@ -1255,15 +1333,14 @@ module.exports = {
     obtenerHojaPorId,
     exportarHojaPDF,
     obtenerHojaRepartoDeHoy,
-
     obtenerHojasPorChofer,
-    cerrarHojasVencidas,
     cerrarHojaManualmente,
     generarHojasAutomaticas,
     actualizarHoja,
-    buscarHojaPorRutaFecha,  // 🆕 FASE 5
-    reporteDiscrepancias,  // 🆕 FASE 7
+    buscarHojaPorRutaFecha,
+    reporteDiscrepancias,
     crearHojaEspecial,
     reporteEspeciales,
-    eliminarHoja
+    eliminarHoja,
+    generarInformeDrogSud
 };

@@ -760,8 +760,8 @@ const LiquidacionesAdmin = () => {
                                                             </ActionIcon>
                                                         </Tooltip>
                                                     )}
-                                                    {liq.estado !== 'borrador' && liq.estado !== 'anulado' && (
-                                                        <Tooltip label="Anular Oficialmente">
+                                                    {liq.estado !== 'anulado' && (
+                                                        <Tooltip label="Anular Liquidación">
                                                             <ActionIcon
                                                                 variant="light"
                                                                 color="red"

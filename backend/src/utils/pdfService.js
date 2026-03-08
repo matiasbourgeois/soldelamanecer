@@ -39,9 +39,10 @@ const generatePDF = async (templateName, data, outputPath) => {
 
         await page.pdf({
             path: outputPath,
-            format: 'A4',
+            format: data.format || 'A4',
+            landscape: data.landscape || false,
             printBackground: true,
-            margin: data.pdfMargin || { top: '0', right: '0', bottom: '0', left: '0' }
+            margin: data.pdfMargin || { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
         });
 
         logger.info(`PDF generado exitosamente: ${outputPath}`);

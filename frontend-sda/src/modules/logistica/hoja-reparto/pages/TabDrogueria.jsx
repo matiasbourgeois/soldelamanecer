@@ -29,6 +29,7 @@ const TabDrogueria = ({ hoja, onSaved }) => {
     });
 
     const [form, setForm] = useState(buildInitialState);
+    const [errores, setErrores] = useState({});
     const [guardando, setGuardando] = useState(false);
 
     useEffect(() => {
@@ -88,6 +89,28 @@ const TabDrogueria = ({ hoja, onSaved }) => {
         }
     }
 
+
+    const formatHora = (valor, campo) => {
+        const limpio = valor.replace(/[^\d]/g, "").slice(0, 4);
+        let error = null;
+
+        if (limpio.length >= 2) {
+            const h = parseInt(limpio.slice(0, 2), 10);
+            if (h > 23) error = "Hora inválida (00-23)";
+        }
+        if (limpio.length === 4) {
+            const m = parseInt(limpio.slice(2, 4), 10);
+            if (m > 59) error = "Minutos inválidos (00-59)";
+        }
+
+        setErrores(prev => ({ ...prev, [campo]: error }));
+
+        if (limpio.length === 4 && !error && !valor.includes(":")) {
+            return `${limpio.slice(0, 2)}:${limpio.slice(2)}`;
+        }
+        return valor;
+    };
+
     // ── Enlace handlers ──────────────────────────────────────────────
     const agregarEnlace = () =>
         setForm(prev => ({ ...prev, horaEnlaces: [...prev.horaEnlaces, ''] }));
@@ -98,9 +121,11 @@ const TabDrogueria = ({ hoja, onSaved }) => {
     const actualizarEnlace = (idx, valor) =>
         setForm(prev => {
             const nuevos = [...prev.horaEnlaces];
-            nuevos[idx] = valor;
+            nuevos[idx] = formatHora(valor, `enlace_${idx}`);
             return { ...prev, horaEnlaces: nuevos };
         });
+
+    const hayErrores = Object.values(errores).some(e => e !== null);
 
     // ── Guardar ──────────────────────────────────────────────────────
     const handleGuardar = async () => {
@@ -153,7 +178,9 @@ const TabDrogueria = ({ hoja, onSaved }) => {
                         label="Salida real"
                         placeholder="05:45"
                         value={form.horaSalidaReal}
-                        onChange={(e) => setForm(prev => ({ ...prev, horaSalidaReal: e.target.value }))}
+                        onChange={(e) => setForm(prev => ({ ...prev, horaSalidaReal: formatHora(e.target.value, 'horaSalidaReal') }))}
+                        error={errores.horaSalidaReal}
+                        maxLength={5}
                         description="Hora real de salida"
                     />
                     <TextInput
@@ -161,7 +188,9 @@ const TabDrogueria = ({ hoja, onSaved }) => {
                         label="1ª Farmacia"
                         placeholder="09:40"
                         value={form.horaInicioDistribucion}
-                        onChange={(e) => setForm(prev => ({ ...prev, horaInicioDistribucion: e.target.value }))}
+                        onChange={(e) => setForm(prev => ({ ...prev, horaInicioDistribucion: formatHora(e.target.value, 'horaInicioDistribucion') }))}
+                        error={errores.horaInicioDistribucion}
+                        maxLength={5}
                         description="Primera entrega"
                     />
                     <TextInput
@@ -169,7 +198,9 @@ const TabDrogueria = ({ hoja, onSaved }) => {
                         label="Última Farmacia"
                         placeholder="12:00"
                         value={form.horaFinDistribucion}
-                        onChange={(e) => setForm(prev => ({ ...prev, horaFinDistribucion: e.target.value }))}
+                        onChange={(e) => setForm(prev => ({ ...prev, horaFinDistribucion: formatHora(e.target.value, 'horaFinDistribucion') }))}
+                        error={errores.horaFinDistribucion}
+                        maxLength={5}
                         description="Última entrega"
                     />
                 </SimpleGrid>
@@ -191,6 +222,8 @@ const TabDrogueria = ({ hoja, onSaved }) => {
                                     placeholder="08:30"
                                     value={hora}
                                     onChange={(e) => actualizarEnlace(idx, e.target.value)}
+                                    error={errores[`enlace_${idx}`]}
+                                    maxLength={5}
                                     style={{ flex: 1 }}
                                 />
                                 {form.horaEnlaces.length > 1 && (
@@ -329,6 +362,7 @@ const TabDrogueria = ({ hoja, onSaved }) => {
                     color="cyan"
                     size="sm"
                     loading={guardando}
+                    disabled={hayErrores}
                     onClick={handleGuardar}
                     mb={1}
                 >

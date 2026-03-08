@@ -6,6 +6,11 @@ const ConfiguracionSchema = new mongoose.Schema({
         default: 0,
         description: "Monto universal por día para contratados que usan vehículo propio de SDA"
     },
+    emailsDrogSud: {
+        type: [String],
+        default: [],
+        description: "Lista de correos para envío automático del informe diario"
+    },
     // Añadiremos más variables globales aquí en el futuro según las directivas del negocio
     ultimaActualizacion: { type: Date, default: Date.now },
     actualizadoPor: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario' }

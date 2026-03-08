@@ -136,10 +136,13 @@ const obtenerEnvios = async (req, res) => {
 
     if (estado) filtro.estado = estado;
 
+    const timeUtil = require("../../utils/timeUtil");
+
     if (fechaDesde || fechaHasta) {
-      filtro.fechaCreacion = {};
-      if (fechaDesde) filtro.fechaCreacion.$gte = fechaDesde;
-      if (fechaHasta) filtro.fechaCreacion.$lte = fechaHasta;
+      const dateRange = timeUtil.getRangeFromDDMMYYYY(req.query.fechaDesde, req.query.fechaHasta);
+      if (dateRange) {
+        filtro.fechaCreacion = dateRange;
+      }
     }
 
     if (busqueda) {

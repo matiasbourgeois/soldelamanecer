@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
   Container, Paper, Title, Grid, TextInput, NumberInput, Button,
-  Text, Group, Stack, ActionIcon, Modal, Select, ThemeIcon, Box, UnstyledButton, ScrollArea, Card, Divider, Badge, Tooltip, rem
+  Text, Group, Stack, ActionIcon, Modal, Select, ThemeIcon, Box, UnstyledButton, ScrollArea, Card, Divider, Badge, Tooltip, rem, Alert
 } from "@mantine/core";
 import {
   Package, User, MapPin, Truck, Plus, Search, X, ArrowRight, Check
@@ -55,6 +55,7 @@ const NuevoEnvio = () => {
     dni: "",
     telefono: ""
   });
+  const [errorDni, setErrorDni] = useState("");
 
 
   const navigate = useNavigate();
@@ -198,8 +199,8 @@ const NuevoEnvio = () => {
   };
 
   const handleGuardarClienteRapido = async () => {
-    if (!nuevoCliente.nombre || !nuevoCliente.email) {
-      mostrarAlerta("El nombre y correo electrónico son obligatorios para crear el cliente.");
+    if (!nuevoCliente.nombre || !nuevoCliente.email || !nuevoCliente.dni) {
+      mostrarAlerta("El nombre, email y DNI/CUIL son obligatorios para crear el cliente.");
       return;
     }
 
@@ -214,15 +215,20 @@ const NuevoEnvio = () => {
       setRemitenteInfo(data.cliente);
       setBusquedaRemitente(`${data.cliente.nombre} (${data.cliente.email})`);
       setShowModalCliente(false); // Cerramos el modal
+      setErrorDni("");
       mostrarAlerta("¡Cliente generado exitosamente al vuelo!", "success");
 
       // Limpiamos el form
       setNuevoCliente({ nombre: "", email: "", dni: "", telefono: "" });
     } catch (error) {
       if (error.response && error.response.data?.error) {
-        mostrarAlerta(`Error: ${error.response.data.error}`);
+        const errMsg = error.response.data.error;
+        if (errMsg.includes("DNI") || errMsg.includes("CUIL")) {
+          setErrorDni(errMsg);
+        }
+        mostrarAlerta(`Error: ${errMsg}`, "danger");
       } else {
-        mostrarAlerta("Error inesperado al crear el cliente rápido.");
+        mostrarAlerta("Error inesperado al crear el cliente rápido.", "danger");
       }
     }
   };
@@ -589,31 +595,81 @@ const NuevoEnvio = () => {
       {/* MODAL NUEVO CLIENTE (RÁPIDO) */}
       <Modal
         opened={showModalCliente}
-        onClose={() => setShowModalCliente(false)}
-        title={<Text fw={700} c="cyan.9">Alta Rápida de Cliente</Text>}
+        onClose={() => {
+          setShowModalCliente(false);
+          setErrorDni("");
+        }}
+        title={<Text fw={700} fz="lg" c="cyan.9">Alta Rápida de Cliente</Text>}
         centered
         radius="lg"
-        padding="lg"
-        overlayProps={{ blur: 3 }}
+        padding="xl"
+        overlayProps={{ blur: 3, opacity: 0.55 }}
       >
         <Stack gap="md">
           <Text size="sm" c="dimmed" mb="xs">
             Registre un remitente al vuelo. El sistema le reservará la cuenta para que pueda reclamarla más adelante.
           </Text>
-          <TextInput label="Razón Social / Nombre" placeholder="Ej: Empresa SRL o Juan Perez" variant="filled" radius="md" required value={nuevoCliente.nombre} onChange={(e) => setNuevoCliente({ ...nuevoCliente, nombre: e.target.value })} />
-          <TextInput label="Email (Obligatorio)" placeholder="cliente@correo.com" type="email" variant="filled" radius="md" required value={nuevoCliente.email} onChange={(e) => setNuevoCliente({ ...nuevoCliente, email: e.target.value })} />
+
+          {errorDni && (
+            <Alert color="red" variant="light" icon={<X size={16} />} radius="md">
+              {errorDni}
+            </Alert>
+          )}
+
+          <TextInput
+            label="Razón Social / Nombre"
+            placeholder="Ej: Empresa SRL o Juan Perez"
+            variant="filled"
+            radius="md"
+            required
+            value={nuevoCliente.nombre}
+            onChange={(e) => setNuevoCliente({ ...nuevoCliente, nombre: e.target.value })}
+          />
+          <TextInput
+            label="Email (Obligatorio)"
+            placeholder="cliente@correo.com"
+            type="email"
+            variant="filled"
+            radius="md"
+            required
+            value={nuevoCliente.email}
+            onChange={(e) => setNuevoCliente({ ...nuevoCliente, email: e.target.value })}
+          />
           <Grid gutter="sm">
             <Grid.Col span={6}>
-              <TextInput label="DNI / CUIT" placeholder="Sin guiones" variant="filled" radius="md" value={nuevoCliente.dni} onChange={(e) => setNuevoCliente({ ...nuevoCliente, dni: e.target.value })} />
+              <TextInput
+                label="DNI / CUIT (Obligatorio)"
+                placeholder="Sin guiones"
+                variant="filled"
+                radius="md"
+                required
+                value={nuevoCliente.dni}
+                error={errorDni ? true : false}
+                onChange={(e) => {
+                  setNuevoCliente({ ...nuevoCliente, dni: e.target.value });
+                  setErrorDni("");
+                }}
+              />
             </Grid.Col>
             <Grid.Col span={6}>
-              <TextInput label="Teléfono" placeholder="Ej: 351..." variant="filled" radius="md" value={nuevoCliente.telefono} onChange={(e) => setNuevoCliente({ ...nuevoCliente, telefono: e.target.value })} />
+              <TextInput
+                label="Teléfono"
+                placeholder="Ej: 351..."
+                variant="filled"
+                radius="md"
+                value={nuevoCliente.telefono}
+                onChange={(e) => setNuevoCliente({ ...nuevoCliente, telefono: e.target.value })}
+              />
             </Grid.Col>
           </Grid>
 
           <Group justify="flex-end" mt="lg">
-            <Button variant="subtle" color="gray" onClick={() => setShowModalCliente(false)}>Cancelar</Button>
-            <Button color="cyan" variant="filled" onClick={handleGuardarClienteRapido}>Generar Cliente</Button>
+            <Button variant="subtle" color="gray" onClick={() => setShowModalCliente(false)}>
+              Cancelar
+            </Button>
+            <Button color="cyan" variant="filled" onClick={handleGuardarClienteRapido} loading={false}>
+              Generar Cliente
+            </Button>
           </Group>
         </Stack>
       </Modal>

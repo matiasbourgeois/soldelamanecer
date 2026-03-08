@@ -94,7 +94,7 @@ const ClientesAdmin = () => {
     };
 
     const handleEliminarCliente = async (userId) => {
-        const confirmar = await confirmarAccion("¿Archivar Cliente?", "El cliente desaparecerá de las listas operativas pero se preservará para el historial logístico (Soft Delete).");
+        const confirmar = await confirmarAccion("¿Eliminar Cliente?", "¿Está seguro de que desea retirar a este cliente de las listas operativas?");
         if (!confirmar) return;
 
         try {
