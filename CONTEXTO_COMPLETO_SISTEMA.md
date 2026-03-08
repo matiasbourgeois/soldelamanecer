@@ -2549,58 +2549,52 @@ A pedido del Administrador del código, se revisó todo el árbol en busca de re
 
 ##  FASE 8.5: PANEL DE NOTIFICACIONES Y MEJORAS EN LIQUIDACIONES
 
-**Fecha Implemetaci�n**: 02/03/2026
+**Fecha Implemetaci�n**: 02/03/2026
 **Estado**:  **COMPLETO**
 
 ### 1. Panel Unificado de Notificaciones (Header)
-Se implement� un sistema de notificaciones globales en el layout principal (\AppLayout.jsx\) accesible para roles \dmin\ y \dministrativo\.
+Se implement� un sistema de notificaciones globales en el layout principal (\AppLayout.jsx\) accesible para roles \dmin\ y \dministrativo\.
 
 *   **Fuentes de Datos (Consolidadas en \/api/notificaciones\)**:
-    *   **Mantenimiento de Veh�culos**: Alertas cr�ticas (vencidos) y advertencias (pr�ximos a vencer en < 500km).
-    *   **Liquidaciones Rechazadas**: Alertas de contratados que rechazaron su liquidaci�n, mostrando motivo.
+    *   **Mantenimiento de Veh�culos**: Alertas cr�ticas (vencidos) y advertencias (pr�ximos a vencer en < 500km).
+    *   **Liquidaciones Rechazadas**: Alertas de contratados que rechazaron su liquidaci�n, mostrando motivo.
 *   **UI God Tier (\NotificacionesPanel.jsx\)**:
-    *   Popover elegante anclado a la campanita.
-    *   **Estado Vac�o (Verde Premium)**: Cuando no hay alertas (total = 0), la campanita se vuelve verde esmeralda (\#10b981\) con un efecto de 'shimmer' (rayo de luz diagonal) y un glow suave.
-    *   **Estado Alerta (Rojo/Naranja)**: Anillo pulsante (\.pulse-ring\) rojo si hay alertas cr�ticas, insignia de conteo, sombra din�mica.
-    *   **Acciones**: Click en cada tarjeta navega al m�dulo correspondiente (ej. \/admin/liquidaciones?tab=historial\).
-*   **Sincronizaci�n en Tiempo Real**:
-    *   Polling cada 60 segundos.
-    *   Sistema de **eventos nativos del navegador** (\window.dispatchEvent(new CustomEvent('notif:refresh'))\) permite a otros componentes (ej. al anular una liquidaci�n) forzar una recarga instant�nea del badge sin esperar al intervalo.
 
-### 2. Mejoras en Historial de Liquidaciones (\LiquidacionesAdmin.jsx\)
-*   **Banner de Atenci�n Requerida**: Un banner �mbar destacado muestra un resumen de todas las liquidaciones en estado \echazado\, independientemente de la p�gina actual.
-*   **Buscador / Filtros Avanzados (Frontend-only)**:
-    *   B�squeda por **Contratado** (TextInput).
-    *   Filtro por **Mes/A�o** (\MonthPickerInput\ de Mantine, parcheado para compatibilidad \dayjs\  \Date\).
-    *   Filtro por **Estado** (Select: Borrador, Enviado, Rechazado, etc.).
-    *   El filtrado ocurre en memoria (\useMemo\ sobre todos los registros cargados) y reinicia la paginaci�n a la p�gina 1.
-*   **Tabs por URL**: El control de pesta�as (Simulador vs Historial) ahora lee el \SearchParams\ de \eact-router-dom\ (\?tab=historial\), permitiendo enlaces directos (como los usados en el panel de notificaciones).
+## FASE 9: GOD TIER FIXES Y REFINAMIENTO LOGÍSTICO (Marzo 2026)
+Esta fase representa la consolidación y blindaje absoluto del sistema frente a concurrencia, errores humanos, caídas de servidor y problemas de husos horarios.
 
+### 1. Sistema Integral de Aprobaciones para Rutas
+- **Problema**: Riesgo de alteraciones no autorizadas en tarifas y datos de rutas por parte de administrativos.
+- **Solución**: Creación de un motor de intercepción (modelo SolicitudAprobacion). Toda edición o creación por parte de un administrativo genera una solicitud pendiente, bloqueando ediciones adicionales hasta que un administrador (o gerente) resuelva la solicitud.
+- **UI Nivel Dios**: Vista de diff (antes/después) en React, cruce en tiempo real de los datos, y badge visual tipo "candado" en el gestor de rutas.
 
-## ƒÜÇ FASE 9: SISTEMA DE APROBACIONES, NOTIFICACIONES Y ROLES GOD TIER (03/03/2026)
+### 2. Time Machine & Backfill de Hojas de Reparto
+- **Problema**: Al estar apagado el servidor por días, el cronjob automático omitió la creación de hojas de reparto necesarias.
+- **Solución**: Programación de scripts ad-hoc para inyección retroactiva (Backfill) y creación de una "Time Machine" oficial: el endpoint /api/sistema/recuperar-dias-caidos.
+- **Efecto**: Capacidad de generar hojas operativas perdidas respetando validaciones de fin de semana y feriados, con cambio de estado progresivo en el tiempo.
 
-**Estado**: Γà **100% COMPLETADO** - Frontend y Backend en produccin.
+### 3. Blindaje Huso Horario (Timezones) y Fechas Estrictas
+- **Problema**: Inconsistencias temporales entre el Frontend (que parseaba en Local Time) y MongoDB (UTC), provocando desfases de -1 día en reportes y asignaciones de hojas.
+- **Solución**: Refactorización global utilizando moment-timezone centrada rígidamente en America/Argentina/Buenos_Aires.
+- **Ejecución**: Se eliminaron usos de setHours() manual y cruces con Day.js en la interfaz, consolidando todo sobre la librería timeUtil.js desarrollada para blindaje backend.
 
-### Γà **LO QUE SE IMPLEMENTô**
+### 4. Upgrade Absoluto del Motor de Liquidaciones
+- **Problema**: El cálculo de liquidaciones fallaba al arrastrar tarifas fijas transversales o no incluir el último día del mes en el simulador.
+- **Solución**:
+    - Re-ingeniería del simulador sumando T23:59:59 a los rangos de fecha ($lte).
+    - Rescate automatizado de tarifas ("Por Distribución" y "Por Mes") directo del esquema raíz si la Hoja de Reparto las omite.
+    - Prevención de sueldos fijos mensuales duplicados vía uso de Sets() en el ciclo iterativo.
+    - Cancelación silenciosa: Al anular una liquidación en estado borrador, el sistema libera estructuralmente los viajes sin enviar correos falsos a los contratistas.
 
-#### 1. Motor de Aprobaciones (Change Requests)
-- **Problema**: El personal administrativo modificaba rutas y tarifas con impacto instantíneo en la base de datos sin supervisin.
-- **Solucin**: Los usuarios con rol dministrativo ahora operan en un entorno aislado (Sandbox/Draft). Al intentar Crear, Editar o Eliminar una ruta en FormularioRuta.jsx o RutasAdmin.jsx, el Backend (utasController.js) intercepta la orden basado en su Token JWT y la desva hacia una nueva coleccin llamada SolicitudesAprobacion con estado PENDIENTE.
-- **UI Administrativo**: Las rutas en este limbo mígico muestran un candado ΓÅ EN REVISIôN en la tabla principal y bloquean modificaciones concurrentes de otros administrativos.
-- **UI Administrador (AprobacionesAdmin.jsx)**: Se cre un Panel de Aprobaciones nivel Dios en el Sidebar, dnde el dmin revisa una autntica **Diff View (Antes vs Despus)** interactiva. Los campos inalterados se ven en gris; los alterados muestran el valor original tachado en rojo con una flecha apuntando al valor nuevo en verde. Las eliminaciones muestran toda la ruta en rojo. El admin puede Aprobar (impacta DB y limpia la solicitud) o Rechazar pidiendo un motivo.
+### 5. Configuración Dinámica y Reportes Automatizados a Droguería del Sud
+- **Problema**: Necesidad de exportar y notificar por correo el parte diario logístico a los clientes B2B.
+- **Solución**: Implementación de una arquitectura híbrida de plantillas HTML y generador Puppeteer en Node. Se añadió una sección en ConfiguracionAdmin.jsx para administrar la lista de destinatarios, logrando un envío One-Click con PDFs profesionales desde el Control Operativo.
 
-#### 2. Resolutor de Paradoja de Roles (Promocin de Clientes)
-- **Problema**: Haba una pared hermtica entre Comercial (clientes) y Personal (empleados). Si un nuevo empleado de logstica se registraba en la pígina pblica, el motor lo catalogaba como cliente preventivo. Era imposible ascenderlo a dministrativo porque no apareca en la tabla de Personal.
-- **Solucin**: En UsuariosAdmin.jsx (solo visible para admin), se instal un Mdulo de Alta Especial. Mediante ModalPromoverAdministrativo.jsx, el dueo puede tipear el mail o CUIT de cualquier persona que se haya registrado por su cuenta. El endpoint especial (/api/usuarios/buscar-promocion) perfora la pared, encuentra al cliente, y con un botn verde lo abduce, cambiíndole el rol a dministrativo y pasíndolo automíticamente a la mesa de control interna.
-
-#### 3. Centro de Notificaciones Unificado
-- **Problema**: Las alertas mecínicas vencidas y las liquidaciones que el gerente bochaba por tener remitos en mal estado, flotaban sueltas sin ninguna advertencia proactiva en el Frontend.
-- **Solucin**: Se cre un endpoint combinatorio (/api/notificaciones/consolidadas) que barre mltiples colecciones (Vehiculos vencidos, Liquidaciones en estado RECHAZADA).
-- **Frontend**: Una campana con contador dinímico rojo en el AppLayout.jsx de Mantine. Al hacer click, despliega un Offcanvas que separa las alertas por urgencia y linkea directo a las pantallas de resolucin (Mantenimiento o Liquidaciones).
-
-#### 4. Dashboard Directivo
-- **Problema**: Las tarjetas frontales marcaban estadsticas mígicas o cadas.
-- **Solucin**: Reescritura del AppLayout.jsx y paneles frontales. El Dashboard de la raz (/admin) ahora absorbe un stream de verdad directamente del backend. Se redisearon contadores de Tarifa Promedio, Rutas Activas, Envos en Reparto y Rendimiento.
+### 6. Controles Estrictos Frontend / Backend
+- **Problema**: Choferes con mismo documento, introducción de horas ilógicas (ej: 29:99) en partes diarios.
+- **Solución**:
+    - Validaciones asíncronas en el alta rápida de origen para denegar duplicidad DNI/CUIL.
+    - Refactorización de Auto-Formatting Time Input HHMM -> HH:MM, restringiendo horas a 23 y minutos a 59 usando expresiones regulares interactivas en Mantine.
 
 ---
 
