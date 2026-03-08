@@ -3,8 +3,7 @@ import { apiUsuarios } from "@core/api/apiSistema";
 import clienteAxios from "@core/api/clienteAxios";
 import AuthContext from "@core/context/AuthProvider";
 import { useNavigate } from "react-router-dom";
-import { GoogleLogin } from "@react-oauth/google";
-import { useGoogleReady } from "@core/hooks/useGoogleReady";
+import { GoogleLoginWrapper } from "@core/components/GoogleLoginWrapper";
 import {
   TextInput,
   PasswordInput,
@@ -32,7 +31,6 @@ function Login() {
   const [formData, setFormData] = useState({ email: "", contrasena: "" });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const googleReady = useGoogleReady();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -199,22 +197,11 @@ function Login() {
 
               <Center>
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                  {googleReady ? (
-                    <GoogleLogin
-                      onSuccess={handleGoogleSuccess}
-                      onError={() => {
-                        setError("No se pudo conectar con Google");
-                      }}
-                      shape="pill"
-                      text="continue_with"
-                      size="large"
-                      theme="outline"
-                    />
-                  ) : (
-                    <div style={{ height: 44, display: 'flex', alignItems: 'center' }}>
-                      <Text size="sm" c="dimmed">Cargando acceso con Google...</Text>
-                    </div>
-                  )}
+                  <GoogleLoginWrapper
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError("No se pudo conectar con Google")}
+                    text="continue_with"
+                  />
                 </div>
               </Center>
             </Stack>

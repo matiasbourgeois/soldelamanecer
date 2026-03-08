@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { apiUsuarios } from "@core/api/apiSistema";
 import clienteAxios from "@core/api/clienteAxios";
 import AuthContext from "@core/context/AuthProvider";
-import { GoogleLogin } from "@react-oauth/google";
-import { useGoogleReady } from "@core/hooks/useGoogleReady";
+import { GoogleLoginWrapper } from "@core/components/GoogleLoginWrapper";
 import {
   TextInput,
   PasswordInput,
@@ -45,7 +44,6 @@ function Registro() {
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const googleReady = useGoogleReady();
 
   // Password Validation Logic
   const validatePassword = (password) => {
@@ -308,22 +306,11 @@ function Registro() {
 
               <Center>
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                  {googleReady ? (
-                    <GoogleLogin
-                      onSuccess={handleGoogleSuccess}
-                      onError={() => {
-                        setError("No se pudo conectar con Google");
-                      }}
-                      shape="pill"
-                      text="signup_with"
-                      size="large"
-                      theme="outline"
-                    />
-                  ) : (
-                    <div style={{ height: 44, display: 'flex', alignItems: 'center' }}>
-                      <Text size="sm" c="dimmed">Cargando acceso con Google...</Text>
-                    </div>
-                  )}
+                  <GoogleLoginWrapper
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError("No se pudo conectar con Google")}
+                    text="signup_with"
+                  />
                 </div>
               </Center>
             </Stack>
