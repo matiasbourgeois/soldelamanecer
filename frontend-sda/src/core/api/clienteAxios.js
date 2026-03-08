@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_BASE = import.meta.env.DEV
     ? "http://localhost:5000/api"
-    : "https://api-choferes.cotizadorlogistico.site/api";
+    : "https://api.soldelamanecer.ar/api";
 
 const clienteAxios = axios.create({
     baseURL: API_BASE

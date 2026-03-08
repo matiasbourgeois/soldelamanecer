@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"nombreZona":{"$numberInt":"1"}},"name":"nombreZona_1","background":true,"unique":true}],"uuid":"da943c1129cc4746b2045ac387c7194f","collectionName":"zonas","type":"collection"}

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // 🌐 DYNAMIC URL: Use local IP for dev (Expo) and production domain for builds.
-const PROD_URL = 'https://api-choferes.cotizadorlogistico.site/api';
+const PROD_URL = 'https://api.soldelamanecer.ar/api';
 const DEV_URL = 'http://192.168.0.132:5000/api'; // ⚠️ Check your local IP if it changes
 
 const BASE_URL = __DEV__ ? DEV_URL : PROD_URL;

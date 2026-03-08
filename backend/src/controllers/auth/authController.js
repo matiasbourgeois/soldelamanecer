@@ -37,7 +37,7 @@ const register = async (req, res) => {
 
         await usuarioExistente.save();
 
-        const apiBaseUrl = process.env.API_URL || "https://api-choferes.cotizadorlogistico.site";
+        const apiBaseUrl = process.env.API_URL || "https://api.soldelamanecer.ar";
         const enlaceVerificacion = `${apiBaseUrl}/api/usuarios/verify/${tokenVerificacion}`;
 
         try {
@@ -72,7 +72,7 @@ const register = async (req, res) => {
 
     await nuevoUsuario.save();
 
-    const apiBaseUrl = process.env.API_URL || "https://api-choferes.cotizadorlogistico.site";
+    const apiBaseUrl = process.env.API_URL || "https://api.soldelamanecer.ar";
     const enlaceVerificacion = `${apiBaseUrl}/api/usuarios/verify/${tokenVerificacion}`;
 
     // 📧 Intentar enviar email, pero no bloquear registro si falla (Soft Fail)

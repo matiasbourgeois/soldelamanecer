@@ -2,11 +2,11 @@
 
 const API_BASE = import.meta.env.DEV
     ? "http://localhost:5000/api"
-    : "https://api-choferes.cotizadorlogistico.site/api";
+    : "https://api.soldelamanecer.ar/api";
 // Para archivos estáticos (uploads, pdfs, etc) que están fuera de /api
 const SERVER_BASE = import.meta.env.DEV
     ? "http://localhost:5000"
-    : "https://api-choferes.cotizadorlogistico.site";
+    : "https://api.soldelamanecer.ar";
 
 /**
  * Los helpers ahora añaden el prefijo del módulo automáticamente.
