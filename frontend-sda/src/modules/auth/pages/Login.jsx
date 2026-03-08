@@ -1,9 +1,10 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { apiUsuarios } from "@core/api/apiSistema";
 import clienteAxios from "@core/api/clienteAxios";
 import AuthContext from "@core/context/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleReady } from "@core/hooks/useGoogleReady";
 import {
   TextInput,
   PasswordInput,
@@ -31,24 +32,7 @@ function Login() {
   const [formData, setFormData] = useState({ email: "", contrasena: "" });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
-
-  // Esperar a que el script de Google GSI cargue antes de renderizar el botón
-  useEffect(() => {
-    // Si ya está disponible (ej: al recargar con caché)
-    if (window.google?.accounts?.id) {
-      setGoogleScriptLoaded(true);
-      return;
-    }
-    // Poll hasta que esté listo (carga asíncrona en primera visita)
-    const interval = setInterval(() => {
-      if (window.google?.accounts?.id) {
-        setGoogleScriptLoaded(true);
-        clearInterval(interval);
-      }
-    }, 100);
-    return () => clearInterval(interval);
-  }, []);
+  const googleReady = useGoogleReady();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -215,7 +199,7 @@ function Login() {
 
               <Center>
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                  {googleScriptLoaded ? (
+                  {googleReady ? (
                     <GoogleLogin
                       onSuccess={handleGoogleSuccess}
                       onError={() => {
