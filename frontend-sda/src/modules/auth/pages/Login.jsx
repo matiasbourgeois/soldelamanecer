@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { apiUsuarios } from "@core/api/apiSistema";
 import clienteAxios from "@core/api/clienteAxios";
 import AuthContext from "@core/context/AuthProvider";
@@ -31,6 +31,24 @@ function Login() {
   const [formData, setFormData] = useState({ email: "", contrasena: "" });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
+
+  // Esperar a que el script de Google GSI cargue antes de renderizar el botón
+  useEffect(() => {
+    // Si ya está disponible (ej: al recargar con caché)
+    if (window.google?.accounts?.id) {
+      setGoogleScriptLoaded(true);
+      return;
+    }
+    // Poll hasta que esté listo (carga asíncrona en primera visita)
+    const interval = setInterval(() => {
+      if (window.google?.accounts?.id) {
+        setGoogleScriptLoaded(true);
+        clearInterval(interval);
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -197,17 +215,22 @@ function Login() {
 
               <Center>
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => {
-                      setError("No se pudo conectar con Google");
-                    }}
-                    useOneTap
-                    shape="pill"
-                    text="continue_with"
-                    size="large"
-                    theme="outline"
-                  />
+                  {googleScriptLoaded ? (
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => {
+                        setError("No se pudo conectar con Google");
+                      }}
+                      shape="pill"
+                      text="continue_with"
+                      size="large"
+                      theme="outline"
+                    />
+                  ) : (
+                    <div style={{ height: 44, display: 'flex', alignItems: 'center' }}>
+                      <Text size="sm" c="dimmed">Cargando acceso con Google...</Text>
+                    </div>
+                  )}
                 </div>
               </Center>
             </Stack>
