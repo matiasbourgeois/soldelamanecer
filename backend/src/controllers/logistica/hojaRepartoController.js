@@ -1336,6 +1336,7 @@ module.exports = {
     obtenerHojasPorChofer,
     cerrarHojaManualmente,
     generarHojasAutomaticas,
+    cerrarHojasVencidas,
     actualizarHoja,
     buscarHojaPorRutaFecha,
     reporteDiscrepancias,

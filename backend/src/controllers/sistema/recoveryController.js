@@ -5,7 +5,7 @@ const { generarHojasAutomaticas, cerrarHojasVencidas } = require('../logistica/h
 const HojaReparto = require('../../models/HojaReparto');
 const logger = require('../../utils/logger');
 
-// Motor de Retroceso Temporal (Time Machine)
+// Protocolo de Recuperación de Datos (Sincronización de Tareas Programadas)
 exports.recuperarDiasCaidos = async (req, res) => {
     try {
         const { fechaInicio, fechaFin } = req.body;
@@ -27,7 +27,7 @@ exports.recuperarDiasCaidos = async (req, res) => {
             return res.status(400).json({ error: "Solo se puede recuperar un máximo de 15 días a la vez" });
         }
 
-        logger.info(`⏱️ INICIANDO PROTOCOLO ANTIMATERIA: Recuperando desde ${fInicio.format('YYYY-MM-DD')} hasta ${fFin.format('YYYY-MM-DD')}`);
+        logger.info(`📋 INICIANDO PROTOCOLO DE RECUPERACIÓN: Sincronizando desde ${fInicio.format('YYYY-MM-DD')} hasta ${fFin.format('YYYY-MM-DD')}`);
 
         const reporteFinal = [];
         let iterador = fInicio.clone();
@@ -60,8 +60,8 @@ exports.recuperarDiasCaidos = async (req, res) => {
                 continue;
             }
 
-            // 2. FASE MAÑANA (Generación)
-            logger.info(`   > Fase Mañana: Generando hojas...`);
+            // 2. GENERACIÓN DE HOJAS
+            logger.info(`   > Etapa 1: Generando estructuras de hojas...`);
             // generarHojasAutomaticas ya tiene el blindaje adentro: si la hoja para una ruta ya existe ese día, la salta
             const resultadosGeneracion = await generarHojasAutomaticas(fechaIterada, false);
             if (resultadosGeneracion) {
@@ -70,10 +70,9 @@ exports.recuperarDiasCaidos = async (req, res) => {
                 reporteDia.errores = resultadosGeneracion.errores;
             }
 
-            // 3. FASE TARDE (Pasar a En Reparto)
-            // Aquí avanzamos TODAS las hojas regulares pendientes del día.
-            // Las hojas manuales/especiales "SDA-ESPECIAL" no tienen horaSalida válida en ruta, por lo que serán ignoradas
-            logger.info(`   > Fase Tarde: Avanzando pendientes a En Reparto...`);
+            // 3. ACTUALIZACIÓN DE ESTADOS (En Reparto)
+            // Sincroniza las hojas pendientes a estado operativo según horario de salida.
+            logger.info(`   > Etapa 2: Sincronizando estados a 'En Reparto'...`);
             const finDiaIterado = iterador.clone().endOf('day').toDate();
 
             const hojasPendientesDia = await HojaReparto.find({
@@ -86,15 +85,15 @@ exports.recuperarDiasCaidos = async (req, res) => {
                     hoja.estado = 'en reparto';
                     hoja.historialMovimientos.push({
                         usuario: req.usuario?._id || null,
-                        accion: `Cambio a EN REPARTO generado por Time Machine`
+                        accion: `Sincronización de estado por Protocolo de Recuperación`
                     });
                     await hoja.save();
                     reporteDia.pasadasAReparto++;
                 }
             }
 
-            // 4. FASE NOCHE (Cerrar Hojas Vencidas)
-            logger.info(`   > Fase Noche: Cerrando hojas...`);
+            // 4. CIERRE DE JORNADA (Hojas Vencidas)
+            logger.info(`   > Etapa 3: Ejecutando cierre de jornada...`);
             // cerrarHojasVencidas toma las que están "en reparto" en ese rango horario y las pasa a "cerrada"
             await cerrarHojasVencidas(fechaIterada);
             // Validamos cuántas terminaron cerradas para reflejarlo en el reporte
@@ -114,10 +113,10 @@ exports.recuperarDiasCaidos = async (req, res) => {
             iterador.add(1, 'days');
         }
 
-        logger.info(`🎉 PROTOCOLO ANTIMATERIA COMPLETADO`);
+        logger.info(`✅ PROTOCOLO DE RECUPERACIÓN COMPLETADO`);
 
         res.status(200).json({
-            mensaje: "Recuperación completada",
+            mensaje: "Sincronización de datos completada exitosamente",
             reporte: reporteFinal
         });
 
