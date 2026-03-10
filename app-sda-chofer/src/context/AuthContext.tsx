@@ -9,6 +9,7 @@ interface AuthContextData {
     isLoading: boolean;
     login: (email: string, pass: string) => Promise<void>;
     logout: () => Promise<void>;
+    updateUser: (partial: Partial<Usuario>) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -83,8 +84,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await AsyncStorage.removeItem('@auth_user');
     };
 
+    const updateUser = async (partial: Partial<Usuario>) => {
+        setUser(prev => {
+            if (!prev) return prev;
+            const updated = { ...prev, ...partial };
+            AsyncStorage.setItem('@auth_user', JSON.stringify(updated));
+            return updated;
+        });
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
+        <AuthContext.Provider value={{ user, token, isLoading, login, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

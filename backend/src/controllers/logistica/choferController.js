@@ -1,6 +1,7 @@
 const Chofer = require("../../models/Chofer");
 const Vehiculo = require("../../models/Vehiculo");
 const UsuarioSistema = require("../../models/Usuario");
+const MantenimientoLog = require("../../models/MantenimientoLog");
 const excelJS = require("exceljs");
 const timeUtil = require("../../utils/timeUtil");
 
@@ -227,12 +228,37 @@ const obtenerMiConfiguracion = async (req, res) => {
     }).populate("vehiculo ruta");
 
     if (hojasActivas.length > 0) {
+      // Detectar si ya se registró el reporte de km hoy para el vehículo asignado
+      const vehiculoIdHoy = hojasActivas[0].vehiculo?._id || hojasActivas[0].vehiculo;
+      let reporteKmHoy = false;
+      let resumenReporteHoy = null;
+
+      if (vehiculoIdHoy) {
+        const logHoy = await MantenimientoLog.findOne({
+          vehiculo: vehiculoIdHoy,
+          tipo: "Reporte Diario",
+          fecha: { $gte: inicioDia, $lte: finDia }
+        }).sort({ fecha: -1 });
+
+        if (logHoy) {
+          reporteKmHoy = true;
+          resumenReporteHoy = {
+            km: logHoy.kmAlMomento,
+            litros: logHoy.litrosCargados || 0,
+            observaciones: logHoy.observaciones || null,
+            fecha: logHoy.fecha
+          };
+        }
+      }
+
       return res.json({
         vehiculo: hojasActivas[0].vehiculo,
         ruta: hojasActivas[0].ruta,
         hojaRepartoId: hojasActivas[0]._id,
         hojaRepartoCodigo: hojasActivas[0].numeroHoja || `${hojasActivas[0].ruta?.codigo?.replace(/^L-/, '')}-${timeUtil.getStrYYYYMMDDArg(hoy).replace(/-/g, '')}`,
         esPlanificada: true,
+        reporteKmHoy,
+        resumenReporteHoy,
         hojasActivas: hojasActivas.map(hoja => ({
           vehiculo: hoja.vehiculo,
           ruta: hoja.ruta,
@@ -396,6 +422,86 @@ const actualizarAsignacion = async (req, res) => {
   } catch (error) {
     console.error('Error actualizando asignación:', error);
     res.status(500).json({ error: 'Error al actualizar asignación' });
+  }
+};
+
+// Obtener la hoja de reparto del chofer para una fecha específica (para KM retroactivo)
+// GET /api/choferes/hoja-por-fecha?fecha=YYYY-MM-DD
+const obtenerHojaPorFecha = async (req, res) => {
+  try {
+    const usuarioId = req.usuario.id;
+    const { fecha } = req.query;
+
+    if (!fecha) {
+      return res.status(400).json({ error: "Se requiere el parámetro 'fecha' en formato YYYY-MM-DD." });
+    }
+
+    const fechaObj = new Date(fecha + 'T12:00:00.000Z'); // Mediodía UTC para evitar saltos de TZ
+    const inicioDia = timeUtil.getInicioDiaArg(fechaObj);
+    const finDia = timeUtil.getFinDiaArg(fechaObj);
+
+    // No permitir fechas futuras
+    const hoy = new Date();
+    if (fechaObj > hoy) {
+      return res.status(400).json({ error: "No se puede cargar kilometraje para fechas futuras." });
+    }
+
+    // Máximo 7 días hacia atrás
+    const limite = new Date();
+    limite.setDate(limite.getDate() - 7);
+    if (fechaObj < limite) {
+      return res.status(400).json({ error: "Solo se pueden cargar reportes de los últimos 7 días." });
+    }
+
+    const chofer = await Chofer.findOne({ usuario: usuarioId });
+    if (!chofer) {
+      return res.status(404).json({ error: "Perfil de chofer no encontrado." });
+    }
+
+    const HojaReparto = require("../../models/HojaReparto");
+    const hoja = await HojaReparto.findOne({
+      chofer: chofer._id,
+      fecha: { $gte: inicioDia, $lte: finDia }
+    }).populate("vehiculo ruta");
+
+    if (!hoja) {
+      return res.status(404).json({ error: "No tenés actividad registrada para esa fecha." });
+    }
+
+    // Verificar si ya se cargó el km para esa fecha y ese vehículo
+    const vehiculoId = hoja.vehiculo?._id || hoja.vehiculo;
+    let reporteExistente = null;
+    if (vehiculoId) {
+      const logExistente = await MantenimientoLog.findOne({
+        vehiculo: vehiculoId,
+        tipo: "Reporte Diario",
+        fecha: { $gte: inicioDia, $lte: finDia }
+      }).sort({ fecha: -1 });
+
+      if (logExistente) {
+        reporteExistente = {
+          km: logExistente.kmAlMomento,
+          litros: logExistente.litrosCargados || 0,
+          observaciones: logExistente.observaciones || null
+        };
+      }
+    }
+
+    return res.json({
+      hoja: {
+        _id: hoja._id,
+        numeroHoja: hoja.numeroHoja,
+        fecha: hoja.fecha,
+        estado: hoja.estado
+      },
+      vehiculo: hoja.vehiculo,
+      ruta: hoja.ruta,
+      reporteExistente
+    });
+
+  } catch (error) {
+    console.error("Error al obtener hoja por fecha:", error);
+    res.status(500).json({ error: "Error al obtener la información de la fecha seleccionada." });
   }
 };
 
@@ -632,6 +738,7 @@ module.exports = {
   obtenerMiConfiguracion,
   obtenerSelectoresReporte,
   actualizarAsignacion,
+  obtenerHojaPorFecha,
   // Contratados
   obtenerContratados,
   editarContratado,

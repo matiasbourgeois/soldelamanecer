@@ -15,6 +15,7 @@ const {
   obtenerMiConfiguracion,
   obtenerSelectoresReporte,
   actualizarAsignacion,
+  obtenerHojaPorFecha,
   // Contratados
   obtenerContratados,
   editarContratado,
@@ -33,6 +34,7 @@ router.post("/", crearChofer);
 // Ruta para que el chofer obtenga sus defaults (app móvil)
 router.get("/configuracion", auth, obtenerMiConfiguracion);
 router.get("/selectores-reporte", auth, obtenerSelectoresReporte);
+router.get("/hoja-por-fecha", auth, obtenerHojaPorFecha);
 
 // Actualizar asignación de ruta/vehículo desde app móvil
 router.post("/actualizar-asignacion", auth, actualizarAsignacion);

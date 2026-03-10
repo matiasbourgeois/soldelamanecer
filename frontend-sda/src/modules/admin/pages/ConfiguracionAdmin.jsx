@@ -131,7 +131,7 @@ const ConfiguracionAdmin = () => {
                 fechaFin: fOut
             });
 
-            console.log("Reporte Antimateria:", resultado.reporte);
+            console.log("Reporte de Sincronización:", resultado.reporte);
 
             let msg = `Se procesaron ${resultado.reporte.length} días. Revisa la consola para el reporte detallado.`;
             mostrarAlerta(msg, "success");
@@ -191,7 +191,7 @@ const ConfiguracionAdmin = () => {
                         Configuración y Sistema
                     </Title>
                     <Text c="dimmed" size="sm">
-                        Panel de control maestro para administradores Nivel Dios.
+                        Panel de control administrativo maestro.
                     </Text>
                 </div>
             </Group>
@@ -356,17 +356,17 @@ const ConfiguracionAdmin = () => {
                                 <Card.Section withBorder inheritPadding py="xs" bg="red.0">
                                     <Group gap="xs">
                                         <IconShieldCheck size={18} color="var(--mantine-color-red-7)" />
-                                        <Text fw={700} c="red.9">Protocolo de Recuperación / Time Machine</Text>
+                                        <Text fw={700} c="red.9">Protocolo de Recuperación de Datos</Text>
                                     </Group>
                                 </Card.Section>
 
                                 <Stack gap="md" mt="md">
-                                    <Alert icon={<IconAlertCircle size={16} />} title="Uso Exclusivo en Emergencias" color="red" variant="filled">
-                                        Esta herramienta simulará el transcurso del tiempo para generar, poner en reparto y cerrar hojas de manera recursiva si el servidor estuvo apagado durante días laborables. ¡Usar con precaución extrema!
+                                    <Alert icon={<IconAlertCircle size={16} />} title="Procedimiento de Sincronización" color="red" variant="filled">
+                                        Esta herramienta permite re-procesar registros operativos y estados de hojas de reparto en caso de interrupciones del servicio. Se recomienda utilizar con supervisión técnica.
                                     </Alert>
 
                                     <Text size="sm" c="dimmed">
-                                        Selecciona el rango de fechas en los que el servidor no procesó tareas programadas. El motor omitirá feriados y no sobreescribirá rutas creadas a mano.
+                                        Seleccione el rango de fechas para re-procesar los registros operativos. El sistema omitirá feriados nacionales y respetará cronogramas manuales pre-existentes.
                                     </Text>
 
                                     <DatePickerInput
@@ -391,7 +391,7 @@ const ConfiguracionAdmin = () => {
                                             radius="md"
                                             disabled={!recoveryDates[0] || !recoveryDates[1]}
                                         >
-                                            Inyectar Días Perdidos
+                                            Sincronizar Datos Operativos
                                         </Button>
                                     </Group>
                                 </Stack>
@@ -437,20 +437,20 @@ const ConfiguracionAdmin = () => {
             <Modal
                 opened={modalConfirmOpen}
                 onClose={() => setModalConfirmOpen(false)}
-                title={<Title order={4} c="red.7">⚠️ Confirmar Viaje en el Tiempo</Title>}
+                title={<Title order={4} c="red.7">⚠️ Confirmar Sincronización Operativa</Title>}
                 centered
                 overlayProps={{ blur: 3, opacity: 0.55 }}
             >
                 <Text size="sm" mb="lg">
-                    Estás a punto de forzar al servidor a inyectar las operativas del pasado desde el <b>{recoveryDates[0] && dayjs(recoveryDates[0]).format('DD/MM/YYYY')}</b> hasta el <b>{recoveryDates[1] && dayjs(recoveryDates[1]).format('DD/MM/YYYY')}</b>.
+                    Está a punto de iniciar un re-procesamiento masivo de datos operativos para el período comprendido entre el <b>{recoveryDates[0] && dayjs(recoveryDates[0]).format('DD/MM/YYYY')}</b> y el <b>{recoveryDates[1] && dayjs(recoveryDates[1]).format('DD/MM/YYYY')}</b>.
                     <br /><br />
-                    El sistema generará todas las hojas correspondientes, simulará sus transiciones y las cerrará instantáneamente.
-                    <b>¿Estás seguro que el servidor estuvo apagado esos días?</b>
+                    El sistema validará las rutas correspondientes y actualizará los estados de las hojas de reparto de forma automática.
+                    <b>¿Confirma que desea iniciar este procedimiento técnico?</b>
                 </Text>
 
                 <Group justify="flex-end">
                     <Button variant="default" onClick={() => setModalConfirmOpen(false)}>Cancelar</Button>
-                    <Button color="red" onClick={executeRecoveryProtocol}>SÍ, VIAJAR EN EL TIEMPO</Button>
+                    <Button color="red" onClick={executeRecoveryProtocol}>SÍ, INICIAR SINCRONIZACIÓN</Button>
                 </Group>
             </Modal>
         </Container>

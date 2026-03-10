@@ -4,6 +4,7 @@ export interface Usuario {
     email: string;
     rol: string;
     tipoContrato?: string;
+    fotoPerfil?: string;
 }
 
 export interface Ubicacion {

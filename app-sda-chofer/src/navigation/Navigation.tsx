@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import LoginScreen from '../screens/LoginScreen';
 import HojaRepartoScreen from '../screens/HojaRepartoScreen';
 import HomeScreen from '../screens/HomeScreen';
-import CargaKilometrajeScreen from '../screens/CargaKilometrajeScreen';
+// CargaKilometrajeScreen removida del flujo principal — el registro de KM ahora se hace desde el modal de HomeScreen
 
 const Stack = createNativeStackNavigator();
 
@@ -20,7 +20,6 @@ export default function Navigation() {
           // 🔓 Usuario Logueado
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="CargaKilometraje" component={CargaKilometrajeScreen} />
             <Stack.Screen name="HojaReparto" component={HojaRepartoScreen} />
           </>
         ) : (
