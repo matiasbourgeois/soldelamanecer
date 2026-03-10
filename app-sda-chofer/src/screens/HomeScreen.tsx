@@ -70,6 +70,8 @@ const HomeScreen = ({ navigation }: any) => {
     const pulseValue = useRef(new Animated.Value(1)).current;
     const appStateRef = useRef<AppStateStatus>(AppState.currentState);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    // Protege la selección manual del chofer contra resets por fetchConfig/AppState
+    const hasManualChange = useRef(false);
 
     // ── Photo picker ──────────────────────────────────────────────────────────────
     const pickImage = async () => {
@@ -133,8 +135,12 @@ const HomeScreen = ({ navigation }: any) => {
         try {
             const res = await api.get('/choferes/configuracion');
             setConfig(res.data);
-            setVehiculoSeleccionado(res.data.vehiculo);
-            setRutaSeleccionada(res.data.ruta);
+            // Solo actualiza los selectores si el chofer NO hizo cambios manuales
+            // (evita resetear la selección al volver del fondo)
+            if (!hasManualChange.current) {
+                setVehiculoSeleccionado(res.data.vehiculo);
+                setRutaSeleccionada(res.data.ruta);
+            }
         } catch (e) {
             console.log('Error fetchConfig:', e);
         } finally {
@@ -180,6 +186,7 @@ const HomeScreen = ({ navigation }: any) => {
     const seleccionarItem = (item: any) => {
         if (tipoSelector === 'vehiculo') setVehiculoSeleccionado(item);
         else setRutaSeleccionada(item);
+        hasManualChange.current = true;  // ← protege contra resets de fetchConfig
         setModalSelectorVisible(false);
     };
 
@@ -538,7 +545,7 @@ const HomeScreen = ({ navigation }: any) => {
             <ConfirmarJornadaModal
                 visible={confirmarVisible}
                 onClose={() => setConfirmarVisible(false)}
-                onSuccess={() => { setConfirmarVisible(false); fetchConfig(); }}
+                onSuccess={() => { hasManualChange.current = false; setConfirmarVisible(false); fetchConfig(); }}
                 vehiculo={vehiculoSeleccionado}
                 ruta={rutaSeleccionada}
                 hojaRepartoId={config?.hojaRepartoId}

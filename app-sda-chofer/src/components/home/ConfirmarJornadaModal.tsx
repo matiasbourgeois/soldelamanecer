@@ -178,11 +178,17 @@ const ConfirmarJornadaModal: React.FC<ConfirmarJornadaModalProps> = ({
                                 <View style={[styles.summaryCard, { backgroundColor: glassBg, borderColor: glassBorder }]}>
                                     <View style={styles.summaryRow}>
                                         <IconButton icon="truck-outline" size={18} iconColor={accent} style={styles.icon0} />
-                                        <View>
+                                        <View style={{ flex: 1 }}>
                                             <Text style={[styles.summaryLabel, { color: textSecondary }]}>VEHÍCULO</Text>
                                             <Text style={[styles.summaryValue, { color: textPrimary }]}>
-                                                {vehiculo?.patente?.toUpperCase() || '—'} · {vehiculo?.marca} {vehiculo?.modelo}
+                                                {vehiculo?.patente?.toUpperCase() || '—'}
                                             </Text>
+                                            {(vehiculo?.marca || vehiculo?.modelo) && (
+                                                <Text style={[styles.summarySubValue, { color: textSecondary }]}
+                                                    numberOfLines={1} ellipsizeMode="tail">
+                                                    {vehiculo?.marca} {vehiculo?.modelo}
+                                                </Text>
+                                            )}
                                         </View>
                                     </View>
                                     <View style={[styles.divLine, { backgroundColor: glassBorder }]} />
@@ -221,7 +227,11 @@ const ConfirmarJornadaModal: React.FC<ConfirmarJornadaModalProps> = ({
                                         <View style={[styles.summaryCard, { backgroundColor: glassBg, borderColor: accent, borderWidth: 1.5, marginTop: 12 }]}>
                                             <Text style={[styles.summaryLabel, { color: accent }]}>VEHÍCULO ENCONTRADO</Text>
                                             <Text style={[styles.summaryValue, { color: textPrimary }]}>
-                                                {vehiculoRetro.patente?.toUpperCase()} · {vehiculoRetro.marca} {vehiculoRetro.modelo}
+                                                {vehiculoRetro.patente?.toUpperCase()}
+                                            </Text>
+                                            <Text style={[styles.summarySubValue, { color: textSecondary }]}
+                                                numberOfLines={1} ellipsizeMode="tail">
+                                                {vehiculoRetro.marca} {vehiculoRetro.modelo}
                                             </Text>
                                             <Text style={[styles.summaryLabel, { color: textSecondary, marginTop: 4 }]}>
                                                 KM anterior: {vehiculoRetro.kilometrajeActual?.toLocaleString('es-AR')} km
@@ -400,9 +410,10 @@ const styles = StyleSheet.create({
     title: { fontSize: 24, fontWeight: '900', letterSpacing: -0.5, marginBottom: 4 },
     subtitle: { fontSize: 14, marginBottom: 20 },
     summaryCard: { borderRadius: 16, padding: 16, borderWidth: 1, marginBottom: 20 },
-    summaryRow: { flexDirection: 'row', alignItems: 'center' },
+    summaryRow: { flexDirection: 'row', alignItems: 'flex-start' },
     summaryLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 1.5, textTransform: 'uppercase' },
     summaryValue: { fontSize: 15, fontWeight: '700', marginTop: 2 },
+    summarySubValue: { fontSize: 12, fontWeight: '500', marginTop: 1 },
     divLine: { height: 1, marginVertical: 12 },
     icon0: { margin: 0, padding: 0 },
     fieldLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 1.5, marginBottom: 8, marginLeft: 2 },
