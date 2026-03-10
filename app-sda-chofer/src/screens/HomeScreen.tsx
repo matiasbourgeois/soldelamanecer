@@ -60,16 +60,13 @@ const HomeScreen = ({ navigation }: any) => {
     const [modalSelectorVisible, setModalSelectorVisible] = useState(false);
     const [tipoSelector, setTipoSelector] = useState<'vehiculo' | 'ruta'>('vehiculo');
     const [searchQuery, setSearchQuery] = useState('');
-    const [cambiosPendientes, setCambiosPendientes] = useState(false);
 
     // Alert
     const [alertConfig, setAlertConfig] = useState<{
         visible: boolean; title: string; message: string; type: 'success' | 'error' | 'warning' | 'info';
     }>({ visible: false, title: '', message: '', type: 'info' });
-    const [showAlertConfirm, setShowAlertConfirm] = useState(false);
 
     // Animaciones
-    const scaleValue = useRef(new Animated.Value(1)).current;
     const pulseValue = useRef(new Animated.Value(1)).current;
     const appStateRef = useRef<AppStateStatus>(AppState.currentState);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -183,22 +180,7 @@ const HomeScreen = ({ navigation }: any) => {
     const seleccionarItem = (item: any) => {
         if (tipoSelector === 'vehiculo') setVehiculoSeleccionado(item);
         else setRutaSeleccionada(item);
-        setCambiosPendientes(true);
         setModalSelectorVisible(false);
-    };
-    const guardarCambios = async () => {
-        try {
-            await api.post('/choferes/actualizar-asignacion', {
-                hojaRepartoId: config.hojaRepartoId,
-                rutaId: rutaSeleccionada?._id,
-                vehiculoId: vehiculoSeleccionado?._id
-            });
-            setCambiosPendientes(false);
-            fetchConfig();
-            setAlertConfig({ visible: true, title: '¡Listo!', message: 'Asignación guardada correctamente.', type: 'success' });
-        } catch (e: any) {
-            setAlertConfig({ visible: true, title: 'Error', message: e.response?.data?.error || 'No se pudieron guardar los cambios.', type: 'error' });
-        }
     };
 
     // ── Datos derivados ────────────────────────────────────────────────────
@@ -491,23 +473,13 @@ const HomeScreen = ({ navigation }: any) => {
                                     <IconButton icon="chevron-down" iconColor={theme.colors.outline} size={18} style={styles.icon0} />
                                 )}
                             </TouchableOpacity>
-
-                            {/* Guardar cambios si hay pendientes */}
-                            {cambiosPendientes && (
-                                <>
-                                    <View style={[styles.statusDivider, { backgroundColor: theme.colors.outline, marginVertical: 10 }]} />
-                                    <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
-                                        <TouchableOpacity style={styles.saveBtn}
-                                            onPress={() => setShowAlertConfirm(true)} activeOpacity={0.9}>
-                                            <LinearGradient colors={['#10b981', '#059669']}
-                                                style={styles.saveBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                                                <IconButton icon="check-all" iconColor="white" size={20} style={styles.icon0} />
-                                                <Text style={styles.saveBtnText}>GUARDAR ASIGNACIÓN</Text>
-                                            </LinearGradient>
-                                        </TouchableOpacity>
-                                    </Animated.View>
-                                </>
-                            )}
+                            {/* Hint: cambios se aplican al confirmar */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(100,116,139,0.15)' }}>
+                                <IconButton icon="information-outline" size={14} iconColor={ts} style={styles.icon0} />
+                                <Text style={[styles.statusSubDetail, { color: ts, flex: 1, marginLeft: 4 }]}>
+                                    Los cambios se aplican al confirmar la jornada.
+                                </Text>
+                            </View>
                         </View>
                     )}
 
@@ -727,10 +699,6 @@ const HomeScreen = ({ navigation }: any) => {
             </Portal>
 
             {/* ── ALERTS ── */}
-            <CustomAlert visible={showAlertConfirm} title="¿Confirmar asignación?"
-                message={`Vehículo: ${vehiculoSeleccionado?.patente?.toUpperCase()} · Ruta: ${rutaSeleccionada?.codigo?.toUpperCase()}`}
-                type="success" confirmText="SÍ, GUARDAR" cancelText="CANCELAR"
-                onClose={() => setShowAlertConfirm(false)} onConfirm={guardarCambios} />
             <CustomAlert visible={alertConfig.visible} title={alertConfig.title}
                 message={alertConfig.message} type={alertConfig.type}
                 onClose={() => setAlertConfig({ ...alertConfig, visible: false })} />
