@@ -362,7 +362,7 @@ const obtenerLogMantenimiento = async (req, res) => {
 const registrarReporteChofer = async (req, res) => {
   try {
     const { id } = req.params;
-    const { kilometraje, litros, rutaId, fecha, observaciones, hojaRepartoId } = req.body;
+    const { kilometraje, litros, rutaId, fecha, observaciones, hojaRepartoId, hojaRepartoIds } = req.body;
 
     const vehiculo = await Vehiculo.findById(id);
     if (!vehiculo) return res.status(404).json({ error: "Vehículo no encontrado" });
@@ -389,40 +389,46 @@ const registrarReporteChofer = async (req, res) => {
       vehiculo.kilometrajeActual = kilometraje;
     }
 
-    // 3. Vincular con Hoja de Reparto si existe
-    let hojaFinalId = hojaRepartoId;
+    // 3. Construir lista de IDs de hojas a actualizar
+    //    Soporta: array hojaRepartoIds (multi-ruta) o string hojaRepartoId (single)
+    const HojaReparto = require("../../models/HojaReparto");
+    const Chofer = require("../../models/Chofer");
+    const choferDoc = req.usuario
+      ? await Chofer.findOne({ usuario: req.usuario.id })
+      : null;
 
-    if (hojaFinalId) {
-      const HojaReparto = require("../../models/HojaReparto");
-      const hoja = await HojaReparto.findById(hojaFinalId);
-      if (hoja) {
-        // Si el chofer reportó un vehículo o ruta distinta a la planificada en la hoja, 
-        // actualizamos la hoja para que el Control Operativo detecte la "discrepancia"
-        // o simplemente para que quede registrado qué usó realmente.
-        hoja.chofer = req.usuario ? (await require("../../models/Chofer").findOne({ usuario: req.usuario.id }))?._id || hoja.chofer : hoja.chofer;
-        hoja.vehiculo = id;
-        hoja.ruta = rutaId || hoja.ruta;
+    const ids = Array.isArray(hojaRepartoIds) && hojaRepartoIds.length > 0
+      ? hojaRepartoIds
+      : hojaRepartoId
+        ? [hojaRepartoId]
+        : [];
 
-        // Si estaba pendiente, pasa a 'en reparto'
-        if (hoja.estado === 'pendiente') {
-          hoja.estado = 'en reparto';
-          hoja.historialMovimientos.push({
-            usuario: req.usuario ? req.usuario.id : null,
-            accion: 'inicio de viaje desde app móvil'
-          });
-        }
-        await hoja.save();
+    // Actualizar TODAS las hojas en paralelo
+    await Promise.all(ids.map(async (hid) => {
+      const hoja = await HojaReparto.findById(hid);
+      if (!hoja) return;
+      if (choferDoc) hoja.chofer = choferDoc._id;
+      hoja.vehiculo = id;
+      // Solo aplica rutaId cuando hay una sola hoja (multi-ruta: cada hoja mantiene su propia ruta)
+      if (ids.length === 1 && rutaId) hoja.ruta = rutaId;
+      if (hoja.estado === 'pendiente') {
+        hoja.estado = 'en reparto';
+        hoja.historialMovimientos.push({
+          usuario: req.usuario ? req.usuario.id : null,
+          accion: 'inicio de viaje desde app móvil'
+        });
       }
-    }
+      await hoja.save();
+    }));
 
-    // 4. Crear Log
+    // 4. Crear UN único MantenimientoLog (un odómetro por vehículo, sin importar cuántas rutas)
     const log = new MantenimientoLog({
       vehiculo: vehiculo._id,
       tipo: "Reporte Diario",
       kmAlMomento: kilometraje,
       litrosCargados: litros || 0,
       ruta: rutaId || null,
-      hojaReparto: hojaFinalId || null,
+      hojaReparto: ids[0] || null,  // referencia a la primera hoja (trazabilidad)
       fecha: fecha ? timeUtil.getMediodiaSeguroUTC(fecha) : new Date(),
       registradoPor: req.usuario ? req.usuario.id : null,
       observaciones: observaciones || `Reporte diario desde App Móvil.`

@@ -14,7 +14,8 @@ interface ConfirmarJornadaModalProps {
     onSuccess: () => void;
     vehiculo: any;
     ruta: any;
-    hojaRepartoId: string;
+    hojaRepartoId?: string;
+    hojasActivas?: Array<{ hojaRepartoId: string; ruta: any; vehiculo: any }>;
     isDark: boolean;
     textPrimary: string;
     textSecondary: string;
@@ -23,7 +24,7 @@ interface ConfirmarJornadaModalProps {
 
 const ConfirmarJornadaModal: React.FC<ConfirmarJornadaModalProps> = ({
     visible, onClose, onSuccess,
-    vehiculo, ruta, hojaRepartoId,
+    vehiculo, ruta, hojaRepartoId, hojasActivas,
     isDark, textPrimary, textSecondary, userId
 }) => {
     const [kmInput, setKmInput] = useState('');
@@ -64,8 +65,7 @@ const ConfirmarJornadaModal: React.FC<ConfirmarJornadaModalProps> = ({
     const getVehiculoId = (v: any) => v?._id?.toString() || v?.id?.toString() || null;
     const getRutaId = (r: any) => r?._id?.toString() || r?.id?.toString() || null;
     const getHojaId = (h: any) => h?.toString() || null;
-
-    const handleSubmit = async () => {
+    const handleSubmit = async () => {
         if (!kmInput || kmInput.trim() === '') {
             setError('Ingresá el kilometraje actual del vehículo.');
             return;
@@ -79,29 +79,41 @@ const ConfirmarJornadaModal: React.FC<ConfirmarJornadaModalProps> = ({
             return;
         }
         const vid = getVehiculoId(vehiculo);
-        if (!vid) { setError('No se encontró el ID del vehículo. Recargá la pantalla.'); return; }
-        await enviar(vid, getHojaId(hojaRepartoId), null);
+        if (!vid) { setError('No se encontró el ID del vehículo. Recarguá la pantalla.'); return; }
+        await enviar(vid, null);
     };
 
     const handleConfirmAlta = async () => {
         setError('');
         const vid = getVehiculoId(vehiculo);
         if (!vid) { setError('No se encontró el ID del vehículo.'); return; }
-        await enviar(vid, getHojaId(hojaRepartoId), null);
+        await enviar(vid, null);
     };
 
-    const enviar = async (vehiculoId: string, hojaId: string | null, fechaOverride: string | null) => {
+    const enviar = async (vehiculoId: string, fechaOverride: string | null) => {
         setSubmitting(true);
         setError('');
         try {
-            const payload = {
+            // Multi-ruta: enviar todos los IDs; single: enviar ID único
+            const hasMulti = Array.isArray(hojasActivas) && hojasActivas.length > 1;
+            const hojaRepartoIdsArr = hasMulti
+                ? hojasActivas!.map(h => h.hojaRepartoId?.toString()).filter(Boolean)
+                : null;
+            const singleHojaId = getHojaId(hojaRepartoId);
+
+            const payload: any = {
                 kilometraje: parseInt(kmInput),
                 litros: litrosInput ? parseFloat(litrosInput) : 0,
                 rutaId: getRutaId(ruta),
-                hojaRepartoId: hojaId,
                 fecha: fechaOverride || new Date().toISOString(),
                 observaciones: observaciones?.trim() || 'Reporte diario desde App Móvil.'
             };
+            if (hojaRepartoIdsArr) {
+                payload.hojaRepartoIds = hojaRepartoIdsArr;
+            } else if (singleHojaId) {
+                payload.hojaRepartoId = singleHojaId;
+            }
+
             console.log('[ConfirmarJornada] Enviando reporte:', { vehiculoId, payload });
             const res = await api.post(`/vehiculos/${vehiculoId}/reporte-chofer`, payload);
             console.log('[ConfirmarJornada] Respuesta OK:', res.data);
@@ -140,7 +152,10 @@ const ConfirmarJornadaModal: React.FC<ConfirmarJornadaModalProps> = ({
 
     const enviarRetroactivo = async () => {
         if (!vehiculoRetro) return;
-        await enviar(vehiculoRetro._id, '', `${fechaRetroactiva}T12:00:00.000Z`);
+        // Retroactivo solo tiene una hoja, usar vehicle._id y fecha override
+        const vid = vehiculoRetro._id?.toString();
+        if (!vid) return;
+        await enviar(vid, `${fechaRetroactiva}T12:00:00.000Z`);
     };
 
     const vehiculoActivo = showRetroactivo ? vehiculoRetro : vehiculo;
@@ -172,10 +187,10 @@ const ConfirmarJornadaModal: React.FC<ConfirmarJornadaModalProps> = ({
                                     ? 'Cargá el km de un día anterior.'
                                     : 'Completá los datos de tu jornada de hoy.'}
                             </Text>
-
                             {/* Resumen (solo modo normal) */}
                             {!showRetroactivo && (
                                 <View style={[styles.summaryCard, { backgroundColor: glassBg, borderColor: glassBorder }]}>
+                                    {/* Vehículo */}
                                     <View style={styles.summaryRow}>
                                         <IconButton icon="truck-outline" size={18} iconColor={accent} style={styles.icon0} />
                                         <View style={{ flex: 1 }}>
@@ -192,15 +207,36 @@ const ConfirmarJornadaModal: React.FC<ConfirmarJornadaModalProps> = ({
                                         </View>
                                     </View>
                                     <View style={[styles.divLine, { backgroundColor: glassBorder }]} />
-                                    <View style={styles.summaryRow}>
-                                        <IconButton icon="map-marker-distance" size={18} iconColor={accent} style={styles.icon0} />
-                                        <View>
-                                            <Text style={[styles.summaryLabel, { color: textSecondary }]}>RUTA</Text>
-                                            <Text style={[styles.summaryValue, { color: textPrimary }]}>
-                                                {ruta?.codigo?.toUpperCase() || '—'}
-                                            </Text>
+                                    {/* Rutas: multi o single */}
+                                    {Array.isArray(hojasActivas) && hojasActivas.length > 1 ? (
+                                        <View style={styles.summaryRow}>
+                                            <IconButton icon="map-marker-multiple-outline" size={18} iconColor="#eab308" style={styles.icon0} />
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={[styles.summaryLabel, { color: '#eab308' }]}>
+                                                    {hojasActivas.length} RUTAS CONFIRMADAS
+                                                </Text>
+                                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                                                    {hojasActivas.map((h, i) => (
+                                                        <View key={i} style={[styles.routeChip, { backgroundColor: isDark ? 'rgba(234,179,8,0.15)' : '#fef9c3', borderColor: '#eab308' }]}>
+                                                            <Text style={{ color: '#b45309', fontWeight: '800', fontSize: 12 }}>
+                                                                {h.ruta?.codigo?.toUpperCase() || '?'}
+                                                            </Text>
+                                                        </View>
+                                                    ))}
+                                                </View>
+                                            </View>
                                         </View>
-                                    </View>
+                                    ) : (
+                                        <View style={styles.summaryRow}>
+                                            <IconButton icon="map-marker-distance" size={18} iconColor={accent} style={styles.icon0} />
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={[styles.summaryLabel, { color: textSecondary }]}>RUTA</Text>
+                                                <Text style={[styles.summaryValue, { color: textPrimary }]}>
+                                                    {ruta?.codigo?.toUpperCase() || '—'}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    )}
                                 </View>
                             )}
 
@@ -440,6 +476,7 @@ const styles = StyleSheet.create({
     submitWrap: { borderRadius: 18, overflow: 'hidden', marginBottom: 16 },
     submitGrad: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
     submitText: { color: 'white', fontWeight: '900', fontSize: 17, letterSpacing: 1.5 },
+    routeChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
     retroLink: { alignItems: 'center', padding: 8 },
     retroLinkText: { fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' },
 });

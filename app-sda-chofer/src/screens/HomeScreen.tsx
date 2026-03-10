@@ -463,17 +463,33 @@ const HomeScreen = ({ navigation }: any) => {
                                 </View>
                                 <View style={styles.statusTextContainer}>
                                     <Text style={[styles.statusLabel, config?.hojasActivas?.length > 1 && { color: '#eab308' }]}>
-                                        {config?.hojasActivas?.length > 1 ? 'MÚLTIPLES RUTAS' : 'RUTA'}
+                                        {config?.hojasActivas?.length > 1 ? 'RUTAS DEL DÍA' : 'RUTA'}
                                     </Text>
-                                    <Text style={[styles.statusMainValue, { color: tp }]}>
-                                        {config?.hojasActivas?.length > 1
-                                            ? `${config.hojasActivas.length} Rutas Activas`
-                                            : (rutaSeleccionada?.codigo?.toUpperCase() || 'SIN RUTA')}
-                                    </Text>
-                                    {rutaSeleccionada?.horaSalida && config?.hojasActivas?.length <= 1 && (
-                                        <Text style={[styles.statusSubDetail, { color: ts }]}>
-                                            Salida: {rutaSeleccionada.horaSalida}
-                                        </Text>
+                                    {config?.hojasActivas?.length > 1 ? (
+                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                                            {config.hojasActivas.map((h: any, i: number) => (
+                                                <View key={i} style={{
+                                                    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+                                                    backgroundColor: isDark ? 'rgba(234,179,8,0.15)' : '#fef9c3',
+                                                    borderWidth: 1, borderColor: '#eab308'
+                                                }}>
+                                                    <Text style={{ color: '#b45309', fontWeight: '800', fontSize: 12 }}>
+                                                        {h.ruta?.codigo?.toUpperCase() || '?'}
+                                                    </Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    ) : (
+                                        <>
+                                            <Text style={[styles.statusMainValue, { color: tp }]}>
+                                                {rutaSeleccionada?.codigo?.toUpperCase() || 'SIN RUTA'}
+                                            </Text>
+                                            {rutaSeleccionada?.horaSalida && (
+                                                <Text style={[styles.statusSubDetail, { color: ts }]}>
+                                                    Salida: {rutaSeleccionada.horaSalida}
+                                                </Text>
+                                            )}
+                                        </>
                                     )}
                                 </View>
                                 {(!config?.hojasActivas || config.hojasActivas.length <= 1) && (
@@ -548,7 +564,7 @@ const HomeScreen = ({ navigation }: any) => {
                 onSuccess={() => { hasManualChange.current = false; setConfirmarVisible(false); fetchConfig(); }}
                 vehiculo={vehiculoSeleccionado}
                 ruta={rutaSeleccionada}
-                hojaRepartoId={config?.hojaRepartoId}
+                hojasActivas={config?.hojasActivas}
                 isDark={isDark}
                 textPrimary={tp}
                 textSecondary={ts}
