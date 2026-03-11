@@ -34,7 +34,7 @@ export const DarkTheme = {
         ...MD3DarkTheme.colors,
         ...commonColors,
         primary: '#06b6d4',       // Cyan 500 (Más brillante para dark)
-        background: '#020617',    // Slate 950 (God Tier original)
+        background: '#020617',    // Slate 950
         surface: '#0f172a',       // Slate 900
         surfaceVariant: 'rgba(30, 41, 59, 0.6)',
         textPrimary: '#f8fafc',   // Slate 50

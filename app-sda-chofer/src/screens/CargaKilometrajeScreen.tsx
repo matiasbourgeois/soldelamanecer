@@ -36,13 +36,13 @@ const CargaKilometrajeScreen = ({ navigation }: any) => {
 
     // State for Success Modal
     const [successModalVisible, setSuccessModalVisible] = useState(false);
-    // State for Confirmation Modal (God Tier)
+    // State for Confirmation Modal
     const [confirmModalVisible, setConfirmModalVisible] = useState(false);
     // State for Mileage Input Modal
     const [kmModalVisible, setKmModalVisible] = useState(false);
     const [tempKmInput, setTempKmInput] = useState('');
 
-    // State for Error Modal (God Tier)
+    // State for Error Modal
     const [errorModalVisible, setErrorModalVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 

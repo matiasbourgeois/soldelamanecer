@@ -14,7 +14,7 @@ const EnvioCard: React.FC<EnvioCardProps> = ({ envio, onPress }) => {
   const isDark = theme.dark;
   const estado = envio.estado?.toLowerCase() || 'pendiente';
 
-  // Configuración de Colores "God Tier" Adaptable
+  // Configuración de Colores Adaptable
 
   // Default (Pendiente / Otros)
   let statusColor = isDark ? '#fbbf24' : '#d97706'; // Amber 400 (Dark) / Amber 600 (Light)

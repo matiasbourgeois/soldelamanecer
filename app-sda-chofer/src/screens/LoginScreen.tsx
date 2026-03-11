@@ -26,7 +26,7 @@ const LoginScreen = ({ navigation }: any) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // 🔴 Estados para manejo de errores visuales (God Tier)
+  // 🔴 Estados para manejo de errores visuales
   const [visible, setVisible] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -151,7 +151,7 @@ const LoginScreen = ({ navigation }: any) => {
             </Button>
 
             <HelperText type="info" style={{ marginTop: 20, textAlign: 'center', color: textSecondary }}>
-              Versión 2.0.2 (God Tier)
+              Versión 2.0.2
             </HelperText>
           </Surface>
 
