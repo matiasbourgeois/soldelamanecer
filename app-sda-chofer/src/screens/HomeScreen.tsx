@@ -474,7 +474,7 @@ const HomeScreen = ({ navigation }: any) => {
                                     <Text style={[styles.statusLabel, config?.hojasActivas?.length > 1 && { color: '#eab308' }]}>
                                         {config?.hojasActivas?.length > 1 ? 'RUTAS DEL DÍA' : 'RUTA'}
                                     </Text>
-                                    {config?.hojasActivas?.length > 1 ? (
+                                    {config?.hojasActivas?.length > 1 && !multiRouteOverride ? (
                                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
                                             {config.hojasActivas.map((h: any, i: number) => (
                                                 <View key={i} style={{
