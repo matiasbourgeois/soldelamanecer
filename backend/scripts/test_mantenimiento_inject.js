@@ -1,30 +1,33 @@
-/**
- * MEGA TEST — Mantenimiento Alerts
- * Inyecta datos de prueba en un vehiculo real para verificar
- * que la app muestra las alertas correctamente.
- * CORRE ESTO, VERIFICA EN EXPO, Y DESPUES CORRE EL CLEANUP.
- */
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 dotenv.config();
 
 const Vehiculo = require("../src/models/Vehiculo");
+const Ruta = require("../src/models/Ruta");
+const HojaReparto = require("../src/models/HojaReparto");
+const timeUtil = require("../src/utils/timeUtil");
 
-const PATENTE_TEST = null; // Se usa el primer vehículo propio disponible
-
+// Inyectar en el PRIMER vehículo que tenga una hoja activa HOY
 async function injectTestData() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Conectado a BD...");
 
-    const vehiculo = PATENTE_TEST
-        ? await Vehiculo.findOne({ patente: PATENTE_TEST.toUpperCase() })
-        : await Vehiculo.findOne({ tipoPropiedad: "propio", activo: true });
+    const hoy = new Date();
+    const inicio = timeUtil.getInicioDiaArg(hoy);
+    const fin = timeUtil.getFinDiaArg(hoy);
 
-    if (!vehiculo) {
-        console.error("No se encontró ningún vehículo.");
+    const hojaHoy = await HojaReparto.findOne({
+        fecha: { $gte: inicio, $lte: fin },
+        estado: { $ne: "cerrada" }
+    }).populate("vehiculo");
+
+    if (!hojaHoy || !hojaHoy.vehiculo) {
+        console.error("No hay hojas activas hoy con vehículo asignado.");
         await mongoose.disconnect();
         return;
     }
+
+    const vehiculo = await Vehiculo.findById(hojaHoy.vehiculo._id);
 
     // Guardar backup de configuración original
     const configOriginal = JSON.stringify(vehiculo.configuracionMantenimiento);
