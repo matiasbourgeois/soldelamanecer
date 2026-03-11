@@ -52,7 +52,7 @@ const AprobacionesAdmin = () => {
         try {
             if (resolucion === "RECHAZAR" && !motivoRechazo) {
                 // En un entorno de producción real, abriríamos un Modal para pedir el motivo. 
-                // Para simplificar ahora (God Tier), pre-definimos un motivo o lo pedimos por prompt.
+                // Para simplificar ahora, pre-definimos un motivo o lo pedimos por prompt.
                 motivoRechazo = window.prompt("Ingresa el motivo del rechazo:", "Cambios no autorizados");
                 if (motivoRechazo === null) return; // Canceló el prompt
             }

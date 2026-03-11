@@ -29,10 +29,10 @@ const ControlOperativo = () => {
     const [filtroChofer, setFiltroChofer] = useState(null);
     const [filtroChoferOpciones, setFiltroChoferOpciones] = useState([]);
 
-    // Sistema de Tabs "Nivel Dios"
+    // Sistema de Tabs
     const [tabTemporal, setTabTemporal] = useState('hoy'); // 'ayer' | 'hoy' | 'custom'
 
-    // Lógica Nivel Dios: Ayer y Hoy por defecto para facilitar auditoría
+    // Ayer y Hoy por defecto para facilitar auditoría
     const getAyerHoy = () => {
         const hoy = new Date();
         const ayer = new Date();
@@ -548,7 +548,7 @@ const ControlOperativo = () => {
 
     return (
         <Container size="xl" py="xl">
-            {/* God Level Header */}
+            {/* Header */}
             <Paper p="xl" radius="lg" shadow="md" withBorder mb="xl" style={{
                 background: 'linear-gradient(135deg, #0b7285 0%, #0c8599 100%)',
                 color: 'white',
@@ -562,7 +562,7 @@ const ControlOperativo = () => {
                                 CONTROL OPERATIVO DIARIO
                             </Title>
                         </Group>
-                        <Text fw={500} opacity={0.9}>Consola de Auditoría y Generación Automática "God Level"</Text>
+                        <Text fw={500} opacity={0.9}>Consola de Auditoría y Generación Automática</Text>
                     </Stack>
                     <Group>
                         <Button
