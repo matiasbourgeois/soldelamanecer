@@ -15,6 +15,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../api/client';
 import { AppTheme } from '../theme/theme';
 import ConfirmarJornadaModal from '../components/home/ConfirmarJornadaModal';
+import MantenimientoAlertBanner, { calcularAlertasMantenimiento } from '../components/home/MantenimientoAlertBanner';
 
 const PROD_URL = 'https://api.soldelamanecer.ar';
 const DEV_URL = 'http://192.168.0.132:5000';
@@ -207,6 +208,7 @@ const HomeScreen = ({ navigation }: any) => {
     const esLibre = !tieneHojaActiva && esFinDeSemana();
 
     // Menú de acciones rápidas (solo entrega, km se hace desde el modal)
+    const alertasMantenimiento = calcularAlertasMantenimiento(vehiculoSeleccionado);
     const menuItems = [
         {
             title: 'Mis entregas del día',
@@ -214,7 +216,22 @@ const HomeScreen = ({ navigation }: any) => {
             icon: 'clipboard-text-play-outline',
             colors: ['#059669', '#10b981'] as [string, string],
             route: 'HojaReparto',
-        }
+            badge: null,
+        },
+        {
+            title: 'Mantenimiento',
+            subtitle: alertasMantenimiento.length > 0
+                ? `${alertasMantenimiento.length} alerta${alertasMantenimiento.length > 1 ? 's' : ''} activa${alertasMantenimiento.length > 1 ? 's' : ''}`
+                : 'Estado del vehículo',
+            icon: 'wrench',
+            colors: alertasMantenimiento.some(a => a.status === 'red')
+                ? ['#991b1b', '#ef4444'] as [string, string]
+                : alertasMantenimiento.length > 0
+                    ? ['#854d0e', '#eab308'] as [string, string]
+                    : ['#1e3a5f', '#2563eb'] as [string, string],
+            route: 'MantenimientoAlert',
+            badge: alertasMantenimiento.some(a => a.status === 'red') ? alertasMantenimiento.filter(a => a.status === 'red').length : null,
+        },
     ];
 
     // ── Render helpers ─────────────────────────────────────────────────────
@@ -535,6 +552,17 @@ const HomeScreen = ({ navigation }: any) => {
                         </Animated.View>
                     )}
 
+                    {/* ── BANNER MANTENIMIENTO ── */}
+                    {vehiculoSeleccionado && alertasMantenimiento.length > 0 && (
+                        <View style={{ paddingHorizontal: 20 }}>
+                            <MantenimientoAlertBanner
+                                vehiculo={vehiculoSeleccionado}
+                                isDark={isDark}
+                                onPress={() => navigation.navigate('MantenimientoAlert', { vehiculo: vehiculoSeleccionado })}
+                            />
+                        </View>
+                    )}
+
                     {/* ── ACCIONES RÁPIDAS ── */}
                     {tieneHojaActiva && (
                         <View style={{ paddingHorizontal: 20 }}>
@@ -544,7 +572,7 @@ const HomeScreen = ({ navigation }: any) => {
                             </View>
                             {menuItems.map((item, i) => (
                                 <TouchableOpacity key={i} activeOpacity={0.85}
-                                    onPress={() => navigation.navigate(item.route)}
+                                    onPress={() => navigation.navigate(item.route, item.route === 'MantenimientoAlert' ? { vehiculo: vehiculoSeleccionado } : undefined)}
                                     style={styles.actionCardWrapper}>
                                     <LinearGradient colors={item.colors}
                                         start={{ x: 0, y: 0 }} end={{ x: 1, y: 0.5 }}
@@ -557,6 +585,11 @@ const HomeScreen = ({ navigation }: any) => {
                                                 <Text style={styles.actionItemTitle}>{item.title}</Text>
                                                 <Text style={styles.actionItemSubtitle}>{item.subtitle}</Text>
                                             </View>
+                                            {item.badge != null && (
+                                                <View style={styles.alertBadge}>
+                                                    <Text style={styles.alertBadgeText}>{item.badge}</Text>
+                                                </View>
+                                            )}
                                             <IconButton icon="chevron-right" iconColor="rgba(255,255,255,0.7)" size={22} />
                                         </View>
                                     </LinearGradient>
@@ -815,7 +848,11 @@ const styles = StyleSheet.create({
     saveBtnText: { color: 'white', fontWeight: '900', fontSize: 14, letterSpacing: 1, marginLeft: 6 },
 
     // Botón CONFIRMAR MI JORNADA
-    confirmWrap: { borderRadius: 20, overflow: 'hidden', marginBottom: 24, elevation: 8, shadowColor: '#10b981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12, marginTop: 4 },
+    confirmWrap: { borderRadius: 20, overflow: 'hidden', marginBottom: 14, elevation: 8, shadowColor: '#10b981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12, marginTop: 4 },
+
+    // Alert badge (acciones rápidas)
+    alertBadge: { minWidth: 24, height: 24, borderRadius: 12, backgroundColor: '#ef4444', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6, marginRight: 4 },
+    alertBadgeText: { color: 'white', fontSize: 11, fontWeight: '900' },
     confirmBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 18, paddingHorizontal: 20 },
     confirmBtnTitle: { color: 'white', fontWeight: '900', fontSize: 15, letterSpacing: 1 },
     confirmBtnSub: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 2 },

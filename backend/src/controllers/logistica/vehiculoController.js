@@ -407,12 +407,15 @@ const registrarReporteChofer = async (req, res) => {
     // NOTA: el cambio de estado pendiente→en reparto lo maneja cronCambiarEstados.js
     await Promise.all(ids.map(async (hid) => {
       const hoja = await HojaReparto.findById(hid);
-      if (!hoja) return;
       if (choferDoc) hoja.chofer = choferDoc._id;
       hoja.vehiculo = id;
       // Solo aplica rutaId cuando hay una sola hoja (override manual)
       // Si hay múltiples hojas (bundle normal), cada una mantiene su propia ruta asignada
-      if (ids.length === 1 && rutaId) hoja.ruta = rutaId;
+      if (ids.length === 1 && rutaId) {
+          hoja.ruta = rutaId;
+          console.log(`[TEST2] Aplicando rutaId: ${rutaId}`);
+      }
+      
       await hoja.save();
     }));
 
