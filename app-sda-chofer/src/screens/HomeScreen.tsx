@@ -72,6 +72,9 @@ const HomeScreen = ({ navigation }: any) => {
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
     // Protege la selección manual del chofer contra resets por fetchConfig/AppState
     const hasManualChange = useRef(false);
+    // Detecta cuando un chofer multi-ruta cambia a una ruta diferente (override)
+    // useState para poder re-renderizar el aviso en la UI
+    const [multiRouteOverride, setMultiRouteOverride] = useState(false);
 
     // ── Photo picker ──────────────────────────────────────────────────────────────
     const pickImage = async () => {
@@ -185,7 +188,13 @@ const HomeScreen = ({ navigation }: any) => {
     };
     const seleccionarItem = (item: any) => {
         if (tipoSelector === 'vehiculo') setVehiculoSeleccionado(item);
-        else setRutaSeleccionada(item);
+        else {
+            setRutaSeleccionada(item);
+            // Si es chofer multi-ruta y elige UNA ruta diferente, activar el override
+            if ((config?.hojasActivas?.length || 0) > 1) {
+                setMultiRouteOverride(true);
+            }
+        }
         hasManualChange.current = true;  // ← protege contra resets de fetchConfig
         setModalSelectorVisible(false);
     };
@@ -453,8 +462,8 @@ const HomeScreen = ({ navigation }: any) => {
 
                             {/* Ruta */}
                             <TouchableOpacity style={styles.statusItem}
-                                onPress={() => { if (!config?.hojasActivas || config.hojasActivas.length <= 1) abrirSelector('ruta'); }}
-                                disabled={config?.hojasActivas?.length > 1} activeOpacity={0.7}>
+                                onPress={() => abrirSelector('ruta')}
+                                activeOpacity={0.7}>
                                 <View style={[styles.statusIconBase, { backgroundColor: config?.hojasActivas?.length > 1 ? 'rgba(234,179,8,0.12)' : (isDark ? 'rgba(56,189,248,0.08)' : 'rgba(0,188,212,0.08)') }]}>
                                     <IconButton
                                         icon={config?.hojasActivas?.length > 1 ? 'map-marker-multiple-outline' : 'map-marker-distance'}
@@ -496,11 +505,14 @@ const HomeScreen = ({ navigation }: any) => {
                                     <IconButton icon="chevron-down" iconColor={theme.colors.outline} size={18} style={styles.icon0} />
                                 )}
                             </TouchableOpacity>
-                            {/* Hint: cambios se aplican al confirmar */}
+                            {/* Hint / aviso cambio de ruta */}
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(100,116,139,0.15)' }}>
-                                <IconButton icon="information-outline" size={14} iconColor={ts} style={styles.icon0} />
-                                <Text style={[styles.statusSubDetail, { color: ts, flex: 1, marginLeft: 4 }]}>
-                                    Los cambios se aplican al confirmar la jornada.
+                                <IconButton icon={multiRouteOverride ? 'alert-circle-outline' : 'information-outline'} size={14}
+                                    iconColor={multiRouteOverride ? '#eab308' : ts} style={styles.icon0} />
+                                <Text style={[styles.statusSubDetail, { color: multiRouteOverride ? '#b45309' : ts, flex: 1, marginLeft: 4 }]}>
+                                    {multiRouteOverride
+                                        ? 'Cambiaste tu ruta asignada. Las rutas originales quedarán pendientes para otro chofer.'
+                                        : 'Los cambios se aplican al confirmar la jornada.'}
                                 </Text>
                             </View>
                         </View>
@@ -561,10 +573,16 @@ const HomeScreen = ({ navigation }: any) => {
             <ConfirmarJornadaModal
                 visible={confirmarVisible}
                 onClose={() => setConfirmarVisible(false)}
-                onSuccess={() => { hasManualChange.current = false; setConfirmarVisible(false); fetchConfig(); }}
+                onSuccess={() => {
+                    hasManualChange.current = false;
+                    setMultiRouteOverride(false);
+                    setConfirmarVisible(false);
+                    fetchConfig();
+                }}
                 vehiculo={vehiculoSeleccionado}
                 ruta={rutaSeleccionada}
-                hojasActivas={config?.hojasActivas}
+                hojaRepartoId={config?.hojaRepartoId}
+                hojasActivas={multiRouteOverride ? undefined : config?.hojasActivas}
                 isDark={isDark}
                 textPrimary={tp}
                 textSecondary={ts}

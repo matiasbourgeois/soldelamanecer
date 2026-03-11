@@ -403,21 +403,16 @@ const registrarReporteChofer = async (req, res) => {
         ? [hojaRepartoId]
         : [];
 
-    // Actualizar TODAS las hojas en paralelo
+    // Actualizar TODAS las hojas en paralelo (vehículo y chofer real usado)
+    // NOTA: el cambio de estado pendiente→en reparto lo maneja cronCambiarEstados.js
     await Promise.all(ids.map(async (hid) => {
       const hoja = await HojaReparto.findById(hid);
       if (!hoja) return;
       if (choferDoc) hoja.chofer = choferDoc._id;
       hoja.vehiculo = id;
-      // Solo aplica rutaId cuando hay una sola hoja (multi-ruta: cada hoja mantiene su propia ruta)
+      // Solo aplica rutaId cuando hay una sola hoja (override manual)
+      // Si hay múltiples hojas (bundle normal), cada una mantiene su propia ruta asignada
       if (ids.length === 1 && rutaId) hoja.ruta = rutaId;
-      if (hoja.estado === 'pendiente') {
-        hoja.estado = 'en reparto';
-        hoja.historialMovimientos.push({
-          usuario: req.usuario ? req.usuario.id : null,
-          accion: 'inicio de viaje desde app móvil'
-        });
-      }
       await hoja.save();
     }));
 
