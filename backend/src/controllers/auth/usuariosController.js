@@ -1,4 +1,5 @@
 const Usuario = require("../../models/Usuario");
+const Chofer = require("../../models/Chofer");
 const bcrypt = require("bcryptjs");
 const { generarJWT } = require("../../helpers/jwt");
 
@@ -146,7 +147,20 @@ const eliminarUsuario = async (req, res) => {
 
     // SOFT DELETE: Archivado Lógico
     usuarioAEliminar.activo = false;
+    
+    // Liberar email y DNI para permitir nuevos registros con esos datos
+    const timestamp = Date.now();
+    usuarioAEliminar.email = `borrado_${timestamp}_${usuarioAEliminar.email}`;
+    if (usuarioAEliminar.dni) {
+      usuarioAEliminar.dni = `borrado_${timestamp}_${usuarioAEliminar.dni}`;
+    }
+
     await usuarioAEliminar.save();
+
+    // Sincronización Opcional: Eliminar la entidad "Chofer" vinculada para evitar huérfanos
+    if (usuarioAEliminar.rol === "chofer") {
+      await Chofer.deleteOne({ usuario: idUsuario });
+    }
 
     res.json({ mensaje: "Usuario desactivado correctamente" });
   } catch (error) {
