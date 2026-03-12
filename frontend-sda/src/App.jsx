@@ -16,6 +16,8 @@ import TransitionScreen from "@components/layout/TransitionScreen";
 // Pages - Auth
 import Login from "./modules/auth/pages/Login";
 import Registro from "./modules/auth/pages/Registro";
+import RecuperarPassword from "./modules/auth/pages/RecuperarPassword";
+import ResetPassword from "./modules/auth/pages/ResetPassword";
 
 // Pages - Public
 import Inicio from "./modules/public/pages/Inicio";
@@ -367,6 +369,8 @@ function App() {
               <Route path="/contacto" element={<Contacto />} />
               <Route path="/login" element={<Login />} />
               <Route path="/registro" element={<Registro />} />
+              <Route path="/recuperar-password" element={<RecuperarPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
               {/* Rutas públicas adicionales requeridas */}
               <Route path="/cotizador-online" element={<CotizadorCordobaPage />} />
               <Route path="/seguimiento" element={<BuscarSeguimiento />} />

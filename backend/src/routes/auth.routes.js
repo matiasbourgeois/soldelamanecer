@@ -16,7 +16,7 @@ const {
   cambiarPassword
 } = require("../controllers/auth/usuariosController");
 
-const { login, register, verificarCuenta, googleLogin, crearClienteRapido } = require("../controllers/auth/authController");
+const { login, register, verificarCuenta, googleLogin, crearClienteRapido, solicitarRecuperacionPassword, restablecerPassword } = require("../controllers/auth/authController");
 const verificarToken = require("../middlewares/verificarToken");
 const upload = require("../middlewares/upload");
 const Usuario = require("../models/Usuario"); // modelo de usuarios
@@ -47,6 +47,8 @@ router.post("/login", login);
 router.post("/register", register);
 router.get("/verify/:token", verificarCuenta);
 router.post("/login-google", googleLogin);
+router.post("/recuperar-password", solicitarRecuperacionPassword);
+router.post("/reset-password/:token", restablecerPassword);
 
 // ✨ FASE 11: Altas Administrativas
 router.post("/rapido", verificarToken, crearClienteRapido);

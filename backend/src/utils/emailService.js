@@ -185,4 +185,25 @@ const enviarInformeDrogSud = async (pdfBuffer, fecha, emails) => {
   }
 };
 
-module.exports = { enviarNotificacionEstado, enviarEmailVerificacion, enviarInformeDrogSud };
+const enviarEmailRecuperacion = async (email, nombre, enlace) => {
+  try {
+    await transporter.sendMail({
+      from: `"Sol del Amanecer Seguridad" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Recuperación de Contraseña - Sol del Amanecer",
+      html: generarHtmlCorreo({
+        titulo: "Recuperación de Contraseña",
+        nombre,
+        mensaje: "Hemos recibido una solicitud para restablecer tu contraseña. Si fuiste vos, hacé clic en el botón de abajo para crear una nueva clave. Este enlace es válido por 1 hora.",
+        buttonText: "Restablecer Contraseña",
+        buttonUrl: enlace
+      })
+    });
+    console.log(`📧 Email de recuperación enviado a ${email}`);
+  } catch (error) {
+    console.error("❌ Error enviando email de recuperación:", error);
+    throw error;
+  }
+};
+
+module.exports = { enviarNotificacionEstado, enviarEmailVerificacion, enviarInformeDrogSud, enviarEmailRecuperacion };

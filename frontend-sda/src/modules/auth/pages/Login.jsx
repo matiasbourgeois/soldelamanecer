@@ -175,6 +175,12 @@ function Login() {
                 styles={{ input: { fontSize: rem(15), height: rem(52) } }}
               />
 
+              <Group justify="flex-end" mt="-md">
+                <Anchor component="button" type="button" size="sm" c="dimmed" onClick={() => navigate('/recuperar-password')}>
+                  ¿Olvidó su contraseña?
+                </Anchor>
+              </Group>
+
               <Button
                 fullWidth
                 type="submit"

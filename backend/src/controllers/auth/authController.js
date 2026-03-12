@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const { OAuth2Client } = require("google-auth-library");
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const { enviarEmailVerificacion } = require("../../utils/emailService");
+const { enviarEmailVerificacion, enviarEmailRecuperacion } = require("../../utils/emailService");
 const logger = require("../../utils/logger");
 const handlebars = require("handlebars");
 const fs = require("fs");
@@ -324,10 +324,85 @@ const crearClienteRapido = async (req, res) => {
   }
 };
 
+// 🔹 Solicitar Recuperación de Contraseña
+const solicitarRecuperacionPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "El email es obligatorio" });
+    }
+
+    const usuario = await Usuario.findOne({ email });
+    if (!usuario) {
+      // Por seguridad, siempre devolvemos un 200 aunque no exista
+      return res.status(200).json({ mensaje: "Si el correo existe, recibirás las instrucciones en breve." });
+    }
+
+    if (!usuario.activo) {
+      return res.status(403).json({ error: "Tu cuenta ha sido desactivada." });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    usuario.resetPasswordToken = token;
+    usuario.resetPasswordExpires = Date.now() + 3600000; // 1 hora
+    await usuario.save();
+
+    const frontendUrl = process.env.FRONTEND_URL || "https://soldelamanecer.ar";
+    const enlace = `${frontendUrl}/reset-password/${token}`;
+
+    await enviarEmailRecuperacion(usuario.email, usuario.nombre, enlace);
+
+    res.status(200).json({ mensaje: "Si el correo existe, recibirás las instrucciones en breve." });
+  } catch (error) {
+    logger.error("🚨 Error al solicitar recuperación:", error);
+    res.status(500).json({ error: "Error en el servidor al procesar la solicitud." });
+  }
+};
+
+// 🔹 Restablecer Contraseña
+const restablecerPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { nuevaContrasena } = req.body;
+
+    if (!nuevaContrasena) {
+      return res.status(400).json({ error: "La nueva contraseña es obligatoria" });
+    }
+
+    const usuario = await Usuario.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!usuario) {
+      return res.status(400).json({ error: "El enlace de recuperación es inválido o ha expirado." });
+    }
+
+    usuario.contrasena = nuevaContrasena;
+    usuario.resetPasswordToken = undefined;
+    usuario.resetPasswordExpires = undefined;
+
+    // Si fue creado por admin, ya se está apropiando de su cuenta con su clave
+    if (usuario.creadoPorAdmin) {
+      usuario.creadoPorAdmin = false;
+      usuario.verificado = true;
+    }
+
+    await usuario.save();
+
+    res.status(200).json({ mensaje: "Contraseña actualizada con éxito. Ya puedes iniciar sesión." });
+  } catch (error) {
+    logger.error("🚨 Error al restablecer contraseña:", error);
+    res.status(500).json({ error: "Error en el servidor al intentar restablecer la contraseña." });
+  }
+};
+
 module.exports = {
   register,
   verificarCuenta,
   login,
   googleLogin,
-  crearClienteRapido
+  crearClienteRapido,
+  solicitarRecuperacionPassword,
+  restablecerPassword
 };
