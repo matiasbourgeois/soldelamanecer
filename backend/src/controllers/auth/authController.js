@@ -30,7 +30,7 @@ const register = async (req, res) => {
 
         // Sobreescribimos datos clave del Placeholder de Management
         usuarioExistente.nombre = nombre; // El nombre que el usuario mismo se puso ahora al registrarse
-        usuarioExistente.contrasena = await bcrypt.hash(contrasena, 10);
+        usuarioExistente.contrasena = contrasena;
         usuarioExistente.creadoPorAdmin = false; // FLAG APAGADO (es suyo ahora)
         usuarioExistente.verificado = false; // Le forzamos a verificar el correo real
         usuarioExistente.tokenVerificacion = tokenVerificacion;
@@ -59,12 +59,10 @@ const register = async (req, res) => {
     // Lógica Original de Alta desde Cero
     const tokenVerificacion = crypto.randomBytes(32).toString("hex");
 
-    const contrasenaHeasheada = await bcrypt.hash(contrasena, 10);
-
     const nuevoUsuario = new Usuario({
       nombre,
       email,
-      contrasena: contrasenaHeasheada,
+      contrasena,
       rol: "cliente",
       verificado: false,
       tokenVerificacion,
