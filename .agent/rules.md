@@ -1,4 +1,4 @@
-﻿# 🦅 MISSION CONTROL: REGLAS DE COMPORTAMIENTO (NIVEL DIOS)
+# 🦅 MISSION CONTROL: REGLAS DE COMPORTAMIENTO (NIVEL DIOS)
 
 Este documento es la **ÚNICA FUENTE DE VERDAD** técnica para el proyecto Sol del Amanecer. Rige la conducta de desarrolladores humanos y agentes de IA.
 
@@ -34,17 +34,22 @@ Hemos implementado una estrategia de "Protección Híbrida" para erradicar el er
 
 ---
 
-## 3. 🚀 PROTOCOLO DE DESPLIEGUE (VPS & HOSTINGER)
+## 3. 🚀 PROTOCOLO DE DESPLIEGUE OFICIAL (VPS & HOSTINGER)
+
+**¡ATENCIÓN AGENTES IA!** PROHIBIDO usar `scp` u otros métodos manuales para alterar código directo en producción.
 
 ### A. Backend (VPS - 69.62.86.69)
-1.  **Conexión:** `ssh root@69.62.86.69`
-2.  **Sync:** `cd /var/www/soldelamanecer/backend && git pull origin main`
-3.  **Install:** `npm install` (solo si hay nuevas dependencias).
-4.  **Restart:** `pm2 restart sda-backend`
-5.  **Nginx (God Mode):**
-    - Configuración especial en `/etc/nginx/sites-enabled/api-choferes`.
-    - Usa `alias` para `/uploads` (sin pasar por Node).
-    - Usa headers CORS dinámicos (`$http_origin`) para permitir credenciales.
+1.  **Conexión:** `ssh root@69.62.86.69` (Password: Consultar al usuario, comienza con `Silverstone...`)
+2.  **Advertencia Crítica:** NUNCA tocar la base de datos `cotizador` ni los procesos de `cotizador-backend` corriendo en el mismo VPS.
+3.  **Deploy Estricto:**
+    - Entrar a la carpeta: `cd /var/www/soldelamanecer/backend`
+    - Descartar la basura suelta y tests: `git reset --hard && git clean -fd`
+    - Traer el código limpio: `git pull origin feature/sidebar-god-tier` (o la rama activa actual)
+    - Instalar deps (si hace falta): `npm install`
+    - Reiniciar la aplicación NodeJS: `pm2 restart sda-backend`
+4.  **Nginx (God Mode):**
+    - Configuraciones en `/etc/nginx/sites-enabled/api-choferes` o `soldelamanecer`.
+    - Usa `alias` para `/uploads` (sin pasar por Node) y CORS dinámico (`$http_origin`).
 
 ### B. Frontend (Hostinger)
 1.  **Build:** Ejecutar `npm run build:vps` en `frontend-sda/`.

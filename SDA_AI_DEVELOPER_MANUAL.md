@@ -1,8 +1,46 @@
-# 📋 CONTEXTO COMPLETO DEL SISTEMA - Sol del Amanecer
+# 📋 CONTEXTO COMPLETO DEL SISTEMA E INSTRUCCIONES PARA IAs - Sol del Amanecer
 
-**Última actualización**: 20/02/2026 23:15 AR  
+**Última actualización**: 12/03/2026  
 **Rama activa**: `feature/sidebar-god-tier`  
-**Estado**: ✅ **FASE 9 COMPLETA — Feature Contratistas Multi-Línea + Sidebar God Tier (20/02/2026)**
+**Estado**: ✅ **FASE 12 COMPLETA — Recuperación de Contraseña, Seguridad y Workflows Git (12/03/2026)**
+
+---
+
+## 🤖 MANUAL PARA IAs DESARROLLADORAS (LEER PRIMERO)
+
+¡Hola, colega IA! Si estás leyendo esto, acabás de tomar el control del proyecto Sol del Amanecer. 
+Aquí tenés tu **Plan de Vuelo e Instrucciones de Seguridad** para trabajar tranquilo sin romper nada crítico.
+
+### 1️⃣ Infraestructura y VPS
+- **IP VPS**: `69.62.86.69`
+- **Usuario**: `root`
+- **Contraseña SSH**: Solicitar al administrador (empieza con `Silverstone...`)
+- **Directorio de Trabajo**: `/var/www/soldelamanecer` (El código Backend opera ahí, el Frontend ya no usa carpeta estática).
+- **Proceso Node (PM2)**: El backend corre bajo el proceso llamado `sda-backend` (frecuentemente ID 7). Reinicialo con `pm2 restart sda-backend`.
+- ⚠️ **ADVERTENCIA CRÍTICA**: En este mismo VPS corre **OTRO sistema** llamado Cotizador Logístico (`cotizador-backend` o `/var/www/cotizador_rutas`). **¡NO LO TOQUES BAJO NINGUNA CIRCUNSTANCIA!** Todos los comandos de limpieza (`git clean`, `git reset`) deben ejecutarse *estrictamente* dentro de `/var/www/soldelamanecer/`.
+
+### 2️⃣ Base de Datos MONGODB
+- **Database**: `soldelamanecer` (Conexión local en el VPS: `mongodb://localhost:27017/soldelamanecer`).
+- ¡NO manipules bases que se llamen `cotizador`!
+- Para diagnósticos limpios en la BBDD de producción, creá scripts temporales de solo-lectura y dejalos en `/tmp/` o eliminalos al terminar la sesión usando `git clean -fd`.
+
+### 3️⃣ Workflow de Despliegue Oficial (Deploy)
+**NUNCA USES `scp` U OTROS MÉTODOS MANUALES PARA ALTERAR CÓDIGO DIRECTO EN PRODUCCIÓN.**
+Esta es la única forma robusta y avalada de actualizar el servidor:
+1. Programá, testeá y comiteá tus cambios en la máquina local Windows.
+2. Usá `git push origin feature/sidebar-god-tier` para subir al repositorio.
+3. Ingresá por SSH al servidor VPS (`ssh root@69.62.86.69`).
+4. Ingresá al directorio: `cd /var/www/soldelamanecer/backend`.
+5. Ejecutá: `git reset --hard && git clean -fd` para descartar toda modificación temporal sin trackear.
+6. Ejecutá: `git pull origin feature/sidebar-god-tier`.
+7. Ejecutá: `pm2 restart sda-backend`.
+8. *Nota*: Si actualizaste dependencias locales, ejecutá `npm install` antes de reiniciar PM2.
+9. El Frontend se compila localmente (`npm run build`) y el administrador se encarga de inyectar la carpeta `dist` en Hostinger.
+
+### 4️⃣ Estado de Arte y Decisiones de Arquitectura
+- El backend corre localmente en **Port 5000**, el Nginx se encarga del proxy.
+- Todo el manejo de fechas está blindado por `moment-timezone` forzado a *America/Argentina/Buenos_Aires*. NO uses implementaciones de `new Date()` puro sin timezone, causarás un desfase de huso horario para las Hojas de Reparto.
+- Los Modelos sufrieron Normalización. El DNI y Email radican solo en la colección `Usuario` (referenciado One-to-One por `Chofer` y `Cliente`).
 
 ---
 
@@ -2728,4 +2766,26 @@ En **Google Cloud Console → Credenciales → OAuth 2.0 Client IDs**, deben est
 
 ---
 
-**FIN DEL DOCUMENTO - CONTEXTO COMPLETO ACTUALIZADO**
+## 🔐 FASE 12 — Recuperación de Contraseña, Doble Hash y Refinamiento Git (12/03/2026)
+
+### 1. Sistema de Recuperación de Contraseña Nivel Dios
+- **Problema**: Los usuarios (clientes y choferes) carecían de método de autonavegación para restablecer contraseñas perdidas, exigiendo intervención directa la Base de Datos.
+- **Solución Implementada**:
+    - Backend: Endpoints públicos `/api/usuarios/recuperar-password` y `/api/usuarios/reset-password/:token`.
+    - Seguridad: Tokens hex de 20 bytes seguros criptográficamente y expiran en 1 hr inyectados temporalmente a `Usuario`.
+    - Emailing Corporativo: Integración del gestor `emailService.js` gatillando plantillas HTML pulcras operando mediante Hostinger SMTP (SSL puerto 465).
+    - Interfaces Web (React): Dos fachadas estéticas minimalistas `RecuperarPassword.jsx` y `ResetPassword.jsx` amarradas públicamente mediante el Layout Principal.
+
+### 2. Bug de Autenticación en Flujo Creación Admin (Double Hash)
+- **Problema**: El Mongoose schema `Usuario` poseía un `.pre('save')` que auto-encriptaba contraseñas modificadas. Los controladores aislados que efectuaban rutinas manuales (como el Panel Chofer y el endpoint de Recover Password) solían ejecutar `bcrypt.hash()` forzadamente. La doble aplicación del hashing bloqueaba de facto e irremediablemente a las cuentas intervenidas.
+- **Solución Implementada**:
+    - Abandono de doble hashing cruzado. Refactorización para confiar ciegamente el `hash` a la lógica `.pre('save')` del ODM de Mongoose con su método nativo discriminado por `isModified('password')`.
+
+### 3. Normalización del DNI (Unique Error y Soft-deletes)
+- **Problema**: Los index `unique: true` de mongo se disparaban bloqueando ediciones inofensivas en usuarios (afirmando duplicidad DNI). Asimismo, IDs huérfanos con string vacío fallaban la validación.
+- **Solución Implementada**:
+    - Carga robusta de validadores algorítmicos `$ne: userId` y limpieza con script nativo de DNIs nulos.
+
+---
+
+**FIN DEL DOCUMENTO - CONTEXTO COMPLETO ACTUALIZADO (12/03/2026)**
