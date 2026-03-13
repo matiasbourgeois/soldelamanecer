@@ -18,6 +18,7 @@ import {
   IconSettings,
   IconChevronRight
 } from "@tabler/icons-react";
+import { useMediaQuery } from "@mantine/hooks";
 
 /**
  * Panel de Administración (Refactorizado a Mantine)
@@ -25,6 +26,7 @@ import {
  */
 const DashboardAdmin = () => {
   const navigate = useNavigate();
+  const isSmall = useMediaQuery('(max-width: 1440px)');
 
   const items = [
     {
@@ -51,9 +53,9 @@ const DashboardAdmin = () => {
   ];
 
   return (
-    <Container size="lg" py={rem(60)}>
-      <Box mb={rem(40)}>
-        <Title order={1} fw={900} style={{ letterSpacing: '-1.5px', fontSize: rem(36) }}>
+    <Container size="lg" py={isSmall ? rem(30) : rem(60)}>
+      <Box mb={isSmall ? rem(20) : rem(40)}>
+        <Title order={1} fw={900} style={{ letterSpacing: '-1.5px', fontSize: isSmall ? rem(26) : rem(36) }}>
           Panel de <Text span inherit variant="gradient" gradient={{ from: 'cyan', to: 'indigo' }}>Administración</Text>
         </Title>
         <Text c="dimmed" size="lg" fw={500} mt="xs">
@@ -61,11 +63,11 @@ const DashboardAdmin = () => {
         </Text>
       </Box>
 
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl">
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing={isSmall ? "md" : "xl"}>
         {items.map((item) => (
           <Card
             key={item.title}
-            p="xl"
+            p={isSmall ? "md" : "xl"}  
             radius="lg"
             withBorder
             style={{
@@ -87,15 +89,15 @@ const DashboardAdmin = () => {
               }
             }}
           >
-            <Stack gap="xl">
+            <Stack gap={isSmall ? "md" : "xl"}>
               <Group justify="space-between" align="flex-start">
                 <ThemeIcon
-                  size={54}
+                  size={isSmall ? 40 : 54}
                   radius="md"
                   variant="light"
                   color={item.color}
                 >
-                  <item.icon size={28} stroke={1.5} />
+                  <item.icon size={isSmall ? 20 : 28} stroke={1.5} />
                 </ThemeIcon>
                 {item.path && (
                   <IconChevronRight size={18} color="var(--mantine-color-gray-4)" />

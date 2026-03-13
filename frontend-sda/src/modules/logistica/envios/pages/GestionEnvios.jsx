@@ -4,9 +4,11 @@ import {
     Container, Title, SimpleGrid, Card, Text, Group, ThemeIcon, Paper, UnstyledButton, rem, Box, Badge
 } from "@mantine/core";
 import { PackagePlus, Search, FileText, ArrowRight, Truck, BarChart3 } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
 
 const GestionEnvios = () => {
     const navigate = useNavigate();
+    const isSmall = useMediaQuery('(max-width: 1440px)');
 
     const acciones = [
         {
@@ -36,9 +38,9 @@ const GestionEnvios = () => {
     ];
 
     return (
-        <Container size="xl" py={50}>
+        <Container size="xl" py={isSmall ? 30 : 50}>
             {/* Minimalist Header */}
-            <Group justify="space-between" align="flex-end" mb={50}>
+            <Group justify="space-between" align="flex-end" mb={isSmall ? 30 : 50}>
                 <Box>
                     <Group align="center" gap="xs" mb={5}>
                         <ThemeIcon variant="light" color="cyan" size="md" radius="md">
@@ -58,12 +60,12 @@ const GestionEnvios = () => {
             </Group>
 
             {/* Premium Actions Grid */}
-            <SimpleGrid cols={{ base: 1, md: 3 }} spacing={30}>
+            <SimpleGrid cols={{ base: 1, md: 3 }} spacing={isSmall ? 20 : 30}>
                 {acciones.map((accion, index) => (
                     <Card
                         key={index}
-                        shadow="none" // Custom shadow via style
-                        padding={30}
+                        shadow="none"
+                        padding={isSmall ? 20 : 30}
                         radius={20}
                         component={UnstyledButton}
                         onClick={() => navigate(accion.ruta)}
@@ -98,10 +100,10 @@ const GestionEnvios = () => {
                         />
 
                         <div style={{ position: 'relative', zIndex: 1 }}>
-                            <Group justify="space-between" align="start" mb={30}>
+                            <Group justify="space-between" align="start" mb={isSmall ? 20 : 30}>
                                 <ThemeIcon
-                                    size={70}
-                                    radius={20}
+                                    size={isSmall ? 54 : 70}
+                                    radius={isSmall ? 14 : 20}
                                     variant="light"
                                     color={accion.color}
                                     style={{ transition: 'all 0.3s ease' }}
@@ -120,11 +122,11 @@ const GestionEnvios = () => {
                                 </ThemeIcon>
                             </Group>
 
-                            <Title order={3} fw={800} mb={10} style={{ fontSize: rem(24) }}>
+                            <Title order={3} fw={800} mb={10} style={{ fontSize: isSmall ? rem(20) : rem(24) }}>
                                 {accion.titulo}
                             </Title>
 
-                            <Text size="md" c="dimmed" lh={1.5} mb={20}>
+                            <Text size={isSmall ? 'sm' : 'md'} c="dimmed" lh={1.5} mb={20}>
                                 {accion.descripcion}
                             </Text>
 

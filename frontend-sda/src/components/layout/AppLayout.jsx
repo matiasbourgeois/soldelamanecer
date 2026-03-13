@@ -17,7 +17,7 @@ import {
     Popover,
     Paper
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     User as IconUser,
@@ -47,6 +47,9 @@ import { NotificacionesPanel } from './NotificacionesPanel';
 
 export function AppLayout({ children, auth, handleLogout }) {
     const theme = useMantineTheme();
+    // 📐 Responsive: monitores 19" (1366x768)
+    const isSmall = useMediaQuery('(max-width: 1440px)');
+    const isVerySmall = useMediaQuery('(max-width: 1366px)');
     const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
     const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
     const [isLogoutHovered, setIsLogoutHovered] = useState(false);
@@ -345,14 +348,14 @@ export function AppLayout({ children, auth, handleLogout }) {
 
     return (
         <AppShell
-            header={{ height: 60 }}
+            header={{ height: isVerySmall ? 50 : 60 }}
             navbar={{
-                width: 300,
+                width: isSmall ? 255 : 300,
                 breakpoint: 'md',
                 collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
             }}
-            padding={location.pathname === '/admin/juegos' ? 0 : 'md'}
-            style={{ backgroundColor: '#f3f4f6' }} // Light gray background for content area
+            padding={location.pathname === '/admin/juegos' ? 0 : (isSmall ? 'sm' : 'md')}
+            style={{ backgroundColor: '#f3f4f6' }}
         >
             {/* ... Header and Navbar components ... */}
             <AppShell.Header style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>

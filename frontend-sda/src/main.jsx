@@ -18,6 +18,14 @@ const theme = createTheme({
   primaryColor: 'cyan',
   fontFamily: 'Inter, sans-serif',
   defaultRadius: 'md',
+  // 📐 Breakpoints explícitos para UI responsiva en 19" (1366x768)
+  breakpoints: {
+    xs: '30em',      // 480px
+    sm: '48em',      // 768px
+    md: '64em',      // 1024px
+    lg: '85.375em',  // 1366px ← TARGET: Monitores 19"
+    xl: '120em',     // 1920px — Monitores 24"/27"
+  },
 });
 
 ReactDOM.createRoot(document.getElementById("root")).render(

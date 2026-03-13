@@ -23,7 +23,7 @@ const RecuperarPassword = () => {
       // POST a la API pública /recuperar-password
       await axios.post(apiUsuariosApi("/recuperar-password"), { email });
       setEnviado(true);
-      mostrarAlerta("Si el email es válido, recibirás instrucciones.", "success");
+      mostrarAlerta("¡Instrucciones enviadas exitosamente!", "success");
     } catch (error) {
       console.error("Error al solicitar recuperación:", error);
       mostrarAlerta(

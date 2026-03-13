@@ -14,7 +14,22 @@ main {
   background-color: white;
 }
 
-html,
+/* 📐 Escalamiento Adaptativo Global — Monitores 19" (1366x768) */
+/* Al reducir el font-size del html, TODOS los valores rem de Mantine
+   (padding, spacing, tipografía) se achicarán automáticamente en proporción */
+html {
+  font-size: 16px; /* Monitores grandes: 24" / 27" */
+}
+@media (max-width: 1440px) {
+  html { font-size: 15px; } /* Monitores intermedios: 21" */
+}
+@media (max-width: 1366px) {
+  html { font-size: 14px; } /* Monitores 19" Full HD — TARGET */
+}
+@media (max-width: 1100px) {
+  html { font-size: 13px; } /* Laptops / resoluciones chicas */
+}
+
 body {
   min-height: 100%;
   margin: 0;

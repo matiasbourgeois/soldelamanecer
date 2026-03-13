@@ -334,8 +334,8 @@ const solicitarRecuperacionPassword = async (req, res) => {
 
     const usuario = await Usuario.findOne({ email });
     if (!usuario) {
-      // Por seguridad, siempre devolvemos un 200 aunque no exista
-      return res.status(200).json({ mensaje: "Si el correo existe, recibirás las instrucciones en breve." });
+      // Priorizando UX sobre enumeración: informamos explícitamente si no existe
+      return res.status(404).json({ error: "El correo ingresado no corresponde a ninguna cuenta registrada en nuestro sistema." });
     }
 
     if (!usuario.activo) {
